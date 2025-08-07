@@ -1,0 +1,448 @@
+<template>
+  <div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <button @click="$router.back()" class="text-gray-400 hover:text-gray-600">
+          <ArrowLeftIcon class="w-6 h-6" />
+        </button>
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">{{ queueName }}</h2>
+          <p class="text-gray-600">Queue details and jobs</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-3">
+        <button @click="refreshJobs" :disabled="loading" class="btn-secondary">
+          <ArrowPathIcon class="w-4 h-4 mr-2" :class="{ 'animate-spin': loading }" />
+          Refresh
+        </button>
+      </div>
+    </div>
+
+    <!-- Queue Stats as Tabs -->
+    <div v-if="queueInfo" class="bg-white rounded-lg border border-gray-200">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">Queue Statistics</h3>
+        <span v-if="queueInfo.isPaused" class="state-paused">Paused</span>
+      </div>
+
+      <!-- Tab Navigation -->
+      <div class="border-b border-gray-200">
+        <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+          <button
+            v-for="[state, count] in Object.entries(queueInfo.counts)"
+            :key="state"
+            @click="selectStateTab(state)"
+            :class="[
+              'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
+              selectedStateTab === state
+                ? 'border-primary-500 text-primary-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            ]"
+          >
+            <div class="flex items-center space-x-2">
+              <span class="capitalize">{{ state }}</span>
+              <span
+                :class="[
+                  'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                  getStateTabStyle(state, selectedStateTab === state)
+                ]"
+              >
+                {{ count }}
+              </span>
+            </div>
+          </button>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <div class="flex flex-wrap items-center gap-4">
+        <!-- Search -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search jobs..."
+            class="block w-48 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+          />
+        </div>
+
+        <!-- Sort -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Sort by</label>
+          <select
+            v-model="sortBy"
+            class="block w-32 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+          >
+            <option value="createdAt">Created</option>
+            <option value="processedOn">Processed</option>
+            <option value="finishedOn">Finished</option>
+            <option value="duration">Duration</option>
+            <option value="state">State</option>
+            <option value="name">Name</option>
+          </select>
+        </div>
+
+        <!-- Sort Order -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Order</label>
+          <select
+            v-model="sortOrder"
+            class="block w-24 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+          >
+            <option value="desc">Desc</option>
+            <option value="asc">Asc</option>
+          </select>
+        </div>
+
+        <!-- Apply Filters -->
+        <div class="flex items-end">
+          <button @click="applyFilters" class="btn-primary">
+            Apply Filters
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Selection Bar -->
+    <div v-if="hasSelection" class="bg-primary-50 border border-primary-200 rounded-lg p-4">
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-primary-800">
+          {{ selection.selectedIds.size }} job(s) selected
+        </span>
+        <div class="flex items-center space-x-3">
+          <button @click="clearSelection" class="text-sm text-primary-600 hover:text-primary-800">
+            Clear selection
+          </button>
+          <!-- v2 bulk actions placeholder -->
+          <button disabled class="btn-secondary opacity-50">
+            Bulk Actions (v2)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Jobs Table -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-medium text-gray-900">Jobs</h3>
+          <span class="text-sm text-gray-500">
+            {{ pagination.total }} total jobs
+          </span>
+        </div>
+      </div>
+
+      <div v-if="loading" class="p-6">
+        <div class="animate-pulse space-y-4">
+          <div v-for="i in 10" :key="i" class="h-12 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+
+      <div v-else-if="jobs.length === 0" class="p-6 text-center text-gray-500">
+        No jobs found
+      </div>
+
+      <div v-else>
+        <!-- Table Header -->
+        <div class="bg-gray-50 px-6 py-3 border-b border-gray-200">
+          <div class="flex items-center">
+            <input
+              type="checkbox"
+              :checked="selection.isAllSelected"
+              @change="toggleSelectAll"
+              class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded mr-4"
+            />
+            <div class="grid grid-cols-12 gap-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <div class="col-span-2">ID</div>
+              <div class="col-span-2">Name</div>
+              <div class="col-span-1">State</div>
+              <div class="col-span-2">Created</div>
+              <div class="col-span-2">Duration</div>
+              <div class="col-span-1">Attempts</div>
+              <div class="col-span-1">Priority</div>
+              <div class="col-span-1">Actions</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table Body -->
+        <div class="divide-y divide-gray-200">
+          <div
+            v-for="job in jobs"
+            :key="job.id"
+            class="px-6 py-4 hover:bg-gray-50 cursor-pointer"
+            @click="toggleJobSelection(job.id)"
+          >
+            <div class="flex items-center">
+              <input
+                type="checkbox"
+                :checked="selection.selectedIds.has(job.id)"
+                @click.stop
+                @change="toggleJobSelection(job.id)"
+                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded mr-4"
+              />
+              <div class="grid grid-cols-12 gap-4 items-center text-sm">
+                <div class="col-span-2 font-mono text-xs">{{ job.id }}</div>
+                <div class="col-span-2 truncate">{{ job.name }}</div>
+                <div class="col-span-1">
+                  <span :class="`state-${job.state}`">{{ job.state }}</span>
+                </div>
+                <div class="col-span-2 text-gray-500">
+                  {{ formatTimestamp(job.createdAt) }}
+                </div>
+                <div class="col-span-2 text-gray-500">
+                  {{ job.duration ? formatDuration(job.duration) : '-' }}
+                </div>
+                <div class="col-span-1">{{ job.attempts }}</div>
+                <div class="col-span-1">{{ job.priority || '-' }}</div>
+                <div class="col-span-1">
+                  <button
+                    @click.stop="viewJobDetail(job.id)"
+                    class="text-primary-600 hover:text-primary-800"
+                  >
+                    View
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div v-if="pagination.totalPages > 1" class="flex items-center justify-between">
+      <div class="text-sm text-gray-700">
+        Showing page {{ pagination.page }} of {{ pagination.totalPages }}
+        ({{ pagination.total }} total jobs)
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <button
+          @click="goToPage(pagination.page - 1)"
+          :disabled="pagination.page <= 1"
+          class="btn-secondary disabled:opacity-50"
+        >
+          Previous
+        </button>
+
+        <div class="flex space-x-1">
+          <button
+            v-for="page in visiblePages"
+            :key="page"
+            @click="goToPage(page)"
+            :class="[
+              'px-3 py-2 text-sm rounded-md',
+              page === pagination.page
+                ? 'bg-primary-600 text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+            ]"
+          >
+            {{ page }}
+          </button>
+        </div>
+
+        <button
+          @click="goToPage(pagination.page + 1)"
+          :disabled="pagination.page >= pagination.totalPages"
+          class="btn-secondary disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import { useJobsStore } from '@/stores/jobs'
+import { useQueuesStore } from '@/stores/queues'
+import { useSettingsStore } from '@/stores/settings'
+import { ArrowLeftIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
+import { formatTimestamp, formatDuration } from '@/utils/date'
+
+const route = useRoute()
+const jobsStore = useJobsStore()
+const queuesStore = useQueuesStore()
+const settingsStore = useSettingsStore()
+
+const queueName = computed(() => route.params.name as string)
+
+const {
+  jobs,
+  loading,
+  pagination,
+  filters,
+  selection,
+  hasSelection,
+} = storeToRefs(jobsStore)
+
+const { settings, autoRefreshEnabled } = storeToRefs(settingsStore)
+
+// Local filter state
+const selectedStateTab = ref<string>('waiting')
+const searchQuery = ref('')
+const sortBy = ref('createdAt')
+const sortOrder = ref('desc')
+
+// Auto-refresh
+let refreshInterval: ReturnType<typeof setInterval> | null = null
+
+const queueInfo = computed(() =>
+  queuesStore.getQueueByName(queueName.value)
+)
+
+const totalJobs = computed(() => {
+  if (!queueInfo.value) return 0
+  return Object.values(queueInfo.value.counts).reduce((a, b) => a + b, 0)
+})
+
+const visiblePages = computed(() => {
+  const current = pagination.value.page
+  const total = pagination.value.totalPages
+  const delta = 2
+
+  const range = []
+  for (let i = Math.max(1, current - delta); i <= Math.min(total, current + delta); i++) {
+    range.push(i)
+  }
+
+  return range
+})
+
+function getStateColor(state: string): string {
+  const colors: Record<string, string> = {
+    waiting: 'text-gray-600',
+    active: 'text-primary-600',
+    completed: 'text-success-600',
+    failed: 'text-danger-600',
+    delayed: 'text-warning-600',
+    paused: 'text-gray-500',
+  }
+  return colors[state] || 'text-gray-600'
+}
+
+function getStateTabStyle(state: string, isSelected: boolean) {
+  if (isSelected) {
+    return 'bg-primary-100 text-primary-800'
+  } else {
+    return 'bg-gray-100 text-gray-800'
+  }
+}
+
+function selectStateTab(state: string) {
+  selectedStateTab.value = state
+
+  // Update filters based on selected tab (always filter by specific state)
+  jobsStore.updateFilters({
+    states: [state] as any,
+    search: searchQuery.value || undefined,
+    sortBy: sortBy.value as any,
+    sortOrder: sortOrder.value as any,
+    page: 1,
+  })
+
+  fetchJobs()
+}
+
+function applyFilters() {
+  // Apply current tab state along with other filters
+  jobsStore.updateFilters({
+    states: [selectedStateTab.value] as any,
+    search: searchQuery.value || undefined,
+    sortBy: sortBy.value as any,
+    sortOrder: sortOrder.value as any,
+    page: 1, // Reset to first page
+  })
+  fetchJobs()
+}
+
+function refreshJobs() {
+  fetchJobs()
+}
+
+function fetchJobs() {
+  jobsStore.fetchJobs(queueName.value, filters.value)
+}
+
+function goToPage(page: number) {
+  if (page >= 1 && page <= pagination.value.totalPages) {
+    jobsStore.updatePage(page)
+    fetchJobs()
+  }
+}
+
+function toggleSelectAll() {
+  jobsStore.toggleSelectAll()
+}
+
+function toggleJobSelection(jobId: string) {
+  jobsStore.toggleJobSelection(jobId)
+}
+
+function clearSelection() {
+  jobsStore.clearSelection()
+}
+
+function viewJobDetail(jobId: string) {
+  jobsStore.fetchJobDetail(queueName.value, jobId)
+}
+
+function setupAutoRefresh() {
+  if (refreshInterval) {
+    clearInterval(refreshInterval)
+  }
+
+  if (autoRefreshEnabled.value && settings.value.autoRefreshInterval > 0) {
+    refreshInterval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchJobs()
+      }
+    }, settings.value.autoRefreshInterval * 1000)
+  }
+}
+
+onMounted(() => {
+  // Load queue info first
+  queuesStore.fetchQueues()
+
+  // Set default tab - try to restore from localStorage, otherwise default to 'waiting'
+  const savedState = localStorage.getItem(`queue-${queueName.value}-selectedState`)
+  if (savedState && ['waiting', 'active', 'completed', 'failed', 'delayed', 'paused'].includes(savedState)) {
+    selectedStateTab.value = savedState
+  } else {
+    selectedStateTab.value = 'waiting'
+  }
+
+  // Load jobs with the selected state
+  fetchJobs()
+
+  // Setup auto-refresh
+  setupAutoRefresh()
+})
+
+// Watch for tab changes to save to localStorage
+watch(selectedStateTab, (newState) => {
+  localStorage.setItem(`queue-${queueName.value}-selectedState`, newState)
+})
+
+onUnmounted(() => {
+  if (refreshInterval) {
+    clearInterval(refreshInterval)
+  }
+
+  // Reset jobs store when leaving
+  jobsStore.reset()
+})
+
+// Watch for settings changes
+watch([autoRefreshEnabled, () => settings.value.autoRefreshInterval], setupAutoRefresh)
+</script>
