@@ -53,11 +53,14 @@ export const useJobsStore = defineStore('jobs', () => {
   });
 
   // Actions
-  async function fetchJobs(queueName: string, requestFilters?: Partial<GetJobsRequest>) {
+  async function fetchJobs(queueName: string, requestFilters?: Partial<GetJobsRequest>, preserveSelection = false) {
     try {
       loading.value = true;
       error.value = null;
       currentQueue.value = queueName;
+
+      // Store current selection before fetching new jobs
+      const previousSelection = new Set(selection.selectedIds);
 
       // Merge with current filters
       const mergedFilters = { ...filters, ...requestFilters };
@@ -77,9 +80,21 @@ export const useJobsStore = defineStore('jobs', () => {
       // Update filters with response filters
       Object.assign(filters, response.filters);
 
-      // Clear selection when loading new page/filters
-      clearSelection();
-      
+      // Handle selection based on preserveSelection flag
+      if (preserveSelection && previousSelection.size > 0) {
+        // Preserve selection for jobs that still exist in the new data
+        const newJobIds = new Set(jobs.value.map(job => job.id));
+        const preservedSelection = new Set(
+          Array.from(previousSelection).filter(id => newJobIds.has(id))
+        );
+
+        selection.selectedIds = preservedSelection;
+        selection.isAllSelected = preservedSelection.size === jobs.value.length && jobs.value.length > 0;
+      } else {
+        // Clear selection when loading new page/filters (original behavior)
+        clearSelection();
+      }
+
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch jobs';
       console.error('Failed to fetch jobs:', err);

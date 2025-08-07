@@ -350,7 +350,8 @@ function selectStateTab(state: string) {
     page: 1,
   })
 
-  fetchJobs()
+  // Don't preserve selection when changing tabs (original behavior)
+  fetchJobs(false)
 }
 
 function applyFilters() {
@@ -362,21 +363,24 @@ function applyFilters() {
     sortOrder: sortOrder.value as any,
     page: 1, // Reset to first page
   })
-  fetchJobs()
+  // Don't preserve selection when applying filters (original behavior)
+  fetchJobs(false)
 }
 
 function refreshJobs() {
-  fetchJobs()
+  // Preserve selection when manually refreshing
+  fetchJobs(true)
 }
 
-function fetchJobs() {
-  jobsStore.fetchJobs(queueName.value, filters.value)
+function fetchJobs(preserveSelection = false) {
+  jobsStore.fetchJobs(queueName.value, filters.value, preserveSelection)
 }
 
 function goToPage(page: number) {
   if (page >= 1 && page <= pagination.value.totalPages) {
     jobsStore.updatePage(page)
-    fetchJobs()
+    // Don't preserve selection when changing pages (original behavior)
+    fetchJobs(false)
   }
 }
 
@@ -404,7 +408,8 @@ function setupAutoRefresh() {
   if (autoRefreshEnabled.value && settings.value.autoRefreshInterval > 0) {
     refreshInterval = setInterval(() => {
       if (document.visibilityState === 'visible') {
-        fetchJobs()
+        // Preserve selection during auto-refresh
+        fetchJobs(true)
       }
     }, settings.value.autoRefreshInterval * 1000)
   }
@@ -422,8 +427,8 @@ onMounted(() => {
     selectedStateTab.value = 'waiting'
   }
 
-  // Load jobs with the selected state
-  fetchJobs()
+  // Load jobs with the selected state (no selection to preserve on initial load)
+  fetchJobs(false)
 
   // Setup auto-refresh
   setupAutoRefresh()
