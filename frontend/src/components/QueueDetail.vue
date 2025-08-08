@@ -427,6 +427,15 @@ onMounted(() => {
     selectedStateTab.value = 'waiting'
   }
 
+  // Update filters with the selected state before fetching jobs
+  jobsStore.updateFilters({
+    states: [selectedStateTab.value] as any,
+    search: searchQuery.value || undefined,
+    sortBy: sortBy.value as any,
+    sortOrder: sortOrder.value as any,
+    page: 1,
+  })
+
   // Load jobs with the selected state (no selection to preserve on initial load)
   fetchJobs(false)
 
