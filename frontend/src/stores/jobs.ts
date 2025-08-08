@@ -53,9 +53,12 @@ export const useJobsStore = defineStore('jobs', () => {
   });
 
   // Actions
-  async function fetchJobs(queueName: string, requestFilters?: Partial<GetJobsRequest>, preserveSelection = false) {
+  async function fetchJobs(queueName: string, requestFilters?: Partial<GetJobsRequest>, preserveSelection = false, silentRefresh = false) {
     try {
-      loading.value = true;
+      // Only show loading state for non-silent refreshes
+      if (!silentRefresh) {
+        loading.value = true;
+      }
       error.value = null;
       currentQueue.value = queueName;
 
@@ -99,6 +102,7 @@ export const useJobsStore = defineStore('jobs', () => {
       error.value = err instanceof Error ? err.message : 'Failed to fetch jobs';
       console.error('Failed to fetch jobs:', err);
     } finally {
+      // Always clear loading state
       loading.value = false;
     }
   }

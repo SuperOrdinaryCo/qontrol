@@ -63,7 +63,7 @@
       <div class="px-6 py-4 border-b border-gray-200">
         <div class="flex justify-between items-center">
           <h3 class="text-lg font-medium text-gray-900">Queues</h3>
-
+          
           <!-- Search Input -->
           <div class="relative max-w-xs">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

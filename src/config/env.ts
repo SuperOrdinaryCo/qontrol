@@ -1,7 +1,6 @@
 /**
  * Configuration module that loads and validates environment variables
  */
-
 export interface Config {
   // Server Configuration
   port: number;
@@ -104,3 +103,4 @@ function validateConfig(): Config {
 }
 
 export const config = validateConfig();
+

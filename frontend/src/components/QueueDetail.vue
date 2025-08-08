@@ -368,12 +368,12 @@ function applyFilters() {
 }
 
 function refreshJobs() {
-  // Preserve selection when manually refreshing
-  fetchJobs(true)
+  // Preserve selection when manually refreshing (with visible loading)
+  fetchJobs(true, false)
 }
 
-function fetchJobs(preserveSelection = false) {
-  jobsStore.fetchJobs(queueName.value, filters.value, preserveSelection)
+function fetchJobs(preserveSelection = false, silentRefresh = false) {
+  jobsStore.fetchJobs(queueName.value, filters.value, preserveSelection, silentRefresh)
 }
 
 function goToPage(page: number) {
@@ -408,8 +408,8 @@ function setupAutoRefresh() {
   if (autoRefreshEnabled.value && settings.value.autoRefreshInterval > 0) {
     refreshInterval = setInterval(() => {
       if (document.visibilityState === 'visible') {
-        // Preserve selection during auto-refresh
-        fetchJobs(true)
+        // Preserve selection during auto-refresh AND make it silent
+        fetchJobs(true, true)
       }
     }, settings.value.autoRefreshInterval * 1000)
   }
