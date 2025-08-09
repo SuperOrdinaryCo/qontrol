@@ -244,12 +244,19 @@
                 </div>
                 <div class="text-center">{{ job.attempts }}</div>
                 <div class="text-center">{{ job.priority || '-' }}</div>
-                <div>
+                <div class="flex items-center space-x-2">
                   <button
                     @click.stop="viewJobDetail(job.id)"
                     class="text-primary-600 hover:text-primary-800 text-sm font-medium"
                   >
                     View
+                  </button>
+                  <button
+                    @click.stop="handleRemoveJob(job.id)"
+                    class="text-red-600 hover:text-red-800 text-sm font-medium"
+                    :disabled="removingJobId === job.id"
+                  >
+                    {{ removingJobId === job.id ? 'Removing...' : 'Remove' }}
                   </button>
                 </div>
               </div>
@@ -337,6 +344,9 @@ const searchQuery = ref('')
 const sortBy = ref('createdAt')
 const sortOrder = ref('desc')
 const jobIdQuery = ref('')
+
+// Removal state
+const removingJobId = ref<string | null>(null)
 
 // Auto-refresh
 let refreshInterval: ReturnType<typeof setInterval> | null = null
@@ -460,6 +470,27 @@ function clearSelection() {
 
 function viewJobDetail(jobId: string) {
   jobsStore.fetchJobDetail(queueName.value, jobId)
+}
+
+async function handleRemoveJob(jobId: string) {
+  if (removingJobId.value) return // Prevent multiple simultaneous removals
+
+  if (!confirm(`Are you sure you want to remove job ${jobId}? This action cannot be undone and will also remove any child jobs.`)) {
+    return
+  }
+
+  try {
+    removingJobId.value = jobId
+    await jobsStore.removeJob(queueName.value, jobId)
+
+    // Success - the store already updated the local state
+    console.log(`Job ${jobId} removed successfully`)
+  } catch (error) {
+    console.error('Failed to remove job:', error)
+    alert('Failed to remove job. Please try again.')
+  } finally {
+    removingJobId.value = null
+  }
 }
 
 function setupAutoRefresh() {

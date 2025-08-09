@@ -124,6 +124,37 @@ router.get('/queues/:queue/jobs/:id', async (req, res) => {
 });
 
 /**
+ * DELETE /api/queues/:queue/jobs/:id
+ * Remove a specific job by ID with removeChildren flag
+ */
+router.delete('/queues/:queue/jobs/:id', async (req, res) => {
+  try {
+    const { queue: queueName, id: jobId } = req.params;
+
+    const success = await JobService.removeJob(queueName, jobId);
+
+    if (!success) {
+      return res.status(404).json({
+        message: 'Job not found or could not be removed',
+        code: 'JOB_REMOVE_FAILED',
+      });
+    }
+
+    res.json({
+      message: 'Job removed successfully',
+      jobId,
+      queueName,
+      timestamp: new Date(),
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to remove job',
+      code: 'JOB_REMOVE_ERROR',
+    });
+  }
+});
+
+/**
  * GET /api/healthz
  * Health check endpoint
  */

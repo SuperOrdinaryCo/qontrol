@@ -162,6 +162,31 @@ export const useJobsStore = defineStore('jobs', () => {
     }
   }
 
+  async function removeJob(queueName: string, jobId: string) {
+    try {
+      await apiClient.removeJob(queueName, jobId);
+
+      // Remove the job from the local jobs array
+      jobs.value = jobs.value.filter(job => job.id !== jobId);
+
+      // Update pagination total
+      pagination.total = Math.max(0, pagination.total - 1);
+      pagination.totalPages = Math.ceil(pagination.total / pagination.pageSize);
+
+      // Clear selection if the removed job was selected
+      if (selection.selectedIds.has(jobId)) {
+        selection.selectedIds.delete(jobId);
+        selection.isAllSelected = selection.selectedIds.size === jobs.value.length && jobs.value.length > 0;
+      }
+
+      console.log(`Successfully removed job ${jobId} from queue ${queueName}`);
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to remove job';
+      console.error('Failed to remove job:', err);
+      throw err; // Re-throw so UI can handle the error
+    }
+  }
+
   function updateFilters(newFilters: Partial<GetJobsRequest>) {
     Object.assign(filters, newFilters);
     filters.page = 1; // Reset to first page when filters change
@@ -249,6 +274,7 @@ export const useJobsStore = defineStore('jobs', () => {
     fetchJobs,
     fetchJobDetail,
     fetchJobById,
+    removeJob,
     updateFilters,
     updatePage,
     toggleJobSelection,

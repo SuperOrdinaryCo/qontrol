@@ -125,6 +125,30 @@ export class JobService {
   }
 
   /**
+   * Remove a job by ID with removeChildren flag
+   */
+  static async removeJob(queueName: string, jobId: string): Promise<boolean> {
+    try {
+      const queue = QueueRegistry.getQueue(queueName);
+      const job = await queue.getJob(jobId);
+
+      if (!job) {
+        logger.warn(`Job ${jobId} not found in queue ${queueName} for removal`);
+        return false;
+      }
+
+      // Remove job with removeChildren flag set to true
+      await job.remove({ removeChildren: true });
+
+      logger.info(`Successfully removed job ${jobId} from queue ${queueName} with children`);
+      return true;
+    } catch (error) {
+      logger.error(`Failed to remove job ${jobId} from queue ${queueName}:`, error);
+      return false;
+    }
+  }
+
+  /**
    * Convert Job to JobSummary
    */
   private static jobToSummary(job: Job): JobSummary {

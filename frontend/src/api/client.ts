@@ -67,6 +67,10 @@ export const apiClient = {
     return response.data.job;
   },
 
+  async removeJob(queueName: string, jobId: string): Promise<void> {
+    await api.delete(`/queues/${queueName}/jobs/${jobId}`);
+  },
+
   // Health check
   async getHealth(): Promise<HealthCheckResponse> {
     const response = await api.get<HealthCheckResponse>('/healthz');
