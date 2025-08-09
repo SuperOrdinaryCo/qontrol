@@ -470,8 +470,23 @@ function setupAutoRefresh() {
   if (autoRefreshEnabled.value && settings.value.autoRefreshInterval > 0) {
     refreshInterval = setInterval(() => {
       if (document.visibilityState === 'visible') {
-        // Preserve selection during auto-refresh AND make it silent
-        fetchJobs(true, true)
+        // Check if we're in job ID search mode
+        if (jobIdQuery.value.trim()) {
+          // Refresh the job ID search silently to avoid dropping/refilling table
+          jobsStore.fetchJobById(queueName.value, jobIdQuery.value.trim(), true)
+        } else {
+          // Update filters with current search state before auto-refresh
+          jobsStore.updateFilters({
+            states: [selectedStateTab.value] as any,
+            search: searchQuery.value || undefined,
+            sortBy: sortBy.value as any,
+            sortOrder: sortOrder.value as any,
+            page: filters.value.page, // Keep current page
+          })
+
+          // Preserve selection during auto-refresh AND make it silent
+          fetchJobs(true, true)
+        }
       }
     }, settings.value.autoRefreshInterval * 1000)
   }
@@ -498,7 +513,7 @@ onMounted(() => {
     page: 1,
   })
 
-  // Load jobs with the selected state (no selection to preserve on initial load)
+  // Load jobs with the selected state (no selection to preserve on original load)
   fetchJobs(false)
 
   // Setup auto-refresh

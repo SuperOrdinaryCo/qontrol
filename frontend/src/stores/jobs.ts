@@ -126,9 +126,12 @@ export const useJobsStore = defineStore('jobs', () => {
     }
   }
 
-  async function fetchJobById(queueName: string, jobId: string) {
+  async function fetchJobById(queueName: string, jobId: string, silentRefresh = false) {
     try {
-      loading.value = true;
+      // Only show loading state for non-silent refreshes
+      if (!silentRefresh) {
+        loading.value = true;
+      }
       error.value = null;
       currentQueue.value = queueName;
 
@@ -154,6 +157,7 @@ export const useJobsStore = defineStore('jobs', () => {
       jobs.value = [];
       Object.assign(pagination, { page: 1, pageSize: 1, total: 0, totalPages: 0 });
     } finally {
+      // Always clear loading state
       loading.value = false;
     }
   }
