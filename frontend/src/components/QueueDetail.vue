@@ -60,9 +60,37 @@
     <!-- Filters -->
     <div class="bg-white rounded-lg border border-gray-200 p-6">
       <div class="flex flex-wrap items-center gap-6">
-        <!-- Search -->
+        <!-- Job ID Search -->
+        <div class="min-w-64">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Find Job by ID</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <HashtagIcon class="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              v-model="jobIdQuery"
+              type="text"
+              placeholder="Enter job ID for instant lookup..."
+              class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 sm:text-sm"
+              @keyup.enter="searchByJobId"
+            />
+            <div v-if="jobIdQuery" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+              <button
+                @click="jobIdQuery = ''; clearJobIdSearch()"
+                class="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <XMarkIcon class="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+          <div v-if="jobIdQuery" class="mt-1 text-xs text-blue-600">
+            Press Enter or wait for instant search...
+          </div>
+        </div>
+
+        <!-- Data/Name Search -->
         <div class="flex-1 min-w-64">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Search Jobs</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Search Jobs Content</label>
           <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" />
@@ -70,7 +98,7 @@
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="Search by job ID, name, or data..."
+              placeholder="Search by job name or data content..."
               class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 focus:outline-none transition-all duration-200 sm:text-sm"
             />
             <div v-if="searchQuery" class="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -81,6 +109,9 @@
                 <XMarkIcon class="h-5 w-5" />
               </button>
             </div>
+          </div>
+          <div v-if="searchQuery" class="mt-1 text-xs text-gray-600">
+            Heavy search through job names and data
           </div>
         </div>
 
@@ -279,7 +310,7 @@ import { storeToRefs } from 'pinia'
 import { useJobsStore } from '@/stores/jobs'
 import { useQueuesStore } from '@/stores/queues'
 import { useSettingsStore } from '@/stores/settings'
-import { ArrowLeftIcon, ArrowPathIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, ArrowPathIcon, MagnifyingGlassIcon, XMarkIcon, HashtagIcon } from '@heroicons/vue/24/outline'
 import { formatTimestamp, formatDuration } from '@/utils/date'
 
 const route = useRoute()
@@ -305,9 +336,11 @@ const selectedStateTab = ref<string>('waiting')
 const searchQuery = ref('')
 const sortBy = ref('createdAt')
 const sortOrder = ref('desc')
+const jobIdQuery = ref('')
 
 // Auto-refresh
 let refreshInterval: ReturnType<typeof setInterval> | null = null
+let jobIdSearchTimeout: ReturnType<typeof setTimeout> | null = null
 
 const queueInfo = computed(() =>
   queuesStore.getQueueByName(queueName.value)
@@ -390,6 +423,21 @@ function fetchJobs(preserveSelection = false, silentRefresh = false) {
   jobsStore.fetchJobs(queueName.value, filters.value, preserveSelection, silentRefresh)
 }
 
+function searchByJobId() {
+  if (!jobIdQuery.value.trim()) return
+
+  // Clear any existing search to avoid conflicts
+  searchQuery.value = ''
+
+  // Use the new job ID search functionality
+  jobsStore.fetchJobById(queueName.value, jobIdQuery.value.trim())
+}
+
+function clearJobIdSearch() {
+  // Clear job ID search and return to normal view
+  fetchJobs(false)
+}
+
 function goToPage(page: number) {
   if (page >= 1 && page <= pagination.value.totalPages) {
     jobsStore.updatePage(page)
@@ -460,6 +508,24 @@ onMounted(() => {
 // Watch for tab changes to save to localStorage
 watch(selectedStateTab, (newState) => {
   localStorage.setItem(`queue-${queueName.value}-selectedState`, newState)
+})
+
+// Watch for job ID changes for auto-search
+watch(jobIdQuery, (newValue) => {
+  // Clear existing timeout
+  if (jobIdSearchTimeout) {
+    clearTimeout(jobIdSearchTimeout)
+  }
+
+  if (newValue.trim()) {
+    // Debounce job ID search by 500ms
+    jobIdSearchTimeout = setTimeout(() => {
+      searchByJobId()
+    }, 500)
+  } else {
+    // Clear search when input is empty
+    clearJobIdSearch()
+  }
 })
 
 onUnmounted(() => {

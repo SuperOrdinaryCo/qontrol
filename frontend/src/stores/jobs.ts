@@ -126,6 +126,38 @@ export const useJobsStore = defineStore('jobs', () => {
     }
   }
 
+  async function fetchJobById(queueName: string, jobId: string) {
+    try {
+      loading.value = true;
+      error.value = null;
+      currentQueue.value = queueName;
+
+      const response: GetJobsResponse = await apiClient.getJobById(queueName, jobId);
+
+      jobs.value = response.jobs.map(job => ({
+        ...job,
+        createdAt: new Date(job.createdAt),
+        processedOn: job.processedOn ? new Date(job.processedOn) : undefined,
+        finishedOn: job.finishedOn ? new Date(job.finishedOn) : undefined,
+      }));
+
+      // Update pagination for single job result
+      Object.assign(pagination, response.pagination);
+
+      // Clear selection for job ID search results
+      clearSelection();
+
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to fetch job by ID';
+      console.error('Failed to fetch job by ID:', err);
+      // Clear jobs on error
+      jobs.value = [];
+      Object.assign(pagination, { page: 1, pageSize: 1, total: 0, totalPages: 0 });
+    } finally {
+      loading.value = false;
+    }
+  }
+
   function updateFilters(newFilters: Partial<GetJobsRequest>) {
     Object.assign(filters, newFilters);
     filters.page = 1; // Reset to first page when filters change
@@ -212,6 +244,7 @@ export const useJobsStore = defineStore('jobs', () => {
     // Actions
     fetchJobs,
     fetchJobDetail,
+    fetchJobById,
     updateFilters,
     updatePage,
     toggleJobSelection,

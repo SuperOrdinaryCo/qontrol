@@ -62,6 +62,37 @@ router.get('/queues/:queue/jobs', validateGetJobs, async (req, res) => {
 });
 
 /**
+ * GET /api/queues/:queue/job-by-id/:id
+ * Fast lookup for a specific job by ID
+ */
+router.get('/queues/:queue/job-by-id/:id', async (req, res) => {
+  try {
+    const { queue: queueName, id: jobId } = req.params;
+
+    const { jobs, total } = await JobService.getJobById(queueName, jobId);
+
+    const response: GetJobsResponse = {
+      jobs,
+      pagination: {
+        page: 1,
+        pageSize: 1,
+        total,
+        totalPages: 1,
+      },
+      filters: {},
+      timestamp: new Date(),
+    };
+
+    res.json(response);
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to fetch job by ID',
+      code: 'JOB_ID_FETCH_ERROR',
+    });
+  }
+});
+
+/**
  * GET /api/queues/:queue/jobs/:id
  * Get detailed information for a specific job
  */

@@ -16,7 +16,6 @@ export class JobService {
       const page = params.page || 1;
       const pageSize = Math.min(params.pageSize || 50, 1000); // Cap at 1000
       const start = (page - 1) * pageSize;
-      const end = start + pageSize - 1;
 
       // Get jobs by states if specified, otherwise default to waiting state only
       const states = params.states || ['waiting'];
@@ -52,9 +51,9 @@ export class JobService {
         allJobs = allJobs.filter(job => job.attemptsMade >= params.minAttempts!);
       }
 
-      // Apply search filter
+      // Apply data/name search filter (heavy search)
       if (params.search) {
-        allJobs = this.filterBySearch(allJobs, params.search);
+        allJobs = this.filterByDataAndName(allJobs, params.search);
       }
 
       // Sort jobs
@@ -75,6 +74,33 @@ export class JobService {
       };
     } catch (error) {
       logger.error(`Failed to get jobs for queue ${queueName}:`, error);
+      return { jobs: [], total: 0 };
+    }
+  }
+
+  /**
+   * Search for a specific job by ID (fast lookup)
+   */
+  static async getJobById(queueName: string, jobId: string): Promise<{
+    jobs: JobSummary[];
+    total: number;
+  }> {
+    try {
+      const queue = QueueRegistry.getQueue(queueName);
+      const job = await queue.getJob(jobId);
+
+      if (!job) {
+        logger.info(`Job ${jobId} not found in queue ${queueName}`);
+        return { jobs: [], total: 0 };
+      }
+
+      const jobSummary = this.jobToSummary(job);
+      return {
+        jobs: [jobSummary],
+        total: 1,
+      };
+    } catch (error) {
+      logger.error(`Failed to get job by ID ${jobId} in queue ${queueName}:`, error);
       return { jobs: [], total: 0 };
     }
   }
@@ -202,7 +228,7 @@ export class JobService {
   /**
    * Filter jobs by search string (name and data)
    */
-  private static filterBySearch(jobs: Job[], search: string): Job[] {
+  private static filterByDataAndName(jobs: Job[], search: string): Job[] {
     const searchLower = search.toLowerCase();
 
     return jobs.filter(job => {
