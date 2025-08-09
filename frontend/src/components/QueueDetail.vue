@@ -219,7 +219,7 @@
           <div
             v-for="job in jobs"
             :key="job.id"
-            class="px-6 py-4 hover:bg-gray-50 cursor-pointer"
+            class="px-6 py-4 hover:bg-gray-50 cursor-pointer relative"
             @click="toggleJobSelection(job.id)"
           >
             <div class="flex items-center">
@@ -253,7 +253,7 @@
                   </button>
                   
                   <!-- Actions Dropdown -->
-                  <div class="relative" @click.stop>
+                  <div @click.stop>
                     <button
                       @click="toggleDropdown(job.id)"
                       class="p-1 text-gray-400 hover:text-gray-600 transition-colors"
@@ -261,59 +261,60 @@
                     >
                       <EllipsisVerticalIcon class="h-5 w-5" />
                     </button>
-                    
-                    <!-- Dropdown Menu -->
-                    <div
-                      v-if="activeDropdown === job.id"
-                      class="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50"
-                    >
-                      <!-- State-specific actions -->
-                      <button
-                        v-if="job.state === 'failed'"
-                        @click="handleRetryJob(job.id)"
-                        class="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 hover:text-blue-700 flex items-center space-x-2"
-                      >
-                        <ArrowPathIcon class="h-4 w-4" />
-                        <span>Retry Job</span>
-                      </button>
-
-                      <button
-                        v-if="job.state === 'active'"
-                        @click="handleDiscardJob(job.id)"
-                        class="w-full text-left px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 hover:text-orange-700 flex items-center space-x-2"
-                      >
-                        <StopIcon class="h-4 w-4" />
-                        <span>Discard Job</span>
-                      </button>
-
-                      <button
-                        v-if="job.state === 'delayed'"
-                        @click="handlePromoteJob(job.id)"
-                        class="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 hover:text-green-700 flex items-center space-x-2"
-                      >
-                        <ArrowUpIcon class="h-4 w-4" />
-                        <span>Promote Job</span>
-                      </button>
-
-                      <!-- Separator if there are state-specific actions -->
-                      <div
-                        v-if="job.state === 'failed' || job.state === 'active' || job.state === 'delayed'"
-                        class="border-t border-gray-100 my-1"
-                      ></div>
-
-                      <!-- Remove action (always available) -->
-                      <button
-                        @click="handleRemoveJob(job.id)"
-                        :disabled="removingJobId === job.id"
-                        class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                      >
-                        <TrashIcon class="h-4 w-4" />
-                        <span>{{ removingJobId === job.id ? 'Removing...' : 'Remove Job' }}</span>
-                      </button>
-                    </div>
                   </div>
                 </div>
               </div>
+            </div>
+
+            <!-- Dropdown Menu (moved to row level) -->
+            <div
+              v-if="activeDropdown === job.id"
+              class="absolute right-6 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50"
+              @click.stop
+            >
+              <!-- State-specific actions -->
+              <button
+                v-if="job.state === 'failed'"
+                @click="handleRetryJob(job.id)"
+                class="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 hover:text-blue-700 flex items-center space-x-2"
+              >
+                <ArrowPathIcon class="h-4 w-4" />
+                <span>Retry Job</span>
+              </button>
+
+              <button
+                v-if="job.state === 'active'"
+                @click="handleDiscardJob(job.id)"
+                class="w-full text-left px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 hover:text-orange-700 flex items-center space-x-2"
+              >
+                <StopIcon class="h-4 w-4" />
+                <span>Discard Job</span>
+              </button>
+
+              <button
+                v-if="job.state === 'delayed'"
+                @click="handlePromoteJob(job.id)"
+                class="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 hover:text-green-700 flex items-center space-x-2"
+              >
+                <ArrowUpIcon class="h-4 w-4" />
+                <span>Promote Job</span>
+              </button>
+
+              <!-- Separator if there are state-specific actions -->
+              <div
+                v-if="job.state === 'failed' || job.state === 'active' || job.state === 'delayed'"
+                class="border-t border-gray-100 my-1"
+              ></div>
+
+              <!-- Remove action (always available) -->
+              <button
+                @click="handleRemoveJob(job.id)"
+                :disabled="removingJobId === job.id"
+                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              >
+                <TrashIcon class="h-4 w-4" />
+                <span>{{ removingJobId === job.id ? 'Removing...' : 'Remove Job' }}</span>
+              </button>
             </div>
           </div>
         </div>
@@ -686,7 +687,30 @@ onMounted(() => {
 
   // Setup auto-refresh
   setupAutoRefresh()
+
+  // Add click outside handler for dropdown
+  document.addEventListener('click', handleClickOutside)
 })
+
+onUnmounted(() => {
+  if (refreshInterval) {
+    clearInterval(refreshInterval)
+  }
+
+  // Remove click outside handler
+  document.removeEventListener('click', handleClickOutside)
+
+  // Reset jobs store when leaving
+  jobsStore.reset()
+})
+
+// Add click outside handler function
+function handleClickOutside(event: Event) {
+  // Close dropdown if clicked outside
+  if (activeDropdown.value) {
+    activeDropdown.value = null
+  }
+}
 
 // Watch for tab changes to save to localStorage
 watch(selectedStateTab, (newState) => {
