@@ -248,6 +248,49 @@ router.post('/queues/:queue/jobs/:id/promote', async (req, res) => {
 });
 
 /**
+ * POST /api/queues/:queue/jobs/bulk-remove
+ * Bulk remove jobs by their IDs
+ */
+router.post('/queues/:queue/jobs/bulk-remove', async (req, res) => {
+  try {
+    const { queue: queueName } = req.params;
+    const { jobIds } = req.body;
+
+    // Validate input
+    if (!Array.isArray(jobIds) || jobIds.length === 0) {
+      return res.status(400).json({
+        message: 'jobIds must be a non-empty array',
+        code: 'INVALID_JOB_IDS',
+      });
+    }
+
+    // Limit bulk operations to prevent overload
+    if (jobIds.length > 100) {
+      return res.status(400).json({
+        message: 'Cannot remove more than 100 jobs at once',
+        code: 'TOO_MANY_JOBS',
+      });
+    }
+
+    const result = await JobService.bulkRemoveJobs(queueName, jobIds);
+
+    const response: BulkActionResponse = {
+      success: result.success,
+      failed: result.failed,
+      errors: result.errors,
+      timestamp: new Date(),
+    };
+
+    res.json(response);
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to bulk remove jobs',
+      code: 'BULK_REMOVE_ERROR',
+    });
+  }
+});
+
+/**
  * GET /api/healthz
  * Health check endpoint
  */

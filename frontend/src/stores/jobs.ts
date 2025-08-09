@@ -276,6 +276,37 @@ export const useJobsStore = defineStore('jobs', () => {
     }
   }
 
+  async function bulkRemoveJobs(queueName: string, jobIds: string[]) {
+    try {
+      const result = await apiClient.bulkRemoveJobs(queueName, jobIds);
+
+      // Remove successfully deleted jobs from local state
+      if (result.success > 0) {
+        jobs.value = jobs.value.filter(job => !jobIds.includes(job.id));
+
+        // Update pagination total
+        pagination.total = Math.max(0, pagination.total - result.success);
+        pagination.totalPages = Math.ceil(pagination.total / pagination.pageSize);
+
+        // Clear selection since we removed the jobs
+        clearSelection();
+
+        // Update queue counts - we'll need to refetch since we don't know the states of removed jobs
+        const { useQueuesStore } = await import('@/stores/queues');
+        const queuesStore = useQueuesStore();
+        queuesStore.fetchQueues(); // Refresh queue counts
+      }
+
+      console.log(`Bulk remove completed: ${result.success} success, ${result.failed} failed`);
+
+      return result;
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to bulk remove jobs';
+      console.error('Failed to bulk remove jobs:', err);
+      throw err;
+    }
+  }
+
   function updateFilters(newFilters: Partial<GetJobsRequest>) {
     Object.assign(filters, newFilters);
     filters.page = 1; // Reset to first page when filters change
@@ -367,6 +398,7 @@ export const useJobsStore = defineStore('jobs', () => {
     retryJob,
     discardJob,
     promoteJob,
+    bulkRemoveJobs,
     updateFilters,
     updatePage,
     toggleJobSelection,

@@ -127,6 +127,7 @@ export interface BulkActionResponse {
     jobId: string;
     error: string;
   }>;
+  timestamp?: Date;
 }
 
 // Error Types

@@ -233,6 +233,63 @@ export class JobService {
   }
 
   /**
+   * Bulk remove jobs by their IDs
+   */
+  static async bulkRemoveJobs(queueName: string, jobIds: string[]): Promise<{
+    success: number;
+    failed: number;
+    errors: Array<{ jobId: string; error: string }>;
+  }> {
+    try {
+      const queue = QueueRegistry.getQueue(queueName);
+      const results = {
+        success: 0,
+        failed: 0,
+        errors: [] as Array<{ jobId: string; error: string }>,
+      };
+
+      // Process jobs in parallel with a concurrency limit
+      const concurrencyLimit = 10;
+      const chunks = [];
+      for (let i = 0; i < jobIds.length; i += concurrencyLimit) {
+        chunks.push(jobIds.slice(i, i + concurrencyLimit));
+      }
+
+      for (const chunk of chunks) {
+        const promises = chunk.map(async (jobId) => {
+          try {
+            const job = await queue.getJob(jobId);
+            if (!job) {
+              results.failed++;
+              results.errors.push({ jobId, error: 'Job not found' });
+              return;
+            }
+
+            await job.remove({ removeChildren: true });
+            results.success++;
+            logger.info(`Bulk removed job ${jobId} from queue ${queueName}`);
+          } catch (error) {
+            results.failed++;
+            results.errors.push({
+              jobId,
+              error: error instanceof Error ? error.message : 'Unknown error'
+            });
+            logger.error(`Failed to bulk remove job ${jobId} from queue ${queueName}:`, error);
+          }
+        });
+
+        await Promise.all(promises);
+      }
+
+      logger.info(`Bulk remove completed for queue ${queueName}: ${results.success} success, ${results.failed} failed`);
+      return results;
+    } catch (error) {
+      logger.error(`Failed to bulk remove jobs from queue ${queueName}:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Convert Job to JobSummary
    */
   private static jobToSummary(job: Job): JobSummary {

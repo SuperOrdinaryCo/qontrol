@@ -83,6 +83,11 @@ export const apiClient = {
     await api.post(`/queues/${queueName}/jobs/${jobId}/promote`);
   },
 
+  async bulkRemoveJobs(queueName: string, jobIds: string[]): Promise<{ success: number; failed: number; errors?: Array<{ jobId: string; error: string }> }> {
+    const response = await api.post(`/queues/${queueName}/jobs/bulk-remove`, { jobIds });
+    return response.data;
+  },
+
   // Health check
   async getHealth(): Promise<HealthCheckResponse> {
     const response = await api.get<HealthCheckResponse>('/healthz');

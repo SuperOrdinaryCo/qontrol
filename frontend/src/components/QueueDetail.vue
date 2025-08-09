@@ -167,9 +167,13 @@
               <button @click="clearSelection" class="text-sm text-primary-600 hover:text-primary-800">
                 Clear selection
               </button>
-              <!-- v2 bulk actions placeholder -->
-              <button disabled class="btn-secondary opacity-50 text-xs px-2 py-1">
-                Bulk Actions (v2)
+              <!-- Bulk Actions Button -->
+              <button
+                @click="handleBulkRemove"
+                :disabled="bulkRemoving"
+                class="text-xs px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {{ bulkRemoving ? 'Removing...' : 'Remove Selected' }}
               </button>
             </div>
           </div>
@@ -426,6 +430,9 @@ const jobToRemove = ref<string | null>(null)
 // Dropdown menu state
 const activeDropdown = ref<string | null>(null)
 
+// Bulk removal state
+const bulkRemoving = ref(false)
+
 // Auto-refresh
 let refreshInterval: ReturnType<typeof setInterval> | null = null
 let jobIdSearchTimeout: ReturnType<typeof setTimeout> | null = null
@@ -564,21 +571,50 @@ async function handleRemoveJob(jobId: string) {
 function confirmRemoveJob() {
   if (!jobToRemove.value) return
 
-  removingJobId.value = jobToRemove.value
+  // Check if this is a bulk removal (jobToRemove contains comma-separated IDs)
+  const isBulkRemoval = jobToRemove.value.includes(',')
 
-  jobsStore.removeJob(queueName.value, removingJobId.value)
-    .then(() => {
-      // Success - the store already updated the local state
-      console.log(`Job ${removingJobId.value} removed successfully`)
-    })
-    .catch((error) => {
-      console.error('Failed to remove job:', error)
-      alert('Failed to remove job. Please try again.')
-    })
-    .finally(() => {
-      removingJobId.value = null
-      showConfirmDialog.value = false
-    })
+  if (isBulkRemoval) {
+    // Handle bulk removal
+    const jobIds = jobToRemove.value.split(', ')
+    bulkRemoving.value = true
+
+    jobsStore.bulkRemoveJobs(queueName.value, jobIds)
+      .then((result) => {
+        console.log(`Bulk removal completed: ${result.success} success, ${result.failed} failed`)
+        if (result.failed > 0) {
+          // Show errors if any jobs failed to remove
+          const errorMessage = `${result.success} jobs removed successfully. ${result.failed} jobs failed to remove.`
+          alert(errorMessage)
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to bulk remove jobs:', error)
+        alert('Failed to bulk remove jobs. Please try again.')
+      })
+      .finally(() => {
+        bulkRemoving.value = false
+        showConfirmDialog.value = false
+        jobToRemove.value = null
+      })
+  } else {
+    // Handle single job removal (existing logic)
+    removingJobId.value = jobToRemove.value
+
+    jobsStore.removeJob(queueName.value, removingJobId.value)
+      .then(() => {
+        console.log(`Job ${removingJobId.value} removed successfully`)
+      })
+      .catch((error) => {
+        console.error('Failed to remove job:', error)
+        alert('Failed to remove job. Please try again.')
+      })
+      .finally(() => {
+        removingJobId.value = null
+        showConfirmDialog.value = false
+        jobToRemove.value = null
+      })
+  }
 }
 
 function cancelRemoveJob() {
@@ -628,6 +664,20 @@ function handlePromoteJob(jobId: string) {
       console.error('Failed to promote job:', error)
       alert('Failed to promote job. Please try again.')
     })
+}
+
+function handleBulkRemove() {
+  // Collect all selected job IDs
+  const jobIds = Array.from(selection.value.selectedIds)
+
+  if (jobIds.length === 0) return
+
+  // Show confirmation dialog for bulk removal
+  showConfirmDialog.value = true
+  confirmDialogTitle.value = 'Confirm Bulk Job Removal'
+  confirmDialogMessage.value = `Are you sure you want to remove ${jobIds.length} job(s)? This action cannot be undone and will also remove any child jobs.`
+  confirmDialogDetails.value = ''
+  jobToRemove.value = jobIds.join(', ')
 }
 
 function setupAutoRefresh() {
