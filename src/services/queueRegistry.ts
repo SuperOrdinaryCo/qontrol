@@ -110,6 +110,7 @@ export class QueueRegistry {
           failed: counts.failed || 0,
           delayed: counts.delayed || 0,
           paused: counts.paused || 0,
+          'waiting-children': counts['waiting-children'] || 0,
         },
         isPaused,
       };
@@ -124,6 +125,7 @@ export class QueueRegistry {
           failed: 0,
           delayed: 0,
           paused: 0,
+          'waiting-children': 0,
         },
         isPaused: false,
       };

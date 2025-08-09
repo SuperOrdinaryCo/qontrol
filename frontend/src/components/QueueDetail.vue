@@ -157,15 +157,15 @@
               @change="toggleSelectAll"
               class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded mr-4"
             />
-            <div class="grid grid-cols-12 gap-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
-              <div class="col-span-2">ID</div>
-              <div class="col-span-2">Name</div>
-              <div class="col-span-1">State</div>
-              <div class="col-span-2">Created</div>
-              <div class="col-span-2">Duration</div>
-              <div class="col-span-1">Attempts</div>
-              <div class="col-span-1">Priority</div>
-              <div class="col-span-1">Actions</div>
+            <div class="jobs-table-grid text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <div class="truncate">ID</div>
+              <div class="truncate">Name</div>
+              <div class="truncate">State</div>
+              <div class="truncate">Created</div>
+              <div class="truncate">Duration</div>
+              <div class="truncate">Attempts</div>
+              <div class="truncate">Priority</div>
+              <div class="truncate">Actions</div>
             </div>
           </div>
         </div>
@@ -186,24 +186,24 @@
                 @change="toggleJobSelection(job.id)"
                 class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded mr-4"
               />
-              <div class="grid grid-cols-12 gap-4 items-center text-sm">
-                <div class="col-span-2 font-mono text-xs">{{ job.id }}</div>
-                <div class="col-span-2 truncate">{{ job.name }}</div>
-                <div class="col-span-1">
+              <div class="jobs-table-grid items-center text-sm">
+                <div class="font-mono text-xs truncate" :title="job.id">{{ job.id }}</div>
+                <div class="truncate" :title="job.name">{{ job.name }}</div>
+                <div>
                   <span :class="`state-${job.state}`">{{ job.state }}</span>
                 </div>
-                <div class="col-span-2 text-gray-500">
+                <div class="text-gray-500 truncate" :title="formatTimestamp(job.createdAt)">
                   {{ formatTimestamp(job.createdAt) }}
                 </div>
-                <div class="col-span-2 text-gray-500">
+                <div class="text-gray-500 truncate">
                   {{ job.duration ? formatDuration(job.duration) : '-' }}
                 </div>
-                <div class="col-span-1">{{ job.attempts }}</div>
-                <div class="col-span-1">{{ job.priority || '-' }}</div>
-                <div class="col-span-1">
+                <div class="text-center">{{ job.attempts }}</div>
+                <div class="text-center">{{ job.priority || '-' }}</div>
+                <div>
                   <button
                     @click.stop="viewJobDetail(job.id)"
-                    class="text-primary-600 hover:text-primary-800"
+                    class="text-primary-600 hover:text-primary-800 text-sm font-medium"
                   >
                     View
                   </button>
@@ -326,6 +326,7 @@ function getStateColor(state: string): string {
     failed: 'text-danger-600',
     delayed: 'text-warning-600',
     paused: 'text-gray-500',
+    'waiting-children': 'text-blue-600',
   }
   return colors[state] || 'text-gray-600'
 }
@@ -421,7 +422,7 @@ onMounted(() => {
 
   // Set default tab - try to restore from localStorage, otherwise default to 'waiting'
   const savedState = localStorage.getItem(`queue-${queueName.value}-selectedState`)
-  if (savedState && ['waiting', 'active', 'completed', 'failed', 'delayed', 'paused'].includes(savedState)) {
+  if (savedState && ['waiting', 'active', 'completed', 'failed', 'delayed', 'paused', 'waiting-children'].includes(savedState)) {
     selectedStateTab.value = savedState
   } else {
     selectedStateTab.value = 'waiting'
@@ -460,3 +461,26 @@ onUnmounted(() => {
 // Watch for settings changes
 watch([autoRefreshEnabled, () => settings.value.autoRefreshInterval], setupAutoRefresh)
 </script>
+
+<style scoped>
+.jobs-table-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(6rem, 0.8fr)   /* ID */
+    minmax(8rem, 2fr)     /* Name */
+    minmax(4rem, 0.8fr)   /* State */
+    minmax(6rem, 1.2fr)   /* Created */
+    minmax(5rem, 1fr)     /* Duration */
+    minmax(4rem, 0.6fr)   /* Attempts */
+    minmax(4rem, 0.6fr)   /* Priority */
+    minmax(4rem, 0.6fr);  /* Actions */
+  gap: 1rem;
+  align-items: center;
+  width: 100%;
+}
+
+.jobs-table-grid > div {
+  min-width: 0; /* Allow items to shrink below their content size */
+  overflow: hidden;
+}
+</style>

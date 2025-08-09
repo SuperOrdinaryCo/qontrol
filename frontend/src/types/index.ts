@@ -8,6 +8,7 @@ export interface QueueInfo {
     failed: number;
     delayed: number;
     paused: number;
+    'waiting-children': number;
   };
   isPaused: boolean;
 }
@@ -19,6 +20,7 @@ export interface JobState {
   failed: number;
   delayed: number;
   paused: number;
+  'waiting-children': number;
 }
 
 export interface JobSummary {
