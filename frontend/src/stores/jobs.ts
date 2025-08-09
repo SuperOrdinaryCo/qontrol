@@ -171,14 +171,14 @@ export const useJobsStore = defineStore('jobs', () => {
       }
 
       await apiClient.removeJob(queueName, jobId);
-
+      
       // Remove the job from the local jobs array
       jobs.value = jobs.value.filter(job => job.id !== jobId);
-
+      
       // Update pagination total
       pagination.total = Math.max(0, pagination.total - 1);
       pagination.totalPages = Math.ceil(pagination.total / pagination.pageSize);
-
+      
       // Clear selection if the removed job was selected
       if (selection.selectedIds.has(jobId)) {
         selection.selectedIds.delete(jobId);
@@ -189,12 +189,90 @@ export const useJobsStore = defineStore('jobs', () => {
       const { useQueuesStore } = await import('@/stores/queues');
       const queuesStore = useQueuesStore();
       queuesStore.updateJobCount(queueName, jobToRemove.state, -1);
-
+      
       console.log(`Successfully removed job ${jobId} from queue ${queueName}`);
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to remove job';
       console.error('Failed to remove job:', err);
       throw err; // Re-throw so UI can handle the error
+    }
+  }
+
+  async function retryJob(queueName: string, jobId: string) {
+    try {
+      await apiClient.retryJob(queueName, jobId);
+
+      // Find the job in local state and update it
+      const jobIndex = jobs.value.findIndex(job => job.id === jobId);
+      if (jobIndex !== -1) {
+        const job = jobs.value[jobIndex];
+        // Update job state to waiting after retry
+        jobs.value[jobIndex] = { ...job, state: 'waiting' };
+
+        // Update queue counts
+        const { useQueuesStore } = await import('@/stores/queues');
+        const queuesStore = useQueuesStore();
+        queuesStore.updateJobCount(queueName, 'failed', -1);
+        queuesStore.updateJobCount(queueName, 'waiting', 1);
+      }
+
+      console.log(`Successfully retried job ${jobId} in queue ${queueName}`);
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to retry job';
+      console.error('Failed to retry job:', err);
+      throw err;
+    }
+  }
+
+  async function discardJob(queueName: string, jobId: string) {
+    try {
+      await apiClient.discardJob(queueName, jobId);
+
+      // Find the job in local state and update it
+      const jobIndex = jobs.value.findIndex(job => job.id === jobId);
+      if (jobIndex !== -1) {
+        const job = jobs.value[jobIndex];
+        // Update job state to failed after discard
+        jobs.value[jobIndex] = { ...job, state: 'failed' };
+
+        // Update queue counts
+        const { useQueuesStore } = await import('@/stores/queues');
+        const queuesStore = useQueuesStore();
+        queuesStore.updateJobCount(queueName, 'active', -1);
+        queuesStore.updateJobCount(queueName, 'failed', 1);
+      }
+
+      console.log(`Successfully discarded job ${jobId} in queue ${queueName}`);
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to discard job';
+      console.error('Failed to discard job:', err);
+      throw err;
+    }
+  }
+
+  async function promoteJob(queueName: string, jobId: string) {
+    try {
+      await apiClient.promoteJob(queueName, jobId);
+
+      // Find the job in local state and update it
+      const jobIndex = jobs.value.findIndex(job => job.id === jobId);
+      if (jobIndex !== -1) {
+        const job = jobs.value[jobIndex];
+        // Update job state to waiting after promotion
+        jobs.value[jobIndex] = { ...job, state: 'waiting' };
+
+        // Update queue counts
+        const { useQueuesStore } = await import('@/stores/queues');
+        const queuesStore = useQueuesStore();
+        queuesStore.updateJobCount(queueName, 'delayed', -1);
+        queuesStore.updateJobCount(queueName, 'waiting', 1);
+      }
+
+      console.log(`Successfully promoted job ${jobId} in queue ${queueName}`);
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to promote job';
+      console.error('Failed to promote job:', err);
+      throw err;
     }
   }
 
@@ -286,6 +364,9 @@ export const useJobsStore = defineStore('jobs', () => {
     fetchJobDetail,
     fetchJobById,
     removeJob,
+    retryJob,
+    discardJob,
+    promoteJob,
     updateFilters,
     updatePage,
     toggleJobSelection,

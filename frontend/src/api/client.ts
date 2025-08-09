@@ -71,6 +71,18 @@ export const apiClient = {
     await api.delete(`/queues/${queueName}/jobs/${jobId}`);
   },
 
+  async retryJob(queueName: string, jobId: string): Promise<void> {
+    await api.post(`/queues/${queueName}/jobs/${jobId}/retry`);
+  },
+
+  async discardJob(queueName: string, jobId: string): Promise<void> {
+    await api.post(`/queues/${queueName}/jobs/${jobId}/discard`);
+  },
+
+  async promoteJob(queueName: string, jobId: string): Promise<void> {
+    await api.post(`/queues/${queueName}/jobs/${jobId}/promote`);
+  },
+
   // Health check
   async getHealth(): Promise<HealthCheckResponse> {
     const response = await api.get<HealthCheckResponse>('/healthz');

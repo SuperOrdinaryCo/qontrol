@@ -149,6 +149,90 @@ export class JobService {
   }
 
   /**
+   * Retry a failed job
+   */
+  static async retryJob(queueName: string, jobId: string): Promise<boolean> {
+    try {
+      const queue = QueueRegistry.getQueue(queueName);
+      const job = await queue.getJob(jobId);
+
+      if (!job) {
+        logger.warn(`Job ${jobId} not found in queue ${queueName} for retry`);
+        return false;
+      }
+
+      // Check if job is in a retryable state (failed)
+      if (job.failedReason) {
+        await job.retry();
+        logger.info(`Successfully retried job ${jobId} in queue ${queueName}`);
+        return true;
+      } else {
+        logger.warn(`Job ${jobId} in queue ${queueName} is not in a failed state and cannot be retried`);
+        return false;
+      }
+    } catch (error) {
+      logger.error(`Failed to retry job ${jobId} in queue ${queueName}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Discard an active job
+   */
+  static async discardJob(queueName: string, jobId: string): Promise<boolean> {
+    try {
+      const queue = QueueRegistry.getQueue(queueName);
+      const job = await queue.getJob(jobId);
+
+      if (!job) {
+        logger.warn(`Job ${jobId} not found in queue ${queueName} for discard`);
+        return false;
+      }
+
+      // Check if job is in an active state
+      if (job.processedOn && !job.finishedOn) {
+        await job.discard();
+        logger.info(`Successfully discarded job ${jobId} in queue ${queueName}`);
+        return true;
+      } else {
+        logger.warn(`Job ${jobId} in queue ${queueName} is not in an active state and cannot be discarded`);
+        return false;
+      }
+    } catch (error) {
+      logger.error(`Failed to discard job ${jobId} in queue ${queueName}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Promote a delayed job
+   */
+  static async promoteJob(queueName: string, jobId: string): Promise<boolean> {
+    try {
+      const queue = QueueRegistry.getQueue(queueName);
+      const job = await queue.getJob(jobId);
+
+      if (!job) {
+        logger.warn(`Job ${jobId} not found in queue ${queueName} for promotion`);
+        return false;
+      }
+
+      // Check if job is delayed
+      if (job.opts.delay && job.opts.delay > Date.now()) {
+        await job.promote();
+        logger.info(`Successfully promoted job ${jobId} in queue ${queueName}`);
+        return true;
+      } else {
+        logger.warn(`Job ${jobId} in queue ${queueName} is not delayed and cannot be promoted`);
+        return false;
+      }
+    } catch (error) {
+      logger.error(`Failed to promote job ${jobId} in queue ${queueName}:`, error);
+      return false;
+    }
+  }
+
+  /**
    * Convert Job to JobSummary
    */
   private static jobToSummary(job: Job): JobSummary {

@@ -171,7 +171,7 @@
     </div>
 
     <!-- Jobs Table -->
-    <div class="bg-white shadow rounded-lg overflow-hidden">
+    <div class="bg-white shadow rounded-lg overflow-visible">
       <div class="px-6 py-4 border-b border-gray-200">
         <div class="flex items-center justify-between">
           <h3 class="text-lg font-medium text-gray-900">Jobs</h3>
@@ -251,13 +251,67 @@
                   >
                     View
                   </button>
-                  <button
-                    @click.stop="handleRemoveJob(job.id)"
-                    class="text-red-600 hover:text-red-800 text-sm font-medium"
-                    :disabled="removingJobId === job.id"
-                  >
-                    {{ removingJobId === job.id ? 'Removing...' : 'Remove' }}
-                  </button>
+                  
+                  <!-- Actions Dropdown -->
+                  <div class="relative" @click.stop>
+                    <button
+                      @click="toggleDropdown(job.id)"
+                      class="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                      :class="{ 'text-gray-600': activeDropdown === job.id }"
+                    >
+                      <EllipsisVerticalIcon class="h-5 w-5" />
+                    </button>
+                    
+                    <!-- Dropdown Menu -->
+                    <div
+                      v-if="activeDropdown === job.id"
+                      class="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50"
+                    >
+                      <!-- State-specific actions -->
+                      <button
+                        v-if="job.state === 'failed'"
+                        @click="handleRetryJob(job.id)"
+                        class="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 hover:text-blue-700 flex items-center space-x-2"
+                      >
+                        <ArrowPathIcon class="h-4 w-4" />
+                        <span>Retry Job</span>
+                      </button>
+
+                      <button
+                        v-if="job.state === 'active'"
+                        @click="handleDiscardJob(job.id)"
+                        class="w-full text-left px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 hover:text-orange-700 flex items-center space-x-2"
+                      >
+                        <StopIcon class="h-4 w-4" />
+                        <span>Discard Job</span>
+                      </button>
+
+                      <button
+                        v-if="job.state === 'delayed'"
+                        @click="handlePromoteJob(job.id)"
+                        class="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 hover:text-green-700 flex items-center space-x-2"
+                      >
+                        <ArrowUpIcon class="h-4 w-4" />
+                        <span>Promote Job</span>
+                      </button>
+
+                      <!-- Separator if there are state-specific actions -->
+                      <div
+                        v-if="job.state === 'failed' || job.state === 'active' || job.state === 'delayed'"
+                        class="border-t border-gray-100 my-1"
+                      ></div>
+
+                      <!-- Remove action (always available) -->
+                      <button
+                        @click="handleRemoveJob(job.id)"
+                        :disabled="removingJobId === job.id"
+                        class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                      >
+                        <TrashIcon class="h-4 w-4" />
+                        <span>{{ removingJobId === job.id ? 'Removing...' : 'Remove Job' }}</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -330,7 +384,7 @@ import { storeToRefs } from 'pinia'
 import { useJobsStore } from '@/stores/jobs'
 import { useQueuesStore } from '@/stores/queues'
 import { useSettingsStore } from '@/stores/settings'
-import { ArrowLeftIcon, ArrowPathIcon, MagnifyingGlassIcon, XMarkIcon, HashtagIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, ArrowPathIcon, MagnifyingGlassIcon, XMarkIcon, HashtagIcon, EllipsisVerticalIcon, TrashIcon, StopIcon, ArrowUpIcon } from '@heroicons/vue/24/outline'
 import { formatTimestamp, formatDuration } from '@/utils/date'
 import ConfirmDialog from './ConfirmDialog.vue'
 
@@ -368,6 +422,9 @@ const confirmDialogTitle = ref('')
 const confirmDialogMessage = ref('')
 const confirmDialogDetails = ref('')
 const jobToRemove = ref<string | null>(null)
+
+// Dropdown menu state
+const activeDropdown = ref<string | null>(null)
 
 // Auto-refresh
 let refreshInterval: ReturnType<typeof setInterval> | null = null
@@ -527,6 +584,50 @@ function confirmRemoveJob() {
 function cancelRemoveJob() {
   showConfirmDialog.value = false
   jobToRemove.value = null
+}
+
+function toggleDropdown(jobId: string) {
+  if (activeDropdown.value === jobId) {
+    activeDropdown.value = null
+  } else {
+    activeDropdown.value = jobId
+  }
+}
+
+function handleRetryJob(jobId: string) {
+  activeDropdown.value = null
+  jobsStore.retryJob(queueName.value, jobId)
+    .then(() => {
+      console.log(`Job ${jobId} retried successfully`)
+    })
+    .catch((error) => {
+      console.error('Failed to retry job:', error)
+      alert('Failed to retry job. Please try again.')
+    })
+}
+
+function handleDiscardJob(jobId: string) {
+  activeDropdown.value = null
+  jobsStore.discardJob(queueName.value, jobId)
+    .then(() => {
+      console.log(`Job ${jobId} discarded successfully`)
+    })
+    .catch((error) => {
+      console.error('Failed to discard job:', error)
+      alert('Failed to discard job. Please try again.')
+    })
+}
+
+function handlePromoteJob(jobId: string) {
+  activeDropdown.value = null
+  jobsStore.promoteJob(queueName.value, jobId)
+    .then(() => {
+      console.log(`Job ${jobId} promoted successfully`)
+    })
+    .catch((error) => {
+      console.error('Failed to promote job:', error)
+      alert('Failed to promote job. Please try again.')
+    })
 }
 
 function setupAutoRefresh() {

@@ -155,6 +155,99 @@ router.delete('/queues/:queue/jobs/:id', async (req, res) => {
 });
 
 /**
+ * POST /api/queues/:queue/jobs/:id/retry
+ * Retry a failed job
+ */
+router.post('/queues/:queue/jobs/:id/retry', async (req, res) => {
+  try {
+    const { queue: queueName, id: jobId } = req.params;
+
+    const success = await JobService.retryJob(queueName, jobId);
+
+    if (!success) {
+      return res.status(404).json({
+        message: 'Job not found or cannot be retried',
+        code: 'JOB_RETRY_FAILED',
+      });
+    }
+
+    res.json({
+      message: 'Job retry initiated successfully',
+      jobId,
+      queueName,
+      timestamp: new Date(),
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to retry job',
+      code: 'JOB_RETRY_ERROR',
+    });
+  }
+});
+
+/**
+ * POST /api/queues/:queue/jobs/:id/discard
+ * Discard an active job
+ */
+router.post('/queues/:queue/jobs/:id/discard', async (req, res) => {
+  try {
+    const { queue: queueName, id: jobId } = req.params;
+
+    const success = await JobService.discardJob(queueName, jobId);
+
+    if (!success) {
+      return res.status(404).json({
+        message: 'Job not found or cannot be discarded',
+        code: 'JOB_DISCARD_FAILED',
+      });
+    }
+
+    res.json({
+      message: 'Job discarded successfully',
+      jobId,
+      queueName,
+      timestamp: new Date(),
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to discard job',
+      code: 'JOB_DISCARD_ERROR',
+    });
+  }
+});
+
+/**
+ * POST /api/queues/:queue/jobs/:id/promote
+ * Promote a delayed job
+ */
+router.post('/queues/:queue/jobs/:id/promote', async (req, res) => {
+  try {
+    const { queue: queueName, id: jobId } = req.params;
+
+    const success = await JobService.promoteJob(queueName, jobId);
+
+    if (!success) {
+      return res.status(404).json({
+        message: 'Job not found or cannot be promoted',
+        code: 'JOB_PROMOTE_FAILED',
+      });
+    }
+
+    res.json({
+      message: 'Job promoted successfully',
+      jobId,
+      queueName,
+      timestamp: new Date(),
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to promote job',
+      code: 'JOB_PROMOTE_ERROR',
+    });
+  }
+});
+
+/**
  * GET /api/healthz
  * Health check endpoint
  */
