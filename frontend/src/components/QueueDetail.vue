@@ -58,25 +58,38 @@
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-lg border border-gray-200 p-4">
-      <div class="flex flex-wrap items-center gap-4">
+    <div class="bg-white rounded-lg border border-gray-200 p-6">
+      <div class="flex flex-wrap items-center gap-6">
         <!-- Search -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search jobs..."
-            class="block w-48 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-          />
+        <div class="flex-1 min-w-64">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Search Jobs</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="Search by job ID, name, or data..."
+              class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 focus:outline-none transition-all duration-200 sm:text-sm"
+            />
+            <div v-if="searchQuery" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+              <button
+                @click="searchQuery = ''; applyFilters()"
+                class="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <XMarkIcon class="h-5 w-5" />
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Sort -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Sort by</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Sort by</label>
           <select
             v-model="sortBy"
-            class="block w-32 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+            class="block w-36 py-3 px-3 border border-gray-300 rounded-lg shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 focus:outline-none transition-all duration-200 sm:text-sm"
           >
             <option value="createdAt">Created</option>
             <option value="processedOn">Processed</option>
@@ -89,10 +102,10 @@
 
         <!-- Sort Order -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Order</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Order</label>
           <select
             v-model="sortOrder"
-            class="block w-24 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+            class="block w-28 py-3 px-3 border border-gray-300 rounded-lg shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 focus:outline-none transition-all duration-200 sm:text-sm"
           >
             <option value="desc">Desc</option>
             <option value="asc">Asc</option>
@@ -101,7 +114,7 @@
 
         <!-- Apply Filters -->
         <div class="flex items-end">
-          <button @click="applyFilters" class="btn-primary">
+          <button @click="applyFilters" class="btn-primary py-3 px-6 shadow-sm hover:shadow-md transition-shadow">
             Apply Filters
           </button>
         </div>
@@ -266,7 +279,7 @@ import { storeToRefs } from 'pinia'
 import { useJobsStore } from '@/stores/jobs'
 import { useQueuesStore } from '@/stores/queues'
 import { useSettingsStore } from '@/stores/settings'
-import { ArrowLeftIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, ArrowPathIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { formatTimestamp, formatDuration } from '@/utils/date'
 
 const route = useRoute()
