@@ -152,29 +152,28 @@
       </div>
     </div>
 
-    <!-- Selection Bar -->
-    <div v-if="hasSelection" class="bg-primary-50 border border-primary-200 rounded-lg p-4">
-      <div class="flex items-center justify-between">
-        <span class="text-sm text-primary-800">
-          {{ selection.selectedIds.size }} job(s) selected
-        </span>
-        <div class="flex items-center space-x-3">
-          <button @click="clearSelection" class="text-sm text-primary-600 hover:text-primary-800">
-            Clear selection
-          </button>
-          <!-- v2 bulk actions placeholder -->
-          <button disabled class="btn-secondary opacity-50">
-            Bulk Actions (v2)
-          </button>
-        </div>
-      </div>
-    </div>
-
     <!-- Jobs Table -->
     <div class="bg-white shadow rounded-lg overflow-visible">
       <div class="px-6 py-4 border-b border-gray-200">
         <div class="flex items-center justify-between">
           <h3 class="text-lg font-medium text-gray-900">Jobs</h3>
+
+          <!-- Selection Bar (moved from above) -->
+          <div v-if="hasSelection" class="flex items-center space-x-4">
+            <span class="text-sm text-primary-600">
+              {{ selection.selectedIds.size }} job(s) selected
+            </span>
+            <div class="flex items-center space-x-3">
+              <button @click="clearSelection" class="text-sm text-primary-600 hover:text-primary-800">
+                Clear selection
+              </button>
+              <!-- v2 bulk actions placeholder -->
+              <button disabled class="btn-secondary opacity-50 text-xs px-2 py-1">
+                Bulk Actions (v2)
+              </button>
+            </div>
+          </div>
+
           <span class="text-sm text-gray-500">
             {{ pagination.total }} total jobs
           </span>
