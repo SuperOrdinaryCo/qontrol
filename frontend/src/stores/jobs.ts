@@ -164,6 +164,12 @@ export const useJobsStore = defineStore('jobs', () => {
 
   async function removeJob(queueName: string, jobId: string) {
     try {
+      // Find the job to get its state before removal
+      const jobToRemove = jobs.value.find(job => job.id === jobId);
+      if (!jobToRemove) {
+        throw new Error('Job not found in local state');
+      }
+
       await apiClient.removeJob(queueName, jobId);
 
       // Remove the job from the local jobs array
@@ -178,6 +184,11 @@ export const useJobsStore = defineStore('jobs', () => {
         selection.selectedIds.delete(jobId);
         selection.isAllSelected = selection.selectedIds.size === jobs.value.length && jobs.value.length > 0;
       }
+
+      // Update queue counts in the queues store
+      const { useQueuesStore } = await import('@/stores/queues');
+      const queuesStore = useQueuesStore();
+      queuesStore.updateJobCount(queueName, jobToRemove.state, -1);
 
       console.log(`Successfully removed job ${jobId} from queue ${queueName}`);
     } catch (err) {

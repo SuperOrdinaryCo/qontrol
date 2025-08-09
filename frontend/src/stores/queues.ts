@@ -82,6 +82,13 @@ export const useQueuesStore = defineStore('queues', () => {
     searchQuery.value = '';
   }
 
+  function updateJobCount(queueName: string, state: string, delta: number) {
+    const queue = queues.value.find(q => q.name === queueName);
+    if (queue && queue.counts[state] !== undefined) {
+      queue.counts[state] = Math.max(0, queue.counts[state] + delta);
+    }
+  }
+
   return {
     // State
     queues,
@@ -101,6 +108,7 @@ export const useQueuesStore = defineStore('queues', () => {
     getQueueByName,
     setSearchQuery,
     clearSearch,
+    updateJobCount,
     reset,
   };
 });
