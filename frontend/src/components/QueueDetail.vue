@@ -307,6 +307,19 @@
         </button>
       </div>
     </div>
+
+    <!-- Custom Confirmation Dialog -->
+    <ConfirmDialog
+      v-model:isOpen="showConfirmDialog"
+      :title="confirmDialogTitle"
+      :message="confirmDialogMessage"
+      :details="confirmDialogDetails"
+      :loading="removingJobId !== null"
+      confirm-text="Remove Job"
+      cancel-text="Cancel"
+      @confirm="confirmRemoveJob"
+      @cancel="cancelRemoveJob"
+    />
   </div>
 </template>
 
@@ -319,6 +332,7 @@ import { useQueuesStore } from '@/stores/queues'
 import { useSettingsStore } from '@/stores/settings'
 import { ArrowLeftIcon, ArrowPathIcon, MagnifyingGlassIcon, XMarkIcon, HashtagIcon } from '@heroicons/vue/24/outline'
 import { formatTimestamp, formatDuration } from '@/utils/date'
+import ConfirmDialog from './ConfirmDialog.vue'
 
 const route = useRoute()
 const jobsStore = useJobsStore()
@@ -347,6 +361,13 @@ const jobIdQuery = ref('')
 
 // Removal state
 const removingJobId = ref<string | null>(null)
+
+// Confirmation dialog state
+const showConfirmDialog = ref(false)
+const confirmDialogTitle = ref('')
+const confirmDialogMessage = ref('')
+const confirmDialogDetails = ref('')
+const jobToRemove = ref<string | null>(null)
 
 // Auto-refresh
 let refreshInterval: ReturnType<typeof setInterval> | null = null
@@ -475,22 +496,37 @@ function viewJobDetail(jobId: string) {
 async function handleRemoveJob(jobId: string) {
   if (removingJobId.value) return // Prevent multiple simultaneous removals
 
-  if (!confirm(`Are you sure you want to remove job ${jobId}? This action cannot be undone and will also remove any child jobs.`)) {
-    return
-  }
+  // Show confirmation dialog
+  showConfirmDialog.value = true
+  confirmDialogTitle.value = 'Confirm Job Removal'
+  confirmDialogMessage.value = `Are you sure you want to remove job ${jobId}? This action cannot be undone and will also remove any child jobs.`
+  confirmDialogDetails.value = ''
+  jobToRemove.value = jobId
+}
 
-  try {
-    removingJobId.value = jobId
-    await jobsStore.removeJob(queueName.value, jobId)
+function confirmRemoveJob() {
+  if (!jobToRemove.value) return
 
-    // Success - the store already updated the local state
-    console.log(`Job ${jobId} removed successfully`)
-  } catch (error) {
-    console.error('Failed to remove job:', error)
-    alert('Failed to remove job. Please try again.')
-  } finally {
-    removingJobId.value = null
-  }
+  removingJobId.value = jobToRemove.value
+
+  jobsStore.removeJob(queueName.value, removingJobId.value)
+    .then(() => {
+      // Success - the store already updated the local state
+      console.log(`Job ${removingJobId.value} removed successfully`)
+    })
+    .catch((error) => {
+      console.error('Failed to remove job:', error)
+      alert('Failed to remove job. Please try again.')
+    })
+    .finally(() => {
+      removingJobId.value = null
+      showConfirmDialog.value = false
+    })
+}
+
+function cancelRemoveJob() {
+  showConfirmDialog.value = false
+  jobToRemove.value = null
 }
 
 function setupAutoRefresh() {
