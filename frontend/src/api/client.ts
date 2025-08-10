@@ -1,15 +1,13 @@
 import axios from 'axios';
 import type {
   QueueInfo,
-  JobSummary,
   JobDetail,
   GetJobsRequest,
   GetQueuesResponse,
   GetJobsResponse,
   GetJobDetailResponse,
   HealthCheckResponse,
-  AppSettings,
-} from './types';
+} from '@/types';
 
 const api = axios.create({
   baseURL: '/api',

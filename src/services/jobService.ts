@@ -328,12 +328,10 @@ export class JobService {
       },
       parent: job.parent ? {
         id: job.parent.id,
-        queue: job.parent.queue,
+        queue: job.parent.queueKey,
       } : undefined,
-      children: job.children ? Object.entries(job.children).map(([queue, id]) => ({
-        id: id as string,
-        queue,
-      })) : undefined,
+      // TODO: Implement children
+      children: undefined,
     };
   }
 
