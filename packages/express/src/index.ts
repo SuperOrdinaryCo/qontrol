@@ -125,7 +125,7 @@ export function createBullDashRouter(bullDash: BullDash, options: BullDashExpres
     try {
       const queueName = req.params.queue;
       const params = req.validatedQuery!;
-      console.log(params, req.query)
+
       const { jobs, total } = await bullDash.getJobs(queueName, params);
 
       const response: GetJobsResponse = {

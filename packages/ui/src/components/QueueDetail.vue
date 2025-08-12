@@ -59,7 +59,7 @@
 
     <!-- Filters -->
     <div class="bg-white rounded-lg border border-gray-200 p-6">
-      <div class="flex flex-wrap items-center gap-6">
+      <div class="flex flex-wrap items-end gap-6">
         <!-- Job ID Search -->
         <div class="min-w-64">
           <label class="block text-sm font-medium text-gray-700 mb-2">Find Job by ID</label>
@@ -144,7 +144,7 @@
         </div>
 
         <!-- Apply Filters -->
-        <div class="flex items-end">
+        <div class="flex items-end h-full">
           <button @click="applyFilters" class="btn-primary py-3 px-6 shadow-sm hover:shadow-md transition-shadow">
             Apply Filters
           </button>

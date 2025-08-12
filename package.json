@@ -9,17 +9,32 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "ts-node-dev --respawn --transpile-only examples/express/src/server.ts",
+    "dev": "concurrently --kill-others-on-fail \"npm run dev:packages\" \"npm run dev:ui\" \"npm run dev:express\"",
+    "dev:packages": "concurrently \"npm run dev:core\" \"npm run dev:express-pkg\"",
+    "dev:core": "cd packages/core && npm run dev",
+    "dev:express-pkg": "cd packages/express && npm run dev",
+    "dev:ui": "cd packages/ui && npm run dev",
+    "dev:express": "cd examples/express && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
+    "dev:standalone": "concurrently \"npm run dev:packages\" \"npm run dev:frontend\"",
+
     "build": "npm run build:packages && npm run build:frontend",
     "build:packages": "npm run build --workspaces --if-present",
     "build:frontend": "cd frontend && npm run build",
+    "build:watch": "npm run build:packages -- --watch",
+
     "start": "node dist/server.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "eslint src/**/*.ts packages/*/src/**/*.ts",
     "type-check": "tsc --noEmit",
+    "type-check:watch": "tsc --noEmit --watch",
+
+    "clean": "npm run clean:dist && npm run clean:node_modules",
+    "clean:dist": "rm -rf packages/*/dist && rm -rf dist",
+    "clean:node_modules": "rm -rf node_modules packages/*/node_modules",
+    "fresh-install": "npm run clean && npm install",
+
     "publish:packages": "npm run build:packages && npm publish --workspaces",
     "version:packages": "npm version patch --workspaces"
   },
