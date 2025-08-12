@@ -322,7 +322,7 @@ export const useJobsStore = defineStore('jobs', () => {
     } else {
       selection.selectedIds.add(jobId);
     }
-
+    
     // Update select all state
     selection.isAllSelected = selection.selectedIds.size === jobs.value.length;
   }
@@ -348,7 +348,7 @@ export const useJobsStore = defineStore('jobs', () => {
     loadingDetail.value = false;
     error.value = null;
     currentQueue.value = '';
-
+    
     // Reset pagination
     Object.assign(pagination, {
       page: 1,
@@ -384,12 +384,12 @@ export const useJobsStore = defineStore('jobs', () => {
     pagination,
     filters,
     selection,
-
+    
     // Getters
     hasSelection,
     selectedJobs,
     jobsByState,
-
+    
     // Actions
     fetchJobs,
     fetchJobDetail,

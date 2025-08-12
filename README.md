@@ -1,187 +1,341 @@
-# BullMQ Dashboard
+# BullDash - BullMQ Monitoring Dashboard
 
-A read-only BullMQ monitoring dashboard built with Express.js + TypeScript + Vue.js + TailwindCSS.
+A comprehensive monitoring solution for BullMQ queues with a beautiful web interface.
 
-## Features
+## 📦 Packages
 
-### v1 (Current)
-- **Queue Monitoring**: List all queues with job counts by state
-- **Job Management**: View jobs with server-side pagination, filtering, and search
-- **Real-time Updates**: Auto-refresh with configurable intervals (default 10s)
-- **Detailed Job View**: Complete job metadata, data, results, and error information
-- **Responsive UI**: Modern blue/white theme with state-based colors
-- **Settings**: Configurable auto-refresh and timezone display
-- **Health Check**: Redis connectivity monitoring
+BullDash is split into modular packages that you can use independently or together:
 
-### v2 (Planned)
-- Bulk job actions (retry, remove, promote, pause/resume)
-- Queue management operations
-- Advanced filtering and search capabilities
+- **`bulldash`** - Main package with everything included (convenience wrapper)
+- **`@bulldash/core`** - Core BullMQ monitoring functionality and queue management
+- **`@bulldash/express`** - Express.js middleware and router (supports Express v4 & v5)
+- **`@bulldash/ui`** - Pre-built Vue.js dashboard UI components
+- **`@bulldash/cli`** - Command-line interface tool for quick project setup
 
-## Quick Start
+## 🚀 Quick Start
 
-### Prerequisites
-- Node.js 18+
-- Redis server running on localhost:6379 (or configure via environment variables)
-
-### Installation & Running
+### Option 1: All-in-One Package (Recommended)
 
 ```bash
-# Install dependencies
+npm install bulldash
+```
+
+```javascript
+const express = require('express');
+const { createBullDashApp } = require('bulldash');
+
+const app = express();
+
+// Create BullDash instance with Redis configuration
+const { router, bullDash } = createBullDashApp({
+  redis: {
+    host: 'localhost',
+    port: 6379,
+    // All ioredis options supported
+  },
+  queuePrefix: 'bull' // Optional: BullMQ queue prefix
+});
+
+// Add your existing queues for monitoring
+bullDash.addQueue('email-queue');
+bullDash.addQueue('image-processing');
+bullDash.addQueue('data-export');
+
+// Mount the dashboard at your preferred path
+app.use('/admin/queues', router);
+
+app.listen(3000, () => {
+  console.log('Server running on http://localhost:3000');
+  console.log('Dashboard available at http://localhost:3000/admin/queues');
+});
+```
+
+### Option 2: Standalone Server
+
+```javascript
+const { createBullDashApp } = require('bulldash');
+
+const { createServer, bullDash } = createBullDashApp({
+  redis: { host: 'localhost', port: 6379 },
+  queuePrefix: 'my-app'
+});
+
+// Add your queues
+bullDash.addQueue('notifications');
+bullDash.addQueue('background-tasks');
+
+// Start standalone server on port 3001
+createServer(3001);
+```
+
+## 🔧 Advanced Usage
+
+### Using Individual Packages
+
+#### Core Package Only
+
+```bash
+npm install @bulldash/core
+```
+
+```javascript
+const { BullDash } = require('@bulldash/core');
+
+const monitor = new BullDash({
+  redis: {
+    host: 'localhost',
+    port: 6379,
+    password: 'your-redis-password',
+    db: 0
+  },
+  queuePrefix: 'bull'
+});
+
+// Add queues to monitor
+monitor.addQueue('my-queue');
+monitor.addQueue('another-queue');
+
+// Get queue statistics
+const queues = await monitor.getQueues();
+const jobs = await monitor.getJobs('my-queue', { 
+  status: 'failed', 
+  page: 1, 
+  pageSize: 50 
+});
+
+// Get specific job details
+const jobDetail = await monitor.getJobDetail('my-queue', 'job-id-123');
+
+// Perform job actions
+await monitor.retryJob('my-queue', 'failed-job-id');
+await monitor.removeJob('my-queue', 'completed-job-id');
+```
+
+#### Express Middleware
+
+```bash
+npm install @bulldash/core @bulldash/express express
+```
+
+```javascript
+const express = require('express');
+const { BullDash } = require('@bulldash/core');
+const { createBullDashRouter } = require('@bulldash/express');
+
+const app = express();
+
+// Create core monitoring instance
+const bullDash = new BullDash({
+  redis: { host: 'localhost', port: 6379 }
+});
+
+bullDash.addQueue('email-queue');
+
+// Create Express router with custom options
+const router = createBullDashRouter(bullDash, {
+  authentication: (req, res, next) => {
+    // Your auth logic here
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (token === 'your-secret-token') {
+      next();
+    } else {
+      res.status(401).json({ error: 'Unauthorized' });
+    }
+  },
+  rateLimit: {
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100 // limit each IP to 100 requests per window
+  },
+  cors: {
+    origin: ['http://localhost:3000', 'https://your-domain.com'],
+    credentials: true
+  }
+});
+
+app.use('/dashboard', router);
+```
+
+### Configuration Options
+
+#### Redis Connection
+
+```javascript
+const { createBullDashApp } = require('bulldash');
+
+const { bullDash } = createBullDashApp({
+  redis: {
+    host: 'redis.example.com',
+    port: 6379,
+    password: 'your-password',
+    db: 0,
+    family: 4, // 4 (IPv4) or 6 (IPv6)
+    keepAlive: true,
+    // All ioredis connection options supported
+  },
+  queuePrefix: 'my-app'
+});
+```
+
+#### Express Router Options
+
+```javascript
+const { createBullDashRouter } = require('@bulldash/express');
+
+const router = createBullDashRouter(bullDash, {
+  cors: {
+    origin: ['http://localhost:3000'],
+    credentials: true
+  },
+  rateLimit: {
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100 // requests per window
+  },
+  authentication: (req, res, next) => {
+    // Custom authentication middleware
+    // Return 401 for unauthorized requests
+    next();
+  }
+});
+```
+
+## 🎨 UI Components (Vue.js)
+
+The UI package provides pre-built Vue.js components for custom integrations:
+
+```bash
+npm install @bulldash/ui
+```
+
+```vue
+<template>
+  <div>
+    <BullDashboard :api-url="apiUrl" />
+  </div>
+</template>
+
+<script>
+import { BullDashboard } from '@bulldash/ui';
+
+export default {
+  components: {
+    BullDashboard
+  },
+  data() {
+    return {
+      apiUrl: 'http://localhost:3000/api'
+    };
+  }
+};
+</script>
+```
+
+## 🛠️ CLI Tool
+
+Quick project scaffolding and development server:
+
+```bash
+npm install -g @bulldash/cli
+
+# Create a new BullDash project
+bulldash init my-monitoring-app
+cd my-monitoring-app
+
+# Install dependencies and start
 npm install
-cd frontend && npm install && cd ..
-
-# Development mode (runs both backend and frontend)
-npm run dev
-
-# Production build
-npm run build
 npm start
 ```
 
-### Environment Variables
+## 📊 Features
 
-```bash
-# Redis Configuration
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_PASSWORD=
-REDIS_DB=0
+- ✅ Real-time queue monitoring with auto-refresh
+- ✅ Comprehensive job details and execution logs
+- ✅ Queue statistics, metrics, and health monitoring
+- ✅ Failed job management with retry functionality
+- ✅ Job lifecycle management (retry, remove, promote, discard)
+- ✅ Multiple queue support with centralized dashboard
+- ✅ Built-in authentication and authorization support
+- ✅ Rate limiting and security headers
+- ✅ Responsive web interface optimized for desktop and mobile
+- ✅ Full TypeScript support with comprehensive type definitions
+- ✅ Express v4 and v5 compatibility
+- ✅ Redis connection pooling and error handling
 
-# Server Configuration
-PORT=3000
-NODE_ENV=development
-LOG_LEVEL=info
+## 🔒 Security
 
-# Frontend Configuration
-FRONTEND_URL=http://localhost:5173
+BullDash includes comprehensive security features out of the box:
 
-# v2 Feature Flags
-ENABLE_BULK_ACTIONS=false
+- **Rate Limiting**: Configurable request rate limiting per IP
+- **CORS Configuration**: Flexible cross-origin resource sharing setup
+- **Security Headers**: Helmet.js integration with CSP and security headers
+- **Authentication Middleware**: Custom authentication hook support
+- **Input Validation**: Joi-based request validation and sanitization
+- **Error Handling**: Secure error responses without sensitive data leakage
+
+## 📝 API Reference
+
+### BullDash Core Class
+
+```typescript
+class BullDash {
+  constructor(config: Config)
+  
+  // Queue Management
+  addQueue(queueName: string, queueOptions?: QueueOptions): Queue
+  getQueues(): Promise<QueueInfo[]>
+  getHealth(): Promise<HealthStatus>
+  
+  // Job Operations
+  getJobs(queueName: string, options?: GetJobsOptions): Promise<{ jobs: JobInfo[], total: number }>
+  getJobDetail(queueName: string, jobId: string): Promise<JobDetailInfo | null>
+  getJobById(queueName: string, jobId: string): Promise<{ jobs: JobInfo[], total: number }>
+  
+  // Job Actions
+  retryJob(queueName: string, jobId: string): Promise<boolean>
+  removeJob(queueName: string, jobId: string): Promise<boolean>
+  discardJob(queueName: string, jobId: string): Promise<boolean>
+  promoteJob(queueName: string, jobId: string): Promise<boolean>
+  bulkRemoveJobs(queueName: string, jobIds: string[]): Promise<BulkActionResult>
+  
+  // Cleanup
+  cleanup(): Promise<void>
+}
 ```
 
-## API Endpoints
+### Express Router Options
 
-- `GET /api/queues` - List all queues with job counts
-- `GET /api/queues/:queue/jobs` - Get jobs with pagination/filtering
-- `GET /api/queues/:queue/jobs/:id` - Get detailed job information
-- `GET /api/healthz` - Health check endpoint
-- `POST /api/queues/:queue/jobs/bulk` - Bulk actions (v2 placeholder)
-
-## Architecture
-
-### Backend Structure
-```
-src/
-├── server.ts              # Express app setup
-├── config/
-│   ├── redis.ts           # Redis connection management
-│   └── logger.ts          # Winston logging configuration
-├── middleware/
-│   └── validation.ts      # Request validation & error handling
-├── routes/
-│   └── api.ts             # API route handlers
-├── services/
-│   ├── queueRegistry.ts   # Queue discovery & management
-│   └── jobService.ts      # Job querying & filtering
-└── types/
-    └── api.ts             # TypeScript interfaces
+```typescript
+interface BullDashExpressOptions {
+  cors?: boolean | CorsOptions;
+  rateLimit?: boolean | RateLimitOptions;
+  authentication?: (req: Request, res: Response, next: NextFunction) => void;
+}
 ```
 
-### Frontend Structure
-```
-src/
-├── main.ts                # Vue app entry point
-├── App.vue                # Main application component
-├── api/
-│   └── client.ts          # API client with axios
-├── stores/
-│   ├── queues.ts          # Pinia store for queue data
-│   ├── jobs.ts            # Pinia store for job data
-│   └── settings.ts        # Pinia store for app settings
-├── components/
-│   ├── Dashboard.vue      # Main dashboard view
-│   ├── QueueDetail.vue    # Queue-specific job listing
-│   ├── JobDetailDrawer.vue # Job detail sidebar
-│   ├── QueueCard.vue      # Queue summary card
-│   ├── StatCard.vue       # Statistics display card
-│   ├── AutoRefreshControl.vue # Auto-refresh toggle
-│   ├── HealthIndicator.vue # Redis connection status
-│   └── Settings.vue       # Application settings
-└── utils/
-    └── date.ts            # Date formatting utilities
+### Configuration Types
+
+```typescript
+interface Config {
+  redis: RedisOptions;
+  queuePrefix?: string;
+}
+
+interface GetJobsOptions {
+  status?: JobStatus;
+  page?: number;
+  pageSize?: number;
+  search?: string;
+}
 ```
 
-## Key Features Implementation
+## 🤝 Contributing
 
-### Efficient Job Querying
-- Server-side pagination with configurable page sizes
-- Multi-state filtering without full table scans
-- Substring search across job names and serialized data
-- Smart duration calculation from BullMQ timestamps
-- Safe job data serialization with size limits
+We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for details on:
 
-### Real-time Monitoring
-- Auto-refresh with configurable intervals
-- Health check monitoring with Redis latency
-- Graceful error handling and loading states
-- Visibility-based refresh (pauses when tab is hidden)
+- Setting up the development environment
+- Running tests and linting
+- Submitting pull requests
+- Reporting issues
 
-### User Experience
-- Sticky filters and search across page navigation
-- Job selection with bulk action preparation for v2
-- Timezone toggle (Local/UTC) with persistent settings
-- Loading skeletons and empty states
-- Responsive design with TailwindCSS
+## 📄 License
 
-### Performance & Scalability
-- Structured logging with request IDs and latency tracking
-- Rate limiting and security headers
-- Compression and caching headers
-- Graceful shutdown handling
-- Memory-efficient job data handling
-
-## Development
-
-### Running Tests
-```bash
-npm test
-npm run test:watch
-```
-
-### Type Checking
-```bash
-npm run type-check
-```
-
-### Linting
-```bash
-npm run lint
-```
-
-## Deployment
-
-### Docker (Recommended)
-```dockerfile
-# Multi-stage build for production
-FROM node:18-alpine AS builder
-# ... build process
-
-FROM node:18-alpine AS runtime
-# ... runtime setup
-```
-
-### Environment Setup
-- Configure Redis connection
-- Set up logging directory permissions
-- Configure reverse proxy (nginx/traefik)
-- Set up monitoring and alerting
-
-## v2 Migration Path
-
-The codebase is designed for easy v2 expansion:
-
-1. **Bulk Actions**: API endpoints are stubbed, UI selection model is ready
-2. **Queue Management**: Queue registry supports operational commands
-3. **Advanced Features**: Extensible filter system and job processing pipeline
-4. **Feature Flags**: Environment-based feature toggles for gradual rollout
+MIT License - see [LICENSE](./LICENSE) file for details.

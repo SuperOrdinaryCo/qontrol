@@ -1,20 +1,27 @@
 {
   "name": "bulldash",
   "version": "1.0.0",
-  "description": "BullMQ Monitoring Dashboard",
-  "main": "dist/server.js",
+  "description": "BullMQ Monitoring Dashboard - Complete Solution",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev:backend": "ts-node-dev --respawn --transpile-only examples/express/src/server.ts",
     "dev:frontend": "cd frontend && npm run dev",
-    "build": "npm run build:backend && npm run build:frontend",
-    "build:backend": "tsc",
+    "build": "npm run build:packages && npm run build:frontend",
+    "build:packages": "npm run build --workspaces --if-present",
     "build:frontend": "cd frontend && npm run build",
     "start": "node dist/server.js",
     "test": "jest",
     "test:watch": "jest --watch",
-    "lint": "eslint src/**/*.ts",
-    "type-check": "tsc --noEmit"
+    "lint": "eslint src/**/*.ts packages/*/src/**/*.ts",
+    "type-check": "tsc --noEmit",
+    "publish:packages": "npm run build:packages && npm publish --workspaces",
+    "version:packages": "npm version patch --workspaces"
   },
   "dependencies": {
     "bullmq": "^4.10.0",

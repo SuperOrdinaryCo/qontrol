@@ -1,0 +1,38 @@
+{
+  "name": "bulldash",
+  "version": "1.0.0",
+  "description": "Complete BullMQ monitoring solution",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "bullmq",
+    "monitoring",
+    "dashboard",
+    "queue",
+    "redis"
+  ],
+  "dependencies": {
+    "@bulldash/core": "^1.0.0",
+    "@bulldash/express": "^1.0.0"
+  },
+  "peerDependencies": {
+    "express": "^4.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.4.5",
+    "typescript": "^5.1.6"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

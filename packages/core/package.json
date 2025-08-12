@@ -1,0 +1,37 @@
+{
+  "name": "@bulldash/core",
+  "version": "1.0.0",
+  "description": "Core BullMQ monitoring functionality",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "bullmq",
+    "queue",
+    "monitoring",
+    "redis"
+  ],
+  "dependencies": {
+    "bullmq": "^4.10.0",
+    "ioredis": "^5.3.2",
+    "winston": "^3.10.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.4.5",
+    "typescript": "^5.1.6"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
+
