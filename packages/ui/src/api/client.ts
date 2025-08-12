@@ -8,14 +8,11 @@ import type {
   GetJobDetailResponse,
   HealthCheckResponse,
 } from '@/types';
+import {getBaseUrl} from '@/utils/base-url.ts';
 
 // Get basePath from injected configuration or use relative paths
 const getApiBaseURL = () => {
-  let baseUrl = window.location.pathname;
-
-  if (baseUrl.endsWith('/')) {
-    baseUrl = baseUrl.slice(0, -1);
-  }
+  const baseUrl = getBaseUrl();
 
   // Use relative path 'api' instead of absolute paths
   // This will work regardless of where the router is mounted
