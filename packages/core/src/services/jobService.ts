@@ -69,7 +69,7 @@ export class JobService {
       const paginatedJobs = allJobs.slice(start, start + pageSize);
 
       // Convert to JobSummary format
-      const jobSummaries = paginatedJobs.map(job => this.jobToSummary(job));
+      const jobSummaries = await Promise.all(paginatedJobs.map(job => this.jobToSummary(job)));
 
       return {
         jobs: jobSummaries,
@@ -98,7 +98,7 @@ export class JobService {
         return { jobs: [], total: 0 };
       }
 
-      const jobSummary = this.jobToSummary(job);
+      const jobSummary = await this.jobToSummary(job);
       return { jobs: [jobSummary], total: 1 };
     } catch (error) {
       logger.error(`Failed to get job ${jobId} from queue ${queueName}:`, error);
@@ -379,11 +379,11 @@ export class JobService {
   /**
    * Convert Job to JobSummary
    */
-  private static jobToSummary(job: Job): JobSummary {
+  private static async jobToSummary(job: Job): Promise<JobSummary> {
     return {
       id: job.id!,
       name: job.name,
-      state: this.getJobState(job),
+      state: await this.getJobState(job),
       createdAt: new Date(job.timestamp),
       processedOn: job.processedOn ? new Date(job.processedOn) : undefined,
       finishedOn: job.finishedOn ? new Date(job.finishedOn) : undefined,
@@ -397,8 +397,8 @@ export class JobService {
   /**
    * Convert Job to JobDetail
    */
-  private static jobToDetail(job: Job): JobDetail {
-    const summary = this.jobToSummary(job);
+  private static async jobToDetail(job: Job): Promise<JobDetail> {
+    const summary = await this.jobToSummary(job);
 
     return {
       ...summary,
@@ -423,14 +423,36 @@ export class JobService {
   }
 
   /**
-   * Get job state from job object
+   * Get job state from job object using BullMQ's async getState method
    */
-  private static getJobState(job: Job): keyof JobState {
-    if (job.finishedOn && !job.failedReason) return 'completed';
-    if (job.failedReason) return 'failed';
-    if (job.processedOn && !job.finishedOn) return 'active';
-    if (job.opts.delay && job.opts.delay > Date.now()) return 'delayed';
-    return 'waiting';
+  private static async getJobState(job: Job): Promise<keyof JobState> {
+    try {
+      const state = await job.getState();
+
+      // Map BullMQ states to our JobState interface
+      switch (state) {
+        case 'completed':
+          return 'completed';
+        case 'failed':
+          return 'failed';
+        case 'active':
+          return 'active';
+        case 'delayed':
+          return 'delayed';
+        case 'waiting':
+          return 'waiting';
+        case 'waiting-children':
+          return 'waiting-children';
+        case 'paused':
+          return 'paused';
+        default:
+          // Fallback for any unknown state
+          return 'waiting';
+      }
+    } catch (error) {
+      // If getState fails, fallback to waiting
+      return 'waiting';
+    }
   }
 
   /**

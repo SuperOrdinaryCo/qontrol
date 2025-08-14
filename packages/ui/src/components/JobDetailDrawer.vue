@@ -88,6 +88,15 @@
                 <dt class="text-sm font-medium text-gray-500">Finished On</dt>
                 <dd class="text-sm text-gray-900">{{ formatTimestamp(jobDetail.finishedOn) }}</dd>
               </div>
+              <div v-if="jobDetail.opts.delay && jobDetail.state === 'delayed'">
+                <dt class="text-sm font-medium text-gray-500">Scheduled For</dt>
+                <dd class="text-sm text-gray-900">
+                  <span>{{ formatTimestamp(new Date(jobDetail.createdAt.getTime() + jobDetail.opts.delay)) }}</span>
+                  <span class="ml-2 text-xs text-warning-600">
+                    ({{ formatDelayRemaining(jobDetail.opts.delay, jobDetail.createdAt) }})
+                  </span>
+                </dd>
+              </div>
             </dl>
           </div>
 
@@ -169,5 +178,30 @@ const isOpen = computed(() => jobDetail.value !== null)
 
 function close() {
   jobsStore.jobDetail = null
+}
+
+function formatDelayRemaining(delay: number, createdAt: Date): string {
+  const scheduledTime = createdAt.getTime() + delay
+  const now = Date.now()
+  const remaining = scheduledTime - now
+
+  if (remaining <= 0) {
+    return 'ready to process'
+  }
+
+  const seconds = Math.floor(remaining / 1000)
+  const minutes = Math.floor(seconds / 60)
+  const hours = Math.floor(minutes / 60)
+  const days = Math.floor(hours / 24)
+
+  if (days > 0) {
+    return `in ${days}d ${hours % 24}h`
+  } else if (hours > 0) {
+    return `in ${hours}h ${minutes % 60}m`
+  } else if (minutes > 0) {
+    return `in ${minutes}m ${seconds % 60}s`
+  } else {
+    return `in ${seconds}s`
+  }
 }
 </script>
