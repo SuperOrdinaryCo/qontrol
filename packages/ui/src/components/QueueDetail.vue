@@ -306,7 +306,7 @@
               </button>
 
               <button
-                v-if="job.state === 'active'"
+                v-if="['waiting', 'waiting-children', 'active'].includes(job.state)"
                 @click="handleDiscardJob(job.id)"
                 class="w-full text-left px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 hover:text-orange-700 flex items-center space-x-2"
               >
@@ -325,7 +325,7 @@
 
               <!-- Separator if there are state-specific actions -->
               <div
-                v-if="job.state === 'failed' || job.state === 'active' || job.state === 'delayed'"
+                v-if="['waiting', 'waiting-children', 'active', 'failed', 'delayed'].includes(job.state)"
                 class="border-t border-gray-100 my-1"
               ></div>
 

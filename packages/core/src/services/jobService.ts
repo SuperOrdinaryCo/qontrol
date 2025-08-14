@@ -238,9 +238,11 @@ export class JobService {
         return false;
       }
 
+      const state = await this.getJobState(job);
+
       // Check if job is in an active state
-      if (job.processedOn && !job.finishedOn) {
-        await job.discard();
+      if (['active', 'waiting', 'waiting-children'].includes(state)) {
+        job.discard();
         logger.info(`Successfully discarded job ${jobId} in queue ${queueName}`);
         return true;
       } else {
@@ -269,7 +271,7 @@ export class JobService {
       }
 
       // Check if job is delayed
-      if (job.opts.delay && job.opts.delay > Date.now()) {
+      if (await job.isDelayed()) {
         await job.promote();
         logger.info(`Successfully promoted job ${jobId} in queue ${queueName}`);
         return true;
