@@ -345,6 +345,71 @@ export class JobService {
   }
 
   /**
+   * Bulk retry jobs by their IDs
+   */
+  static async bulkRetryJobs(queueName: string, jobIds: string[]): Promise<{
+    success: number;
+    failed: number;
+    errors: Array<{ jobId: string; error: string }>;
+  }> {
+    const logger = Logger.getInstance();
+
+    try {
+      const queue = QueueRegistry.getQueue(queueName);
+      const results = {
+        success: 0,
+        failed: 0,
+        errors: [] as Array<{ jobId: string; error: string }>,
+      };
+
+      // Process jobs in parallel with a concurrency limit
+      const concurrencyLimit = 10;
+      const chunks = [];
+      for (let i = 0; i < jobIds.length; i += concurrencyLimit) {
+        chunks.push(jobIds.slice(i, i + concurrencyLimit));
+      }
+
+      for (const chunk of chunks) {
+        const promises = chunk.map(async (jobId) => {
+          try {
+            const job = await queue.getJob(jobId);
+            if (!job) {
+              results.failed++;
+              results.errors.push({ jobId, error: 'Job not found' });
+              return;
+            }
+
+            // Only retry jobs that are in failed state
+            if (job.finishedOn && job.failedReason) {
+              await job.retry();
+              results.success++;
+              logger.info(`Bulk retried job ${jobId} from queue ${queueName}`);
+            } else {
+              results.failed++;
+              results.errors.push({ jobId, error: 'Job is not in failed state' });
+            }
+          } catch (error) {
+            results.failed++;
+            results.errors.push({
+              jobId,
+              error: error instanceof Error ? error.message : 'Unknown error'
+            });
+            logger.error(`Failed to bulk retry job ${jobId} from queue ${queueName}:`, error);
+          }
+        });
+
+        await Promise.all(promises);
+      }
+
+      logger.info(`Bulk retry completed for queue ${queueName}: ${results.success} success, ${results.failed} failed`);
+      return results;
+    } catch (error) {
+      logger.error(`Failed to bulk retry jobs from queue ${queueName}:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Pause a queue
    */
   static async pauseQueue(queueName: string): Promise<boolean> {

@@ -307,6 +307,41 @@ export const useJobsStore = defineStore('jobs', () => {
     }
   }
 
+  async function bulkRetryJobs(queueName: string, jobIds: string[]) {
+    try {
+      const result = await apiClient.bulkRetryJobs(queueName, jobIds);
+
+      // Update successfully retried jobs in local state
+      if (result.success > 0) {
+        jobIds.forEach(jobId => {
+          const jobIndex = jobs.value.findIndex(job => job.id === jobId);
+          if (jobIndex !== -1) {
+            const job = jobs.value[jobIndex];
+            // Update job state to waiting after retry
+            jobs.value[jobIndex] = { ...job, state: 'waiting' };
+          }
+        });
+
+        // Clear selection since we processed the jobs
+        clearSelection();
+
+        // Update queue counts
+        const { useQueuesStore } = await import('@/stores/queues');
+        const queuesStore = useQueuesStore();
+        queuesStore.updateJobCount(queueName, 'failed', -result.success);
+        queuesStore.updateJobCount(queueName, 'waiting', result.success);
+      }
+
+      console.log(`Bulk retry completed: ${result.success} success, ${result.failed} failed`);
+
+      return result;
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to bulk retry jobs';
+      console.error('Failed to bulk retry jobs:', err);
+      throw err;
+    }
+  }
+
   function updateFilters(newFilters: Partial<GetJobsRequest>) {
     Object.assign(filters, newFilters);
     filters.page = 1; // Reset to first page when filters change
@@ -399,6 +434,7 @@ export const useJobsStore = defineStore('jobs', () => {
     discardJob,
     promoteJob,
     bulkRemoveJobs,
+    bulkRetryJobs,
     updateFilters,
     updatePage,
     toggleJobSelection,

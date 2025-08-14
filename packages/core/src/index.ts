@@ -65,6 +65,11 @@ export class BullDash {
     return JobService.bulkRemoveJobs(queueName, jobIds);
   }
 
+  // Bulk retry jobs
+  async bulkRetryJobs(queueName: string, jobIds: string[]) {
+    return JobService.bulkRetryJobs(queueName, jobIds);
+  }
+
   // Queue management
   async pauseQueue(queueName: string) {
     return JobService.pauseQueue(queueName);

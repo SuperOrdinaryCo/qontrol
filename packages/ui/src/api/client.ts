@@ -101,6 +101,11 @@ export const apiClient = {
     return response.data;
   },
 
+  async bulkRetryJobs(queueName: string, jobIds: string[]): Promise<{ success: number; failed: number; errors?: Array<{ jobId: string; error: string }> }> {
+    const response = await api.post(`/queues/${queueName}/jobs/bulk-retry`, { jobIds });
+    return response.data;
+  },
+
   async pauseQueue(queueName: string): Promise<void> {
     await api.post(`/queues/${queueName}/pause`);
   },

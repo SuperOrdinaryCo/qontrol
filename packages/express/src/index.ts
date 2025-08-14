@@ -369,6 +369,49 @@ export function createBullDashRouter(bullDash: BullDash, options: BullDashExpres
   });
 
   /**
+   * POST /api/queues/:queue/jobs/bulk-retry
+   * Bulk retry jobs by their IDs
+   */
+  router.post('/api/queues/:queue/jobs/bulk-retry', async (req, res) => {
+    try {
+      const { queue: queueName } = req.params;
+      const { jobIds } = req.body;
+
+      // Validate input
+      if (!Array.isArray(jobIds) || jobIds.length === 0) {
+        return res.status(400).json({
+          message: 'jobIds must be a non-empty array',
+          code: 'INVALID_JOB_IDS',
+        });
+      }
+
+      // Limit bulk operations to prevent overload
+      if (jobIds.length > 100) {
+        return res.status(400).json({
+          message: 'Cannot retry more than 100 jobs at once',
+          code: 'TOO_MANY_JOBS',
+        });
+      }
+
+      const result = await bullDash.bulkRetryJobs(queueName, jobIds);
+
+      const response: BulkActionResponse = {
+        success: result.success,
+        failed: result.failed,
+        errors: result.errors,
+        timestamp: new Date(),
+      };
+
+      res.json(response);
+    } catch (error) {
+      res.status(500).json({
+        message: 'Failed to bulk retry jobs',
+        code: 'BULK_RETRY_ERROR',
+      });
+    }
+  });
+
+  /**
    * POST /api/queues/:queue/pause
    * Pause a queue
    */
@@ -447,33 +490,6 @@ export function createBullDashRouter(bullDash: BullDash, options: BullDashExpres
 
     const statusCode = redis.status === 'healthy' ? 200 : 503;
     res.status(statusCode).json(response);
-  });
-
-// v2 Bulk Actions (placeholders - feature flagged)
-  /**
-   * POST /api/queues/:queue/jobs/bulk
-   * Bulk actions on jobs (v2 placeholder)
-   */
-  router.post('/api/queues/:queue/jobs/bulk', async (req, res) => {
-    // Feature flag check
-    if (!process.env.ENABLE_BULK_ACTIONS) {
-      return res.status(501).json({
-        message: 'Bulk actions not implemented in v1',
-        code: 'FEATURE_NOT_IMPLEMENTED',
-      });
-    }
-
-    // v2 implementation placeholder
-    const response: BulkActionResponse = {
-      success: 0,
-      failed: 0,
-      errors: [{
-        jobId: 'placeholder',
-        error: 'Bulk actions will be implemented in v2',
-      }],
-    };
-
-    res.status(501).json(response);
   });
 
   // SPA fallback: serve index.html for all non-API routes (must be after API routes)

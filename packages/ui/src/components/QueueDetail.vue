@@ -187,7 +187,16 @@
               <button @click="clearSelection" class="text-sm text-primary-600 hover:text-primary-800">
                 Clear selection
               </button>
-              <!-- Bulk Actions Button -->
+              <!-- Bulk Retry Button (only show if failed jobs are selected) -->
+              <button
+                v-if="hasFailedJobsSelected"
+                @click="handleBulkRetry"
+                :disabled="bulkRetrying"
+                class="text-xs px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {{ bulkRetrying ? 'Retrying...' : 'Retry Selected' }}
+              </button>
+              <!-- Bulk Remove Button -->
               <button
                 @click="handleBulkRemove"
                 :disabled="bulkRemoving"
@@ -452,6 +461,9 @@ const activeDropdown = ref<string | null>(null)
 // Bulk removal state
 const bulkRemoving = ref(false)
 
+// Bulk retry state
+const bulkRetrying = ref(false)
+
 // Auto-refresh
 let refreshInterval: ReturnType<typeof setInterval> | null = null
 let jobIdSearchTimeout: ReturnType<typeof setTimeout> | null = null
@@ -482,6 +494,14 @@ const visiblePages = computed(() => {
   }
 
   return range
+})
+
+// Check if any selected jobs are failed (for bulk retry feature)
+const hasFailedJobsSelected = computed(() => {
+  if (!hasSelection.value) return false
+
+  const selectedJobs = jobs.value.filter(job => selection.value.selectedIds.has(job.id))
+  return selectedJobs.some(job => job.state === 'failed')
 })
 
 function getStateColor(state: string): string {
@@ -748,152 +768,34 @@ function handleBulkRemove() {
   jobToRemove.value = jobIds.join(', ')
 }
 
-async function toggleQueuePause() {
-  if (!queueInfo.value || pausingQueue.value) return
+function handleBulkRetry() {
+  // Collect all selected job IDs that are failed
+  const selectedJobs = jobs.value.filter(job => selection.value.selectedIds.has(job.id))
+  const failedJobIds = selectedJobs.filter(job => job.state === 'failed').map(job => job.id)
 
-  try {
-    pausingQueue.value = true
+  if (failedJobIds.length === 0) return
 
-    if (queueInfo.value.isPaused) {
-      // Resume the queue
-      await queuesStore.resumeQueue(queueName.value)
-      console.log(`Queue ${queueName.value} resumed successfully`)
-    } else {
-      // Pause the queue
-      await queuesStore.pauseQueue(queueName.value)
-      console.log(`Queue ${queueName.value} paused successfully`)
-    }
+  bulkRetrying.value = true
 
-    // Refresh queue info to get updated status
-    await queuesStore.fetchQueue(queueName.value)
-  } catch (error) {
-    console.error('Failed to toggle queue pause:', error)
-    alert(`Failed to ${queueInfo.value.isPaused ? 'resume' : 'pause'} queue. Please try again.`)
-  } finally {
-    pausingQueue.value = false
-  }
-}
-
-function setupAutoRefresh() {
-  if (refreshInterval) {
-    clearInterval(refreshInterval)
-  }
-
-  if (autoRefreshEnabled.value && settings.value.autoRefreshInterval > 0) {
-    refreshInterval = setInterval(() => {
-      if (document.visibilityState === 'visible') {
-        // Check if we're in job ID search mode
-        if (jobIdQuery.value.trim()) {
-          // Refresh the job ID search silently to avoid dropping/refilling table
-          jobsStore.fetchJobById(queueName.value, jobIdQuery.value.trim(), true)
-        } else {
-          // Update filters with current search state before auto-refresh
-          jobsStore.updateFilters({
-            states: [selectedStateTab.value] as any,
-            search: searchQuery.value || undefined,
-            sortBy: sortBy.value as any,
-            sortOrder: sortOrder.value as any,
-            page: filters.value.page, // Keep current page
-          })
-
-          // Preserve selection during auto-refresh AND make it silent
-          fetchJobs(true, true)
-        }
-
-        // Always refresh queue counts during auto-refresh - now using optimized single queue fetch
-        queuesStore.fetchQueue(queueName.value).catch(error => {
-          console.error('Failed to refresh queue counts during auto-refresh:', error)
-        })
+  jobsStore.bulkRetryJobs(queueName.value, failedJobIds)
+    .then((result) => {
+      console.log(`Bulk retry completed: ${result.success} success, ${result.failed} failed`)
+      if (result.failed > 0) {
+        // Show errors if any jobs failed to retry
+        const errorMessage = `${result.success} jobs retried successfully. ${result.failed} jobs failed to retry.`
+        alert(errorMessage)
       }
-    }, settings.value.autoRefreshInterval * 1000)
-  }
+    })
+    .catch((error) => {
+      console.error('Failed to bulk retry jobs:', error)
+      alert('Failed to bulk retry jobs. Please try again.')
+    })
+    .finally(() => {
+      bulkRetrying.value = false
+    })
 }
 
-onMounted(() => {
-  // Load queue info first
-  queuesStore.fetchQueues()
-
-  // Set default tab - try to restore from localStorage, otherwise default to 'waiting'
-  const savedState = localStorage.getItem(`queue-${queueName.value}-selectedState`)
-  if (savedState && ['waiting', 'active', 'completed', 'failed', 'delayed', 'paused', 'waiting-children'].includes(savedState)) {
-    selectedStateTab.value = savedState
-  } else {
-    selectedStateTab.value = 'waiting'
-  }
-
-  // Update filters with the selected state before fetching jobs
-  jobsStore.updateFilters({
-    states: [selectedStateTab.value] as any,
-    search: searchQuery.value || undefined,
-    sortBy: sortBy.value as any,
-    sortOrder: sortOrder.value as any,
-    page: 1,
-  })
-
-  // Load jobs with the selected state (no selection to preserve on original load)
-  fetchJobs(false)
-
-  // Setup auto-refresh
-  setupAutoRefresh()
-
-  // Add click outside handler for dropdown
-  document.addEventListener('click', handleClickOutside)
-})
-
-onUnmounted(() => {
-  if (refreshInterval) {
-    clearInterval(refreshInterval)
-  }
-
-  // Remove click outside handler
-  document.removeEventListener('click', handleClickOutside)
-
-  // Reset jobs store when leaving
-  jobsStore.reset()
-})
-
-// Add click outside handler function
-function handleClickOutside(event: Event) {
-  // Close dropdown if clicked outside
-  if (activeDropdown.value) {
-    activeDropdown.value = null
-  }
-}
-
-// Watch for tab changes to save to localStorage
-watch(selectedStateTab, (newState) => {
-  localStorage.setItem(`queue-${queueName.value}-selectedState`, newState)
-})
-
-// Watch for job ID changes for auto-search
-watch(jobIdQuery, (newValue) => {
-  // Clear existing timeout
-  if (jobIdSearchTimeout) {
-    clearTimeout(jobIdSearchTimeout)
-  }
-
-  if (newValue.trim()) {
-    // Debounce job ID search by 500ms
-    jobIdSearchTimeout = setTimeout(() => {
-      searchByJobId()
-    }, 500)
-  } else {
-    // Clear search when input is empty
-    clearJobIdSearch()
-  }
-})
-
-onUnmounted(() => {
-  if (refreshInterval) {
-    clearInterval(refreshInterval)
-  }
-
-  // Reset jobs store when leaving
-  jobsStore.reset()
-})
-
-// Watch for settings changes
-watch([autoRefreshEnabled, () => settings.value.autoRefreshInterval], setupAutoRefresh)
+// ...existing code...
 </script>
 
 <style scoped>
