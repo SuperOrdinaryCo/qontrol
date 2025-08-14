@@ -455,7 +455,7 @@ export class JobService {
       processedOn: job.processedOn ? new Date(job.processedOn) : undefined,
       finishedOn: job.finishedOn ? new Date(job.finishedOn) : undefined,
       duration: this.calculateDuration(job),
-      attempts: job.attemptsMade,
+      attempts: job.attemptsStarted,
       priority: job.opts.priority,
       delay: job.opts.delay,
     };
@@ -494,7 +494,11 @@ export class JobService {
    */
   private static async getJobState(job: Job): Promise<keyof JobState> {
     try {
-      const state = await job.getState();
+      let state = await job.getState();
+
+      if (await QueueRegistry.getQueue(job.queueName).isPaused()) {
+        return 'paused'
+      }
 
       // Map BullMQ states to our JobState interface
       switch (state) {
@@ -510,8 +514,6 @@ export class JobService {
           return 'waiting';
         case 'waiting-children':
           return 'waiting-children';
-        case 'paused':
-          return 'paused';
         default:
           // Fallback for any unknown state
           return 'waiting';

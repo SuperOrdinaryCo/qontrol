@@ -69,7 +69,7 @@ export const setupQueue = (config: Config) => {
   });
 
   DefaultQueueWorker.on('failed', (job, error) => {
-    console.log(`${job.id} has failed with ${error.message}`);
+    console.log(`${job?.id} has failed with ${error.message}`);
   });
 
   return {

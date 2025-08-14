@@ -49,7 +49,7 @@ export interface JobDetail extends JobSummary {
     priority?: number;
   };
   parent?: {
-    id: string;
+    id?: string;
     queue: string;
   };
   children?: Array<{

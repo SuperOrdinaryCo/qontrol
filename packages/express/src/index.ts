@@ -10,6 +10,15 @@ import {
 } from '@bulldash/core';
 import {validateGetJobs} from './validation';
 
+let expressVersion: string = require('express/package.json').version;
+
+let isExpressV5 = false;
+
+if (expressVersion) {
+  const [major] = expressVersion.split('.').map(Number);
+  isExpressV5 = major === 5
+}
+
 export interface BullDashExpressOptions {}
 
 export function createBullDashRouter(bullDash: BullDash, options: BullDashExpressOptions = {}) {
@@ -492,12 +501,14 @@ export function createBullDashRouter(bullDash: BullDash, options: BullDashExpres
     res.status(statusCode).json(response);
   });
 
+  const genericPath = isExpressV5 ? '*all' : '*';
+
   // SPA fallback: serve index.html for all non-API routes (must be after API routes)
   try {
     const uiPackagePath = path.dirname(require.resolve('@bulldash/ui/package.json'));
     const uiDistPath = path.join(uiPackagePath, 'dist');
 
-    router.get('*', (req, res) => {
+    router.get(genericPath, (req, res) => {
       // Only serve index.html for non-API routes and non-asset routes
       if (!req.path.startsWith('/api') && !req.path.startsWith('/assets')) {
         const indexPath = path.join(uiDistPath, 'index.html');
@@ -520,7 +531,7 @@ export function createBullDashRouter(bullDash: BullDash, options: BullDashExpres
     });
   } catch (error) {
     // If UI package is not available, serve error for all routes
-    router.get('*', (req, res) => {
+    router.get(genericPath, (req, res) => {
       if (!req.path.startsWith('/api')) {
         res.status(500).send(`
           <h1>BullDash UI Error</h1>
