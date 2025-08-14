@@ -232,14 +232,14 @@ export const useJobsStore = defineStore('jobs', () => {
       const jobIndex = jobs.value.findIndex(job => job.id === jobId);
       if (jobIndex !== -1) {
         const job = jobs.value[jobIndex];
-        // Update job state to failed after discard
-        jobs.value[jobIndex] = { ...job, state: 'failed' };
+        // According to BullMQ docs, discard moves job back to waiting state, not failed
+        jobs.value[jobIndex] = { ...job, state: 'waiting' };
 
         // Update queue counts
         const { useQueuesStore } = await import('@/stores/queues');
         const queuesStore = useQueuesStore();
         queuesStore.updateJobCount(queueName, 'active', -1);
-        queuesStore.updateJobCount(queueName, 'failed', 1);
+        queuesStore.updateJobCount(queueName, 'waiting', 1);
       }
 
       console.log(`Successfully discarded job ${jobId} in queue ${queueName}`);
