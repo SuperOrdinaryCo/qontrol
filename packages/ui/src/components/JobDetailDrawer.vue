@@ -120,7 +120,10 @@
               <div v-if="jobDetail.stacktrace" class="mt-3">
                 <details>
                   <summary class="text-sm text-danger-700 cursor-pointer">Stack Trace</summary>
-                  <pre class="mt-2 text-xs text-danger-600 overflow-x-auto">{{ jobDetail.stacktrace.join('\n') }}</pre>
+                  <details v-for="(attempt, index) in jobDetail.stacktrace" :key="index" :open="index + 1 === jobDetail.stacktrace.length">
+                    <summary class="text-sm text-danger-700 cursor-pointer">Attempt #{{ index + 1 }} -> {{ showBasicError(attempt) }} </summary>
+                    <pre class="mt-2 text-xs text-danger-600 overflow-x-auto">{{ attempt }}</pre>
+                  </details>
                 </details>
               </div>
             </div>
@@ -203,5 +206,15 @@ function formatDelayRemaining(delay: number, createdAt: Date): string {
   } else {
     return `in ${seconds}s`
   }
+}
+
+function showBasicError(error: string): string {
+  const errorLine = error.split('\n')[0];
+
+  if (errorLine) {
+    return errorLine.slice(0, 60)
+  }
+
+  return 'Error:';
 }
 </script>
