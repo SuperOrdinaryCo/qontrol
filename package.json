@@ -15,12 +15,9 @@
     "dev:express-pkg": "cd packages/express && npm run dev",
     "dev:ui": "cd packages/ui && npm run dev",
     "dev:express": "cd examples/express && npm run dev",
-    "dev:frontend": "cd frontend && npm run dev",
-    "dev:standalone": "concurrently \"npm run dev:packages\" \"npm run dev:frontend\"",
 
-    "build": "npm run build:packages && npm run build:frontend",
+    "build": "npm run build:packages",
     "build:packages": "npm run build --workspaces --if-present",
-    "build:frontend": "cd frontend && npm run build",
     "build:watch": "npm run build:packages -- --watch",
 
     "start": "node dist/server.js",

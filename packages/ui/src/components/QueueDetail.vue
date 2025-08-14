@@ -512,6 +512,7 @@ function getStateColor(state: string): string {
     failed: 'text-danger-600',
     delayed: 'text-warning-600',
     paused: 'text-gray-500',
+    prioritized: 'text-purple-600',
     'waiting-children': 'text-blue-600',
   }
   return colors[state] || 'text-gray-600'
