@@ -240,17 +240,16 @@
         <!-- Table Body -->
         <div class="divide-y divide-gray-200">
           <div
-            v-for="job in jobs"
+            v-for="(job, index) in jobs"
             :key="job.id"
             class="px-6 py-4 hover:bg-gray-50 cursor-pointer relative"
-            @click="toggleJobSelection(job.id)"
+            @click="handleJobClick(job.id, index, $event)"
           >
             <div class="flex items-center">
               <input
                 type="checkbox"
                 :checked="selection.selectedIds.has(job.id)"
-                @click.stop
-                @change="toggleJobSelection(job.id)"
+                @click.stop="handleJobClick(job.id, index, $event)"
                 class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded mr-4"
               />
               <div class="jobs-table-grid items-center text-sm">
@@ -460,6 +459,9 @@ let jobIdSearchTimeout: ReturnType<typeof setTimeout> | null = null
 // Queue pause/resume state
 const pausingQueue = ref(false)
 
+// Bulk selection state
+const lastSelectedIndex = ref<number>(-1)
+
 const queueInfo = computed(() =>
   queuesStore.getQueueByName(queueName.value)
 )
@@ -572,6 +574,47 @@ function toggleSelectAll() {
 
 function toggleJobSelection(jobId: string) {
   jobsStore.toggleJobSelection(jobId)
+}
+
+function handleJobClick(jobId: string, index: number, event: Event) {
+  // Close any open dropdowns when selecting jobs
+  activeDropdown.value = null
+
+  if (event instanceof MouseEvent && event.shiftKey && lastSelectedIndex.value !== -1) {
+    // Shift+click: select range
+    handleRangeSelection(index)
+  } else {
+    // Regular click: toggle single job
+    jobsStore.toggleJobSelection(jobId)
+    lastSelectedIndex.value = index
+  }
+}
+
+function handleRangeSelection(currentIndex: number) {
+  const startIndex = Math.min(lastSelectedIndex.value, currentIndex)
+  const endIndex = Math.max(lastSelectedIndex.value, currentIndex)
+
+  // Get all job IDs in the range
+  const jobsInRange = jobs.value.slice(startIndex, endIndex + 1)
+
+  // Check if all jobs in range are already selected
+  const allInRangeSelected = jobsInRange.every(job => selection.value.selectedIds.has(job.id))
+
+  if (allInRangeSelected) {
+    // If all are selected, deselect the range
+    jobsInRange.forEach(job => {
+      if (selection.value.selectedIds.has(job.id)) {
+        jobsStore.toggleJobSelection(job.id)
+      }
+    })
+  } else {
+    // If some or none are selected, select all in range
+    jobsInRange.forEach(job => {
+      if (!selection.value.selectedIds.has(job.id)) {
+        jobsStore.toggleJobSelection(job.id)
+      }
+    })
+  }
 }
 
 function clearSelection() {
