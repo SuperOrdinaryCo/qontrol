@@ -7,6 +7,7 @@ export type QueueInput = {
   failable?: boolean;
   delayed?: number;
   awaited?: number;
+  copies?: number;
 }
 
 export const setupQueue = (config: Config) => {

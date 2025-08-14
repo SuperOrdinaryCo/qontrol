@@ -37,10 +37,21 @@ app.get('/', (req, res) => {
 app.post('/add-job', async (req, res) => {
   const opts: Partial<JobsOptions> = {}
 
-  const { failable, delayed, awaited, name = 'default' }: QueueInput = req.body ?? {};
+  const { failable, delayed, awaited, name = 'default', copies }: QueueInput = req.body ?? {};
 
   if (delayed) {
     opts.delay = delayed;
+  }
+
+  if (copies) {
+    const jobs = await Promise.all(Array.from({ length: copies }).map(() => DefaultQueue.add(name, {
+      failable,
+      awaited,
+    } as QueueInput, opts)))
+
+    return res.send({
+      jobId: jobs.map(job => job.id),
+    })
   }
 
   const job = await DefaultQueue.add(name, {
