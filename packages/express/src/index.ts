@@ -1,8 +1,4 @@
 import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import compression from 'compression';
-import rateLimit from 'express-rate-limit';
 import path from 'path';
 import {
   BulkActionResponse,
@@ -14,45 +10,10 @@ import {
 } from '@bulldash/core';
 import {validateGetJobs} from './validation';
 
-export interface BullDashExpressOptions {
-  cors?: boolean | any;
-  rateLimit?: boolean | any;
-  authentication?: (req: express.Request, res: express.Response, next: express.NextFunction) => void;
-}
+export interface BullDashExpressOptions {}
 
 export function createBullDashRouter(bullDash: BullDash, options: BullDashExpressOptions = {}) {
   const router = express.Router();
-
-  // Apply security middleware
-  if (options.cors !== false) {
-    router.use(cors(typeof options.cors === 'object' ? options.cors : {}));
-  }
-
-  router.use(helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        scriptSrc: ["'self'"],
-        imgSrc: ["'self'", "data:", "https:"],
-      },
-    },
-  }));
-  router.use(compression());
-
-  // Apply rate limiting
-  if (options.rateLimit !== false) {
-    const limiter = rateLimit(typeof options.rateLimit === 'object' ? options.rateLimit : {
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      max: 100 // limit each IP to 100 requests per windowMs
-    });
-    router.use(limiter);
-  }
-
-  // Apply authentication middleware if provided
-  if (options.authentication) {
-    router.use(options.authentication);
-  }
 
   // Serve UI assets from @bulldash/ui package
   try {
