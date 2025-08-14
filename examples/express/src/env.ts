@@ -1,4 +1,4 @@
-export const config = {
+export const configFactory = () => ({
   // Server Configuration
   port: parseInt(process.env.PORT || '3000'),
   nodeEnv: process.env.NODE_ENV || 'development',
@@ -34,4 +34,4 @@ export const config = {
   cors: {
     origin: process.env.CORS_ORIGIN || process.env.FRONTEND_URL || 'http://localhost:5173',
   },
-};
+});
