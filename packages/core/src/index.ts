@@ -65,6 +65,15 @@ export class BullDash {
     return JobService.bulkRemoveJobs(queueName, jobIds);
   }
 
+  // Queue management
+  async pauseQueue(queueName: string) {
+    return JobService.pauseQueue(queueName);
+  }
+
+  async resumeQueue(queueName: string) {
+    return JobService.resumeQueue(queueName);
+  }
+
   // Health check
   async getHealth() {
     return JobService.getHealth();

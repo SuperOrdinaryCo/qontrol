@@ -13,9 +13,29 @@
       </div>
 
       <div class="flex items-center space-x-3">
-        <button @click="refreshJobs" :disabled="loading" class="btn-secondary">
+        <button @click="refreshJobs" :disabled="loading" class="btn-secondary flex items-center">
           <ArrowPathIcon class="w-4 h-4 mr-2" :class="{ 'animate-spin': loading }" />
           Refresh
+        </button>
+
+        <!-- Pause/Resume Queue Button -->
+        <button
+          v-if="queueInfo"
+          @click="toggleQueuePause"
+          :disabled="pausingQueue"
+          :class="[
+            'btn-secondary flex items-center',
+            queueInfo.isPaused
+              ? 'text-green-600 hover:text-green-700 border-green-300 hover:border-green-400'
+              : 'text-orange-600 hover:text-orange-700 border-orange-300 hover:border-orange-400'
+          ]"
+        >
+          <component
+            :is="queueInfo.isPaused ? PlayIcon : PauseIcon"
+            class="w-4 h-4 mr-2"
+            :class="{ 'animate-pulse': pausingQueue }"
+          />
+          {{ pausingQueue ? 'Processing...' : (queueInfo.isPaused ? 'Resume' : 'Pause') }}
         </button>
       </div>
     </div>
@@ -388,7 +408,7 @@ import { storeToRefs } from 'pinia'
 import { useJobsStore } from '@/stores/jobs'
 import { useQueuesStore } from '@/stores/queues'
 import { useSettingsStore } from '@/stores/settings'
-import { ArrowLeftIcon, ArrowPathIcon, MagnifyingGlassIcon, XMarkIcon, HashtagIcon, EllipsisVerticalIcon, TrashIcon, StopIcon, ArrowUpIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, ArrowPathIcon, MagnifyingGlassIcon, XMarkIcon, HashtagIcon, EllipsisVerticalIcon, TrashIcon, StopIcon, ArrowUpIcon, PlayIcon, PauseIcon } from '@heroicons/vue/24/outline'
 import { formatTimestamp, formatDuration } from '@/utils/date'
 import ConfirmDialog from './ConfirmDialog.vue'
 
@@ -436,6 +456,9 @@ const bulkRemoving = ref(false)
 // Auto-refresh
 let refreshInterval: ReturnType<typeof setInterval> | null = null
 let jobIdSearchTimeout: ReturnType<typeof setTimeout> | null = null
+
+// Queue pause/resume state
+const pausingQueue = ref(false)
 
 const queueInfo = computed(() =>
   queuesStore.getQueueByName(queueName.value)
@@ -680,6 +703,32 @@ function handleBulkRemove() {
   confirmDialogMessage.value = `Are you sure you want to remove ${jobIds.length} job(s)? This action cannot be undone and will also remove any child jobs.`
   confirmDialogDetails.value = ''
   jobToRemove.value = jobIds.join(', ')
+}
+
+async function toggleQueuePause() {
+  if (!queueInfo.value || pausingQueue.value) return
+
+  try {
+    pausingQueue.value = true
+
+    if (queueInfo.value.isPaused) {
+      // Resume the queue
+      await queuesStore.resumeQueue(queueName.value)
+      console.log(`Queue ${queueName.value} resumed successfully`)
+    } else {
+      // Pause the queue
+      await queuesStore.pauseQueue(queueName.value)
+      console.log(`Queue ${queueName.value} paused successfully`)
+    }
+
+    // Refresh queue info to get updated status
+    await queuesStore.fetchQueue(queueName.value)
+  } catch (error) {
+    console.error('Failed to toggle queue pause:', error)
+    alert(`Failed to ${queueInfo.value.isPaused ? 'resume' : 'pause'} queue. Please try again.`)
+  } finally {
+    pausingQueue.value = false
+  }
 }
 
 function setupAutoRefresh() {

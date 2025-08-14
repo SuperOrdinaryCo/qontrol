@@ -112,6 +112,42 @@ export const useQueuesStore = defineStore('queues', () => {
     }
   }
 
+  async function pauseQueue(queueName: string) {
+    try {
+      await apiClient.pauseQueue(queueName);
+
+      // Update the queue's paused status in local state
+      const queue = queues.value.find(q => q.name === queueName);
+      if (queue) {
+        queue.isPaused = true;
+      }
+
+      console.log(`Successfully paused queue ${queueName}`);
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to pause queue';
+      console.error('Failed to pause queue:', err);
+      throw err; // Re-throw so the UI can handle the error
+    }
+  }
+
+  async function resumeQueue(queueName: string) {
+    try {
+      await apiClient.resumeQueue(queueName);
+
+      // Update the queue's paused status in local state
+      const queue = queues.value.find(q => q.name === queueName);
+      if (queue) {
+        queue.isPaused = false;
+      }
+
+      console.log(`Successfully resumed queue ${queueName}`);
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to resume queue';
+      console.error('Failed to resume queue:', err);
+      throw err; // Re-throw so the UI can handle the error
+    }
+  }
+
   return {
     // State
     queues,
@@ -133,6 +169,8 @@ export const useQueuesStore = defineStore('queues', () => {
     setSearchQuery,
     clearSearch,
     updateJobCount,
+    pauseQueue,
+    resumeQueue,
     reset,
   };
 });

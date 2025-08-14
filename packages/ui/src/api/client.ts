@@ -101,6 +101,14 @@ export const apiClient = {
     return response.data;
   },
 
+  async pauseQueue(queueName: string): Promise<void> {
+    await api.post(`/queues/${queueName}/pause`);
+  },
+
+  async resumeQueue(queueName: string): Promise<void> {
+    await api.post(`/queues/${queueName}/resume`);
+  },
+
   // Health check
   async getHealth(): Promise<HealthCheckResponse> {
     const response = await api.get<HealthCheckResponse>('/healthz');

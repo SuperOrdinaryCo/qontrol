@@ -343,6 +343,40 @@ export class JobService {
   }
 
   /**
+   * Pause a queue
+   */
+  static async pauseQueue(queueName: string): Promise<boolean> {
+    const logger = Logger.getInstance();
+
+    try {
+      const queue = QueueRegistry.getQueue(queueName);
+      await queue.pause();
+      logger.info(`Successfully paused queue ${queueName}`);
+      return true;
+    } catch (error) {
+      logger.error(`Failed to pause queue ${queueName}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Resume a queue
+   */
+  static async resumeQueue(queueName: string): Promise<boolean> {
+    const logger = Logger.getInstance();
+
+    try {
+      const queue = QueueRegistry.getQueue(queueName);
+      await queue.resume();
+      logger.info(`Successfully resumed queue ${queueName}`);
+      return true;
+    } catch (error) {
+      logger.error(`Failed to resume queue ${queueName}:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Convert Job to JobSummary
    */
   private static jobToSummary(job: Job): JobSummary {

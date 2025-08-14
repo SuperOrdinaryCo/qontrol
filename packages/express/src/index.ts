@@ -369,6 +369,66 @@ export function createBullDashRouter(bullDash: BullDash, options: BullDashExpres
   });
 
   /**
+   * POST /api/queues/:queue/pause
+   * Pause a queue
+   */
+  router.post('/api/queues/:queue/pause', async (req, res) => {
+    try {
+      const { queue: queueName } = req.params;
+
+      const success = await bullDash.pauseQueue(queueName);
+
+      if (!success) {
+        return res.status(500).json({
+          message: 'Failed to pause queue',
+          code: 'QUEUE_PAUSE_FAILED',
+        });
+      }
+
+      res.json({
+        message: 'Queue paused successfully',
+        queueName,
+        timestamp: new Date(),
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: 'Failed to pause queue',
+        code: 'QUEUE_PAUSE_ERROR',
+      });
+    }
+  });
+
+  /**
+   * POST /api/queues/:queue/resume
+   * Resume a queue
+   */
+  router.post('/api/queues/:queue/resume', async (req, res) => {
+    try {
+      const { queue: queueName } = req.params;
+
+      const success = await bullDash.resumeQueue(queueName);
+
+      if (!success) {
+        return res.status(500).json({
+          message: 'Failed to resume queue',
+          code: 'QUEUE_RESUME_FAILED',
+        });
+      }
+
+      res.json({
+        message: 'Queue resumed successfully',
+        queueName,
+        timestamp: new Date(),
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: 'Failed to resume queue',
+        code: 'QUEUE_RESUME_ERROR',
+      });
+    }
+  });
+
+  /**
    * GET /api/healthz
    * Health check endpoint
    */
