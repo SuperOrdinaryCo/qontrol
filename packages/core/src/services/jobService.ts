@@ -29,7 +29,7 @@ export class JobService {
       for (const state of states) {
         try {
           // Use correct BullMQ method to get jobs for each state
-          const stateJobs = await queue.getJobs([state as any], 0, -1, true);
+          const stateJobs = await queue.getJobs(state, 0, -1, true);
           allJobs.push(...stateJobs);
         } catch (error) {
           logger.warn(`Failed to get ${state} jobs for queue ${queueName}:`, error);

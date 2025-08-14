@@ -118,6 +118,35 @@ export function createBullDashRouter(bullDash: BullDash, options: BullDashExpres
   });
 
   /**
+   * GET /api/queues/:queue
+   * Get a specific queue with its job counts
+   */
+  router.get('/api/queues/:queue', async (req, res) => {
+    try {
+      const queueName = req.params.queue;
+      const queues = await bullDash.getQueues();
+      const queue = queues.find(q => q.name === queueName);
+
+      if (!queue) {
+        return res.status(404).json({
+          message: 'Queue not found',
+          code: 'QUEUE_NOT_FOUND',
+        });
+      }
+
+      res.json({
+        queue,
+        timestamp: new Date(),
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: 'Failed to fetch queue',
+        code: 'QUEUE_FETCH_ERROR',
+      });
+    }
+  });
+
+  /**
    * GET /api/queues/:queue/jobs
    * Get jobs for a specific queue with pagination, filtering, and search
    */

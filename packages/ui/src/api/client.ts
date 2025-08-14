@@ -49,6 +49,11 @@ export const apiClient = {
     return response.data.queues;
   },
 
+  async getQueue(queueName: string): Promise<QueueInfo> {
+    const response = await api.get<{ queue: QueueInfo; timestamp: Date }>(`/queues/${queueName}`);
+    return response.data.queue;
+  },
+
   // Job operations
   async getJobs(queueName: string, params: GetJobsRequest = {}): Promise<GetJobsResponse> {
     const response = await api.get<GetJobsResponse>(`/queues/${queueName}/jobs`, {

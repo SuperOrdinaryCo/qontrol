@@ -512,6 +512,8 @@ function applyFilters() {
 function refreshJobs() {
   // Preserve selection when manually refreshing (with visible loading)
   fetchJobs(true, false)
+  // Also refresh queue info to update counts - now using optimized single queue fetch
+  queuesStore.fetchQueue(queueName.value)
 }
 
 function fetchJobs(preserveSelection = false, silentRefresh = false) {
@@ -705,6 +707,11 @@ function setupAutoRefresh() {
           // Preserve selection during auto-refresh AND make it silent
           fetchJobs(true, true)
         }
+
+        // Always refresh queue counts during auto-refresh - now using optimized single queue fetch
+        queuesStore.fetchQueue(queueName.value).catch(error => {
+          console.error('Failed to refresh queue counts during auto-refresh:', error)
+        })
       }
     }, settings.value.autoRefreshInterval * 1000)
   }

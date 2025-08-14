@@ -62,6 +62,29 @@ export const useQueuesStore = defineStore('queues', () => {
     }
   }
 
+  async function fetchQueue(queueName: string) {
+    try {
+      error.value = null;
+      const queueData = await apiClient.getQueue(queueName);
+
+      // Update the specific queue in the local state
+      const existingIndex = queues.value.findIndex(q => q.name === queueName);
+      if (existingIndex !== -1) {
+        queues.value[existingIndex] = queueData;
+      } else {
+        // Add queue if it doesn't exist in local state
+        queues.value.push(queueData);
+      }
+
+      lastUpdated.value = new Date();
+      console.log(`Successfully refreshed queue ${queueName} counts`);
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to fetch queue';
+      console.error('Failed to fetch queue:', err);
+      throw err; // Re-throw so the UI can handle the error
+    }
+  }
+
   function getQueueByName(name: string): QueueInfo | undefined {
     return queues.value.find(queue => queue.name === name);
   }
@@ -105,6 +128,7 @@ export const useQueuesStore = defineStore('queues', () => {
 
     // Actions
     fetchQueues,
+    fetchQueue,
     getQueueByName,
     setSearchQuery,
     clearSearch,
