@@ -501,6 +501,86 @@ export function createBullDashRouter(bullDash: BullDash, options: BullDashExpres
     res.status(statusCode).json(response);
   });
 
+  /**
+   * POST /api/queues/:queue/clean
+   * Clean jobs from a specific queue
+   */
+  router.post('/api/queues/:queue/clean', async (req, res) => {
+    try {
+      const queueName = req.params.queue;
+      const { grace = 0, limit = 0, type = 'completed' } = req.body;
+
+      const cleaned = await bullDash.cleanQueue(queueName, grace, limit, type);
+
+      const response = {
+        cleaned,
+        queueName,
+        type,
+        timestamp: new Date(),
+      };
+
+      res.json(response);
+    } catch (error: any) {
+      res.status(500).json({
+        message: `Failed to clean queue ${req.params.queue}`,
+        code: 'QUEUE_CLEAN_ERROR',
+        details: error.message,
+      });
+    }
+  });
+
+  /**
+   * POST /api/queues/:queue/drain
+   * Drain all waiting jobs from a queue
+   */
+  router.post('/api/queues/:queue/drain', async (req, res) => {
+    try {
+      const queueName = req.params.queue;
+
+      await bullDash.drainQueue(queueName);
+
+      const response = {
+        drained: true,
+        queueName,
+        timestamp: new Date(),
+      };
+
+      res.json(response);
+    } catch (error: any) {
+      res.status(500).json({
+        message: `Failed to drain queue ${req.params.queue}`,
+        code: 'QUEUE_DRAIN_ERROR',
+        details: error.message,
+      });
+    }
+  });
+
+  /**
+   * DELETE /api/queues/:queue/obliterate
+   * Obliterate a queue (remove all jobs and queue data)
+   */
+  router.delete('/api/queues/:queue/obliterate', async (req, res) => {
+    try {
+      const queueName = req.params.queue;
+
+      await bullDash.obliterateQueue(queueName);
+
+      const response = {
+        obliterated: true,
+        queueName,
+        timestamp: new Date(),
+      };
+
+      res.json(response);
+    } catch (error: any) {
+      res.status(500).json({
+        message: `Failed to obliterate queue ${req.params.queue}`,
+        code: 'QUEUE_OBLITERATE_ERROR',
+        details: error.message,
+      });
+    }
+  });
+
   const genericPath = isExpressV5 ? '*all' : '*';
 
   // SPA fallback: serve index.html for all non-API routes (must be after API routes)

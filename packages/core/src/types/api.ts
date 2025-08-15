@@ -138,3 +138,29 @@ export interface ApiError {
   code: string;
   details?: any;
 }
+
+// Queue cleaning operations
+export interface CleanQueueRequest {
+  grace?: number; // Grace period in milliseconds (jobs older than this will be cleaned)
+  limit?: number; // Maximum number of jobs to clean (0 = no limit)
+  type?: 'completed' | 'failed' | 'active' | 'delayed' | 'waiting' | 'paused' | 'prioritized';
+}
+
+export interface CleanQueueResponse {
+  cleaned: number;
+  queueName: string;
+  type: string;
+  timestamp: Date;
+}
+
+export interface DrainQueueResponse {
+  drained: boolean;
+  queueName: string;
+  timestamp: Date;
+}
+
+export interface ObliterateQueueResponse {
+  obliterated: boolean;
+  queueName: string;
+  timestamp: Date;
+}

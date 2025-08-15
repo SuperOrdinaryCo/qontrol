@@ -19,30 +19,30 @@
 
       <!-- Modal panel -->
       <div
-        class="relative inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6"
+        class="relative inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6"
       >
         <div class="sm:flex sm:items-start">
           <!-- Warning icon -->
-          <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-            <ExclamationTriangleIcon class="h-6 w-6 text-red-600" aria-hidden="true" />
+          <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-800 sm:mx-0 sm:h-10 sm:w-10">
+            <ExclamationTriangleIcon class="h-6 w-6 text-red-600 dark:text-gray-100" aria-hidden="true" />
           </div>
 
           <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
             <!-- Title -->
-            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100" id="modal-title">
               {{ title || 'Confirm Action' }}
             </h3>
 
             <!-- Message -->
             <div class="mt-2">
-              <p class="text-sm text-gray-500">
+              <p class="text-sm text-gray-500 dark:text-gray-300">
                 {{ message }}
               </p>
             </div>
 
             <!-- Additional details if provided -->
-            <div v-if="details" class="mt-3 p-3 bg-gray-50 rounded-md">
-              <p class="text-xs text-gray-600">
+            <div v-if="details" class="mt-3 p-3 bg-gray-50 dark:bg-gray-500 rounded-md">
+              <p class="text-xs text-gray-600 dark:text-gray-100">
                 {{ details }}
               </p>
             </div>
@@ -61,7 +61,7 @@
           </button>
           <button
             type="button"
-            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:w-auto sm:text-sm transition-colors"
+            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-500 hover:dark:border-gray-700 shadow-sm px-4 py-2 bg-white dark:bg-gray-500 text-base font-medium text-gray-700 dark:text-gray-100 hover:bg-gray-50 hover:dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:w-auto sm:text-sm transition-colors"
             @click="handleCancel"
             :disabled="loading"
           >

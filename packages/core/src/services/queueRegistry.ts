@@ -165,4 +165,65 @@ export class QueueRegistry {
     await Promise.all(closePromises);
     this.queues.clear();
   }
+
+  /**
+   * Clean jobs from a queue by state
+   */
+  static async cleanQueue(queueName: string, grace: number = 0, limit: number = 0, type: 'completed' | 'failed' | 'active' | 'delayed' | 'waiting' | 'paused' | 'prioritized' = 'completed'): Promise<number> {
+    const logger = Logger.getInstance();
+
+    try {
+      const queue = this.getQueue(queueName);
+
+      // Clean jobs based on type
+      const cleanedCount = await queue.clean(grace, limit, type);
+
+      logger.info(`Cleaned ${cleanedCount} ${type} jobs from queue "${queueName}"`);
+      return cleanedCount;
+    } catch (error) {
+      logger.error(`Failed to clean ${type} jobs from queue ${queueName}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obliterate (completely remove) a queue and all its jobs
+   */
+  static async obliterateQueue(queueName: string): Promise<void> {
+    const logger = Logger.getInstance();
+
+    try {
+      const queue = this.getQueue(queueName);
+
+      // Obliterate the queue (removes all jobs and queue data)
+      await queue.obliterate({ force: true });
+
+      // Remove from our local registry
+      this.queues.delete(queueName);
+
+      logger.info(`Obliterated queue "${queueName}" and all its jobs`);
+    } catch (error) {
+      logger.error(`Failed to obliterate queue ${queueName}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Drain queue (remove all waiting jobs)
+   */
+  static async drainQueue(queueName: string): Promise<void> {
+    const logger = Logger.getInstance();
+
+    try {
+      const queue = this.getQueue(queueName);
+
+      // Drain the queue (removes all waiting jobs)
+      await queue.drain();
+
+      logger.info(`Drained queue "${queueName}" (removed all waiting jobs)`);
+    } catch (error) {
+      logger.error(`Failed to drain queue ${queueName}:`, error);
+      throw error;
+    }
+  }
 }

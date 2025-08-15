@@ -13,6 +13,16 @@
       </div>
 
       <div class="flex items-center space-x-3">
+        <!-- Queue Clean Button -->
+        <button
+            @click="showCleanDialog(selectedStateTab)"
+            :disabled="cleaningQueue || !canCleanSelectedState"
+            class="btn-secondary flex items-center text-red-600 hover:text-red-500 border-red-300 hover:border-red-400 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <TrashIcon class="w-4 h-4 mr-2" :class="{ 'animate-pulse': cleaningQueue }" />
+          {{ cleaningQueue ? 'Cleaning...' : `Clean ${selectedStateTab}` }}
+        </button>
+
         <button @click="refreshJobs" :disabled="loading" class="btn-secondary flex items-center">
           <ArrowPathIcon class="w-4 h-4 mr-2" :class="{ 'animate-spin': loading }" />
           Refresh
@@ -27,7 +37,7 @@
             'btn-secondary flex items-center',
             queueInfo.isPaused
               ? 'text-green-600 hover:text-green-700 border-green-300 hover:border-green-400'
-              : 'text-orange-600 hover:text-orange-700 border-orange-300 hover:border-orange-400'
+              : 'text-orange-600 hover:text-orange-500 border-orange-300 hover:border-orange-400'
           ]"
         >
           <component
@@ -411,7 +421,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useJobsStore } from '@/stores/jobs'
 import { useQueuesStore } from '@/stores/queues'
@@ -421,6 +431,7 @@ import { formatTimestamp, formatDuration } from '@/utils/date'
 import ConfirmDialog from './ConfirmDialog.vue'
 
 const route = useRoute()
+const router = useRouter()
 const jobsStore = useJobsStore()
 const queuesStore = useQueuesStore()
 const settingsStore = useSettingsStore()
@@ -471,6 +482,10 @@ let jobIdSearchTimeout: ReturnType<typeof setTimeout> | null = null
 // Queue pause/resume state
 const pausingQueue = ref(false)
 
+// Queue cleaning state
+const cleaningQueue = ref(false)
+const cleanAction = ref<string | null>(null)
+
 // Bulk selection state
 const lastSelectedIndex = ref<number>(-1)
 
@@ -502,6 +517,13 @@ const hasFailedJobsSelected = computed(() => {
 
   const selectedJobs = jobs.value.filter(job => selection.value.selectedIds.has(job.id))
   return selectedJobs.some(job => job.state === 'failed')
+})
+
+// Check if the currently selected state can be cleaned
+const canCleanSelectedState = computed(() => {
+  // Only allow cleaning certain states that make sense
+  const cleanableStates = ['completed', 'failed', 'waiting', 'delayed']
+  return cleanableStates.includes(selectedStateTab.value)
 })
 
 function getStateColor(state: string): string {
@@ -658,6 +680,12 @@ async function handleRemoveJob(jobId: string) {
 }
 
 function confirmRemoveJob() {
+  // Check if this is a queue cleaning action
+  if (cleanAction.value) {
+    performCleanAction()
+    return
+  }
+
   if (!jobToRemove.value) return
 
   // Check if this is a bulk removal (jobToRemove contains comma-separated IDs)
@@ -857,6 +885,45 @@ function setupAutoRefresh() {
   }
 }
 
+// Queue cleaning functions
+function toggleCleanMenu() {
+  showCleanMenu.value = !showCleanMenu.value
+}
+
+function showCleanDialog(action: string) {
+  cleanAction.value = action
+
+  // Set up confirmation dialog based on action
+  showConfirmDialog.value = true
+  confirmDialogTitle.value = `Clean ${action.charAt(0).toUpperCase() + action.slice(1)} Jobs`
+  confirmDialogMessage.value = `Are you sure you want to clean all ${action} jobs from queue "${queueName.value}"?`
+  confirmDialogDetails.value = `This will permanently remove all ${action} jobs from the queue. This action cannot be undone.`
+}
+
+async function performCleanAction() {
+  console.log(cleanAction.value)
+  if (!cleanAction.value) return
+
+  try {
+    cleaningQueue.value = true
+
+    // Use the selected state directly for cleaning
+    const result = await queuesStore.cleanQueue(queueName.value, { type: cleanAction.value as any })
+    console.log(`Cleaned ${result.cleaned} ${cleanAction.value} jobs`)
+
+    // Refresh queue info and jobs after cleaning
+    await queuesStore.fetchQueue(queueName.value)
+    refreshJobs()
+  } catch (error) {
+    console.error(`Failed to clean ${cleanAction.value} jobs:`, error)
+    alert(`Failed to clean ${cleanAction.value} jobs. Please try again.`)
+  } finally {
+    cleaningQueue.value = false
+    cleanAction.value = null
+    showConfirmDialog.value = false
+  }
+}
+
 onMounted(() => {
   // Load queue info first
   queuesStore.fetchQueues()
@@ -901,7 +968,7 @@ onUnmounted(() => {
 })
 
 // Add click outside handler function
-function handleClickOutside(event: Event) {
+function handleClickOutside() {
   // Close dropdown if clicked outside
   if (activeDropdown.value) {
     activeDropdown.value = null

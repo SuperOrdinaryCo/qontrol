@@ -95,7 +95,7 @@ export const useSettingsStore = defineStore('settings', () => {
     settings,
     autoRefreshEnabled,
     isDarkMode,
-
+    
     // Actions
     updateSettings,
     resetSettings,

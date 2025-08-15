@@ -114,6 +114,22 @@ export const apiClient = {
     await api.post(`/queues/${queueName}/resume`);
   },
 
+  // Queue cleaning operations
+  async cleanQueue(queueName: string, options: { grace?: number; limit?: number; type?: 'completed' | 'failed' | 'active' | 'delayed' | 'waiting' | 'paused' | 'prioritized' } = {}): Promise<{ cleaned: number; queueName: string; type: string; timestamp: Date }> {
+    const response = await api.post(`/queues/${queueName}/clean`, options);
+    return response.data;
+  },
+
+  async drainQueue(queueName: string): Promise<{ drained: boolean; queueName: string; timestamp: Date }> {
+    const response = await api.post(`/queues/${queueName}/drain`);
+    return response.data;
+  },
+
+  async obliterateQueue(queueName: string): Promise<{ obliterated: boolean; queueName: string; timestamp: Date }> {
+    const response = await api.delete(`/queues/${queueName}/obliterate`);
+    return response.data;
+  },
+
   // Health check
   async getHealth(): Promise<HealthCheckResponse> {
     const response = await api.get<HealthCheckResponse>('/healthz');

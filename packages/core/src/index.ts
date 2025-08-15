@@ -98,4 +98,17 @@ export class BullDash {
   async cleanup() {
     return QueueRegistry.cleanup();
   }
+
+  // Queue cleaning methods
+  async cleanQueue(queueName: string, grace: number = 0, limit: number = 0, type: 'completed' | 'failed' | 'active' | 'delayed' | 'waiting' | 'paused' | 'prioritized' = 'completed') {
+    return QueueRegistry.cleanQueue(queueName, grace, limit, type);
+  }
+
+  async obliterateQueue(queueName: string) {
+    return QueueRegistry.obliterateQueue(queueName);
+  }
+
+  async drainQueue(queueName: string) {
+    return QueueRegistry.drainQueue(queueName);
+  }
 }

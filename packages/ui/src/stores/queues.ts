@@ -148,6 +148,46 @@ export const useQueuesStore = defineStore('queues', () => {
     }
   }
 
+  // Queue cleaning operations
+  async function cleanQueue(queueName: string, options: { grace?: number; limit?: number; type?: 'completed' | 'failed' | 'active' | 'delayed' | 'waiting' | 'paused' | 'prioritized' } = {}) {
+    try {
+      error.value = null;
+      const result = await apiClient.cleanQueue(queueName, options);
+      console.log(`Successfully cleaned ${result.cleaned} ${options.type || 'completed'} jobs from queue ${queueName}`);
+      return result;
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to clean queue';
+      console.error('Failed to clean queue:', err);
+      throw err;
+    }
+  }
+
+  async function drainQueue(queueName: string) {
+    try {
+      error.value = null;
+      const result = await apiClient.drainQueue(queueName);
+      console.log(`Successfully drained queue ${queueName}`);
+      return result;
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to drain queue';
+      console.error('Failed to drain queue:', err);
+      throw err;
+    }
+  }
+
+  async function obliterateQueue(queueName: string) {
+    try {
+      error.value = null;
+      const result = await apiClient.obliterateQueue(queueName);
+      console.log(`Successfully obliterated queue ${queueName}`);
+      return result;
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to obliterate queue';
+      console.error('Failed to obliterate queue:', err);
+      throw err;
+    }
+  }
+
   return {
     // State
     queues,
@@ -172,5 +212,8 @@ export const useQueuesStore = defineStore('queues', () => {
     pauseQueue,
     resumeQueue,
     reset,
+    cleanQueue,
+    drainQueue,
+    obliterateQueue,
   };
 });
