@@ -115,6 +115,10 @@
           <dt class="text-sm text-gray-500">Current Time</dt>
           <dd class="text-sm text-gray-900">{{ currentTime }}</dd>
         </div>
+        <div>
+          <dt class="text-sm text-gray-500">Version</dt>
+          <dd class="text-sm text-gray-900">{{ version }}</dd>
+        </div>
       </dl>
     </div>
   </div>
@@ -126,6 +130,9 @@ import { storeToRefs } from 'pinia'
 import { useSettingsStore } from '@/stores/settings'
 import { formatTimestamp } from '@/utils/date'
 import type { AppSettings } from '@/types'
+
+// Version information
+const version = '1.0.0'
 
 const settingsStore = useSettingsStore()
 const { settings, autoRefreshEnabled } = storeToRefs(settingsStore)
