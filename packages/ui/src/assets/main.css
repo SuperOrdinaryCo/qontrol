@@ -9,6 +9,7 @@
 
   .btn-secondary {
     @apply bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors;
+    @apply dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100;
   }
 
   .state-badge {
@@ -17,33 +18,41 @@
 
   .state-waiting {
     @apply state-badge bg-gray-100 text-gray-800;
+    @apply dark:bg-gray-800 dark:text-gray-200;
   }
 
   .state-active {
     @apply state-badge bg-primary-100 text-primary-800;
+    @apply dark:bg-primary-900 dark:text-primary-200;
   }
 
   .state-completed {
     @apply state-badge bg-success-100 text-success-800;
+    @apply dark:bg-success-900 dark:text-success-200;
   }
 
   .state-failed {
     @apply state-badge bg-danger-100 text-danger-800;
+    @apply dark:bg-danger-900 dark:text-danger-200;
   }
 
   .state-delayed {
     @apply state-badge bg-warning-100 text-warning-800;
+    @apply dark:bg-warning-900 dark:text-warning-200;
   }
 
   .state-paused {
     @apply state-badge bg-gray-100 text-gray-600;
+    @apply dark:bg-gray-800 dark:text-gray-400;
   }
 
   .state-prioritized {
     @apply state-badge bg-purple-100 text-purple-800;
+    @apply dark:bg-purple-900 dark:text-purple-200;
   }
 
   .state-waiting-children {
     @apply state-badge bg-blue-100 text-blue-800;
+    @apply dark:bg-blue-900 dark:text-blue-200;
   }
 }

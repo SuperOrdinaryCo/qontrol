@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow cursor-pointer" @click="$emit('click')">
+  <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-800 hover:shadow-md transition-shadow cursor-pointer" @click="$emit('click')">
     <div class="p-6">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-3">
@@ -7,12 +7,12 @@
             <QueueListIcon class="w-5 h-5 text-primary-600" />
           </div>
           <div>
-            <h3 class="text-lg font-medium text-gray-900">{{ queue.name }}</h3>
+            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ queue.name }}</h3>
             <div class="flex items-center space-x-2 mt-1">
               <span v-if="queue.isPaused" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
                 Paused
               </span>
-              <span class="text-sm text-gray-500">{{ totalJobs }} jobs</span>
+              <span class="text-sm text-gray-500 dark:text-gray-300">{{ totalJobs }} jobs</span>
             </div>
           </div>
         </div>
@@ -58,27 +58,27 @@ const totalJobs = computed(() => {
 
 function getStateBackgroundClass(state: string): string {
   const backgroundClasses: Record<string, string> = {
-    waiting: 'bg-yellow-50',
-    active: 'bg-blue-50',
-    completed: 'bg-green-50',
-    failed: 'bg-red-50',
-    delayed: 'bg-purple-50',
-    paused: 'bg-gray-50',
-    'waiting-children': 'bg-yellow-50',
+    waiting: 'bg-yellow-50 dark:bg-yellow-800',
+    active: 'bg-blue-50 dark:bg-blue-800',
+    completed: 'bg-green-50 dark:bg-green-800',
+    failed: 'bg-red-50 dark:bg-red-800',
+    delayed: 'bg-purple-50 dark:bg-purple-800',
+    paused: 'bg-gray-50 dark:bg-gray-800',
+    'waiting-children': 'bg-yellow-50 dark:bg-yellow-800',
   }
-  return backgroundClasses[state] || 'bg-gray-50'
+  return backgroundClasses[state] || 'bg-gray-50 dark:bg-gray-800'
 }
 
 function getStateTextClass(state: string): string {
   const textClasses: Record<string, string> = {
-    waiting: 'text-yellow-700',
-    active: 'text-blue-700',
-    completed: 'text-green-700',
-    failed: 'text-red-700',
-    delayed: 'text-purple-700',
-    paused: 'text-gray-700',
-    'waiting-children': 'text-yellow-700',
+    waiting: 'text-yellow-700 dark:text-yellow-300',
+    active: 'text-blue-700 dark:text-blue-300',
+    completed: 'text-green-700 dark:text-green-300',
+    failed: 'text-red-700 dark:text-red-300',
+    delayed: 'text-purple-700 dark:text-purple-300',
+    paused: 'text-gray-700 dark:text-gray-300',
+    'waiting-children': 'text-yellow-700 dark:text-yellow-300',
   }
-  return textClasses[state] || 'text-gray-700'
+  return textClasses[state] || 'text-gray-700 dark:text-gray-300'
 }
 </script>

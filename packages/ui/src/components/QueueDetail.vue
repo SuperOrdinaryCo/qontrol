@@ -3,12 +3,12 @@
     <!-- Page Header -->
     <div class="flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <button @click="$router.back()" class="text-gray-400 hover:text-gray-600">
+        <button @click="$router.back()" class="text-gray-400 hover:text-gray-600 dark:text-gray-100 hober:dark:text-gray-300">
           <ArrowLeftIcon class="w-6 h-6" />
         </button>
         <div>
-          <h2 class="text-2xl font-bold text-gray-900">{{ queueName }}</h2>
-          <p class="text-gray-600">Queue details and jobs</p>
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-200">{{ queueName }}</h2>
+          <p class="text-gray-600 dark:text-gray-400">Queue details and jobs</p>
         </div>
       </div>
 
@@ -41,14 +41,14 @@
     </div>
 
     <!-- Queue Stats as Tabs -->
-    <div v-if="queueInfo" class="bg-white rounded-lg border border-gray-200">
-      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-        <h3 class="text-lg font-medium text-gray-900">Queue Statistics</h3>
+    <div v-if="queueInfo" class="bg-white dark:bg-gray-800  rounded-lg border border-gray-200 dark:border-gray-800">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Queue Statistics</h3>
         <span v-if="queueInfo.isPaused" class="state-paused">Paused</span>
       </div>
 
       <!-- Tab Navigation -->
-      <div class="border-b border-gray-200">
+      <div class="border-b border-gray-200 dark:border-gray-800">
         <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
           <button
             v-for="[state, count] in Object.entries(queueInfo.counts)"
@@ -58,7 +58,7 @@
               'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
               selectedStateTab === state
                 ? 'border-primary-500 text-primary-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-700 hover:border-gray-300'
             ]"
           >
             <div class="flex items-center space-x-2">
@@ -78,26 +78,26 @@
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-lg border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800  rounded-lg border border-gray-200 dark:border-gray-800 p-6">
       <div class="flex flex-wrap items-end gap-6">
         <!-- Job ID Search -->
         <div class="min-w-64">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Find Job by ID</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">Find Job by ID</label>
           <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <HashtagIcon class="h-5 w-5 text-gray-400" />
+              <HashtagIcon class="h-5 w-5 text-gray-400 dark:text-gray-800" />
             </div>
             <input
               v-model="jobIdQuery"
               type="text"
               placeholder="Enter job ID for instant lookup..."
-              class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 sm:text-sm"
+              class="block w-full pl-10 pr-4 py-3 border dark:text-gray-800 border-gray-300 dark:border-gray-600 rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 sm:text-sm"
               @keyup.enter="searchByJobId"
             />
             <div v-if="jobIdQuery" class="absolute inset-y-0 right-0 pr-3 flex items-center">
               <button
                 @click="jobIdQuery = ''; clearJobIdSearch()"
-                class="text-gray-400 hover:text-gray-600 transition-colors"
+                class="text-gray-400 hover:text-gray-600 dark:text-gray-800 hover:dark:text-gray-600 transition-colors"
               >
                 <XMarkIcon class="h-5 w-5" />
               </button>
@@ -110,37 +110,37 @@
 
         <!-- Data/Name Search -->
         <div class="flex-1 min-w-64">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Search Jobs Content</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">Search Jobs Content</label>
           <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" />
+              <MagnifyingGlassIcon class="h-5 w-5 text-gray-400 dark:text-gray-800" />
             </div>
             <input
               v-model="searchQuery"
               type="text"
               placeholder="Search by job name or data content..."
-              class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 focus:outline-none transition-all duration-200 sm:text-sm"
+              class="block w-full pl-10 pr-4 py-3 border dark:text-gray-800 border-gray-300 dark:border-gray-600 rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 sm:text-sm"
             />
             <div v-if="searchQuery" class="absolute inset-y-0 right-0 pr-3 flex items-center">
               <button
                 @click="searchQuery = ''; applyFilters()"
-                class="text-gray-400 hover:text-gray-600 transition-colors"
+                class="text-gray-400 hover:text-gray-600 dark:text-gray-800 hover:dark:text-gray-600 transition-colors"
               >
                 <XMarkIcon class="h-5 w-5" />
               </button>
             </div>
           </div>
-          <div v-if="searchQuery" class="mt-1 text-xs text-gray-600">
+          <div v-if="searchQuery" class="mt-1 text-xs text-gray-600 dark:text-gray-200">
             Heavy search through job names and data
           </div>
         </div>
 
         <!-- Sort -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Sort by</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">Sort by</label>
           <select
             v-model="sortBy"
-            class="block w-36 py-3 px-3 border border-gray-300 rounded-lg shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 focus:outline-none transition-all duration-200 sm:text-sm"
+            class="block w-36 py-3 px-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 focus:outline-none transition-all duration-200 sm:text-sm"
           >
             <option value="createdAt">Created</option>
             <option value="processedOn">Processed</option>
@@ -153,10 +153,10 @@
 
         <!-- Sort Order -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Order</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">Order</label>
           <select
             v-model="sortOrder"
-            class="block w-28 py-3 px-3 border border-gray-300 rounded-lg shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 focus:outline-none transition-all duration-200 sm:text-sm"
+            class="block w-28 py-3 px-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 focus:outline-none transition-all duration-200 sm:text-sm"
           >
             <option value="desc">Desc</option>
             <option value="asc">Asc</option>
@@ -173,10 +173,10 @@
     </div>
 
     <!-- Jobs Table -->
-    <div class="bg-white shadow rounded-lg overflow-visible">
-      <div class="px-6 py-4 border-b border-gray-200">
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-visible">
+      <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-600">
         <div class="flex items-center justify-between">
-          <h3 class="text-lg font-medium text-gray-900">Jobs</h3>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Jobs</h3>
 
           <!-- Selection Bar (moved from above) -->
           <div v-if="hasSelection" class="flex items-center space-x-4">
@@ -215,25 +215,25 @@
 
       <div v-if="loading" class="p-6">
         <div class="animate-pulse space-y-4">
-          <div v-for="i in 10" :key="i" class="h-12 bg-gray-200 rounded"></div>
+          <div v-for="i in 10" :key="i" class="h-12 bg-gray-200 dark:bg-gray-800 rounded"></div>
         </div>
       </div>
 
-      <div v-else-if="jobs.length === 0" class="p-6 text-center text-gray-500">
+      <div v-else-if="jobs.length === 0" class="p-6 text-center text-gray-500 dark:text-gray-100">
         No jobs found
       </div>
 
       <div v-else>
         <!-- Table Header -->
-        <div class="bg-gray-50 px-6 py-3 border-b border-gray-200">
+        <div class="bg-gray-50 dark:bg-gray-700 px-6 py-3 border-b border-gray-200 dark:border-gray-600">
           <div class="flex items-center">
             <input
               type="checkbox"
               :checked="selection.isAllSelected"
               @change="toggleSelectAll"
-              class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded mr-4"
+              class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:text-gray-600 rounded mr-4"
             />
-            <div class="jobs-table-grid text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <div class="jobs-table-grid text-xs font-medium text-gray-500 dark:text-gray-100 uppercase tracking-wider">
               <div class="truncate">ID</div>
               <div class="truncate">Name</div>
               <div class="truncate">State</div>
@@ -247,11 +247,11 @@
         </div>
 
         <!-- Table Body -->
-        <div class="divide-y divide-gray-200">
+        <div class="divide-y divide-gray-200 dark:divide-gray-600">
           <div
             v-for="(job, index) in jobs"
             :key="job.id"
-            class="px-6 py-4 hover:bg-gray-50 cursor-pointer relative"
+            class="px-6 py-4 hover:bg-gray-50 hover:dark:bg-gray-700 cursor-pointer relative"
             @click="handleJobClick(job.id, index, $event)"
           >
             <div class="flex items-center">
@@ -259,22 +259,22 @@
                 type="checkbox"
                 :checked="selection.selectedIds.has(job.id)"
                 @click.stop="handleJobClick(job.id, index, $event)"
-                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded mr-4"
+                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-gray-600 rounded mr-4"
               />
               <div class="jobs-table-grid items-center text-sm">
-                <div class="font-mono text-xs truncate" :title="job.id">{{ job.id }}</div>
-                <div class="truncate" :title="job.name">{{ job.name }}</div>
+                <div class="font-mono text-xs truncate dark:text-gray-100" :title="job.id">{{ job.id }}</div>
+                <div class="truncate dark:text-gray-100" :title="job.name">{{ job.name }}</div>
                 <div>
-                  <span :class="`state-${job.state}`">{{ job.state }}</span>
+                  <span :class="`state-${job.state} dark:text-gray-100`">{{ job.state }}</span>
                 </div>
-                <div class="text-gray-500 truncate" :title="formatTimestamp(job.createdAt)">
+                <div class="text-gray-500 dark:text-gray-100 truncate" :title="formatTimestamp(job.createdAt)">
                   {{ formatTimestamp(job.createdAt) }}
                 </div>
-                <div class="text-gray-500 truncate">
+                <div class="text-gray-500 dark:text-gray-100 truncate">
                   {{ job.duration ? formatDuration(job.duration) : '-' }}
                 </div>
-                <div class="text-center">{{ job.attempts }}</div>
-                <div class="text-center">{{ job.priority || '-' }}</div>
+                <div class="text-center dark:text-gray-100">{{ job.attempts }}</div>
+                <div class="text-center dark:text-gray-100">{{ job.priority || '-' }}</div>
                 <div class="flex items-center space-x-2">
                   <button
                     @click.stop="viewJobDetail(job.id)"
@@ -287,8 +287,8 @@
                   <div @click.stop>
                     <button
                       @click="toggleDropdown(job.id)"
-                      class="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                      :class="{ 'text-gray-600': activeDropdown === job.id }"
+                      class="p-1 text-gray-400 dark:text-gray-400 hover:dark:text-gray-200 hover:text-gray-600 transition-colors"
+                      :class="{ 'text-gray-600 dark:text-gray-200': activeDropdown === job.id }"
                     >
                       <EllipsisVerticalIcon class="h-5 w-5" />
                     </button>
@@ -341,7 +341,7 @@
               <button
                 @click="handleRemoveJob(job.id)"
                 :disabled="removingJobId === job.id"
-                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-800 hover:bg-red-50 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
                 <TrashIcon class="h-4 w-4" />
                 <span>{{ removingJobId === job.id ? 'Removing...' : 'Remove Job' }}</span>
@@ -522,7 +522,7 @@ function getStateTabStyle(state: string, isSelected: boolean) {
   if (isSelected) {
     return 'bg-primary-100 text-primary-800'
   } else {
-    return 'bg-gray-100 text-gray-800'
+    return 'bg-gray-100 dark:bg-gray-200 text-gray-800 dark:text-gray-800'
   }
 }
 

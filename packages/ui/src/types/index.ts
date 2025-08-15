@@ -111,6 +111,7 @@ export interface HealthCheckResponse {
 export interface AppSettings {
   autoRefreshInterval: number;
   timezone: 'local' | 'utc';
+  theme: 'light' | 'dark' | 'system';
 }
 
 // UI-specific types

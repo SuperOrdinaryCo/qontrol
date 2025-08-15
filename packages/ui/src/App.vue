@@ -1,7 +1,7 @@
 <template>
-  <div id="app" class="min-h-screen bg-gray-50">
+  <div id="app" class="min-h-screen bg-gray-50 dark:bg-gray-900">
     <!-- Header -->
-    <header class="bg-white shadow-sm border-b border-gray-200">
+    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
           <!-- Logo and Navigation -->
@@ -10,21 +10,21 @@
               <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
                 <span class="text-white font-bold text-sm">BQ</span>
               </div>
-              <h1 class="text-xl font-semibold text-gray-900">BullMQ Dashboard</h1>
+              <h1 class="text-xl font-semibold text-gray-900 dark:text-gray-100">BullMQ Dashboard</h1>
             </router-link>
 
             <nav class="flex space-x-4">
               <router-link
                 :to="{ name: 'dashboard' }"
-                class="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
-                :class="{ 'text-primary-600 bg-primary-50': $route.name === 'dashboard' }"
+                class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
+                :class="{ 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20': $route.name === 'dashboard' }"
               >
                 Queues
               </router-link>
               <router-link
                 :to="{ name: 'settings' }"
-                class="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
-                :class="{ 'text-primary-600 bg-primary-50': $route.name === 'settings' }"
+                class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
+                :class="{ 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20': $route.name === 'settings' }"
               >
                 Settings
               </router-link>
@@ -41,7 +41,7 @@
     </header>
 
     <!-- Main content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <router-view />
     </main>
 

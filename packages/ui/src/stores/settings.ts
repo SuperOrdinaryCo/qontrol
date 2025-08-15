@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import type { AppSettings } from '@/types';
 
 const STORAGE_KEY = 'bulldash-settings';
@@ -7,12 +7,43 @@ const STORAGE_KEY = 'bulldash-settings';
 const defaultSettings: AppSettings = {
   autoRefreshInterval: 10, // seconds
   timezone: 'local',
+  theme: 'system',
 };
 
 export const useSettingsStore = defineStore('settings', () => {
   // State
   const settings = ref<AppSettings>({ ...defaultSettings });
   const autoRefreshEnabled = ref(true);
+
+  // Theme management
+  const isDarkMode = computed(() => {
+    if (settings.value.theme === 'dark') return true;
+    if (settings.value.theme === 'light') return false;
+    // System preference
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  // Apply theme to document
+  function applyTheme() {
+    const html = document.documentElement;
+    if (isDarkMode.value) {
+      html.classList.add('dark');
+    } else {
+      html.classList.remove('dark');
+    }
+  }
+
+  // Listen for system theme changes
+  function setupSystemThemeListener() {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => {
+      if (settings.value.theme === 'system') {
+        applyTheme();
+      }
+    };
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }
 
   // Load settings from localStorage on init
   function loadSettings() {
@@ -39,6 +70,9 @@ export const useSettingsStore = defineStore('settings', () => {
   // Watch for settings changes and auto-save
   watch(settings, saveSettings, { deep: true });
 
+  // Watch for theme changes
+  watch(() => settings.value.theme, applyTheme, { immediate: true });
+
   // Actions
   function updateSettings(newSettings: Partial<AppSettings>) {
     Object.assign(settings.value, newSettings);
@@ -54,17 +88,18 @@ export const useSettingsStore = defineStore('settings', () => {
 
   // Initialize
   loadSettings();
+  setupSystemThemeListener();
 
   return {
     // State
     settings,
     autoRefreshEnabled,
-    
+    isDarkMode,
+
     // Actions
     updateSettings,
     resetSettings,
     toggleAutoRefresh,
     loadSettings,
-    saveSettings,
   };
 });

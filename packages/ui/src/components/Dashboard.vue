@@ -3,8 +3,8 @@
     <!-- Page Header -->
     <div class="flex justify-between items-center">
       <div>
-        <h2 class="text-2xl font-bold text-gray-900">Queue Dashboard</h2>
-        <p class="text-gray-600">Monitor your BullMQ queues and jobs</p>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-200">Queue Dashboard</h2>
+        <p class="text-gray-600 dark:text-gray-400">Monitor your BullMQ queues and jobs</p>
       </div>
 
       <div class="flex items-center space-x-3">
@@ -48,37 +48,37 @@
     </div>
 
     <!-- Error State -->
-    <div v-if="error" class="bg-danger-50 border border-danger-200 rounded-lg p-4">
+    <div v-if="error" class="bg-danger-50 dark:bg-danger-900 border border-danger-200 rounded-lg p-4">
       <div class="flex">
-        <ExclamationTriangleIcon class="h-5 w-5 text-danger-400" />
+        <ExclamationTriangleIcon class="h-5 w-5 text-danger-400 dark:text-danger-200" />
         <div class="ml-3">
-          <h3 class="text-sm font-medium text-danger-800">Error loading queues</h3>
-          <p class="mt-1 text-sm text-danger-700">{{ error }}</p>
+          <h3 class="text-sm font-medium text-danger-800 dark:text-danger-200">Error loading queues</h3>
+          <p class="mt-1 text-sm text-danger-700 dark:text-danger-50">{{ error }}</p>
         </div>
       </div>
     </div>
 
     <!-- Queues List -->
-    <div class="bg-white shadow rounded-lg">
-      <div class="px-6 py-4 border-b border-gray-200">
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+      <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
         <div class="flex justify-between items-center">
-          <h3 class="text-lg font-medium text-gray-900">Queues</h3>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Queues</h3>
           
           <!-- Search Input -->
           <div class="relative max-w-xs">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" />
+              <MagnifyingGlassIcon class="h-5 w-5 text-gray-400 dark:text-gray-100" />
             </div>
             <input
               v-model="searchQuery"
               type="text"
               placeholder="Search queues..."
-              class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              class="block w-full pl-10 pr-3 py-2 border dark:text-gray-100 border-gray-300 dark:border-gray-200 dark:bg-gray-800 rounded-md leading-5 bg-white placeholder-gray-500 dark:placeholder-gray-200 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             />
             <div v-if="searchQuery" class="absolute inset-y-0 right-0 pr-3 flex items-center">
               <button
                 @click="clearSearch"
-                class="text-gray-400 hover:text-gray-600"
+                class="text-gray-400 hover:text-gray-600 dark:text-gray-100 hover:dark:text-gray-300"
               >
                 <XMarkIcon class="h-4 w-4" />
               </button>
@@ -89,24 +89,24 @@
 
       <div v-if="loading && queues.length === 0" class="p-6">
         <div class="animate-pulse space-y-4">
-          <div v-for="i in 3" :key="i" class="h-16 bg-gray-200 rounded"></div>
+          <div v-for="i in 3" :key="i" class="h-16 bg-gray-200 dark:bg-gray-800 rounded"></div>
         </div>
       </div>
 
-      <div v-else-if="sortedQueues.length === 0 && searchQuery" class="p-6 text-center text-gray-500">
+      <div v-else-if="sortedQueues.length === 0 && searchQuery" class="p-6 text-center text-gray-500 dark:text-gray-100">
         <div class="space-y-2">
-          <MagnifyingGlassIcon class="h-8 w-8 text-gray-300 mx-auto" />
+          <MagnifyingGlassIcon class="h-8 w-8 text-gray-300 dark:text-gray-100 mx-auto" />
           <p>No queues found matching "{{ searchQuery }}"</p>
           <button
             @click="clearSearch"
-            class="text-blue-600 hover:text-blue-500 text-sm"
+            class="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
           >
             Clear search
           </button>
         </div>
       </div>
 
-      <div v-else-if="queues.length === 0" class="p-6 text-center text-gray-500">
+      <div v-else-if="queues.length === 0" class="p-6 text-center text-gray-500 dark:text-gray-100">
         No queues found
       </div>
 
