@@ -522,7 +522,7 @@ const hasFailedJobsSelected = computed(() => {
 // Check if the currently selected state can be cleaned
 const canCleanSelectedState = computed(() => {
   // Only allow cleaning certain states that make sense
-  const cleanableStates = ['completed', 'failed', 'waiting', 'delayed']
+  const cleanableStates = ['completed', 'wait', 'waiting', 'active', 'paused', 'prioritized', 'delayed', 'failed']
   return cleanableStates.includes(selectedStateTab.value)
 })
 
@@ -901,7 +901,6 @@ function showCleanDialog(action: string) {
 }
 
 async function performCleanAction() {
-  console.log(cleanAction.value)
   if (!cleanAction.value) return
 
   try {
