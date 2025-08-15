@@ -7,6 +7,7 @@ export * from './services/queueRegistry';
 export * from './config/redis';
 export * from './config/logger';
 export * from './types/api';
+export * from './constants';
 export { Config } from './config/env';
 
 // Main BullDash class for easy setup

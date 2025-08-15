@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import Joi from 'joi';
-import { GetJobsRequest, Logger } from '@bulldash/core';
+import { GetJobsRequest, Logger, JOB_STATES } from '@bulldash/core';
 
 // Validation schemas
 const getJobsSchema = Joi.object({
@@ -8,7 +8,7 @@ const getJobsSchema = Joi.object({
   pageSize: Joi.number().integer().min(1).max(1000).default(500),
   sortBy: Joi.string().valid('createdAt', 'processedOn', 'finishedOn', 'duration', 'state', 'name'),
   sortOrder: Joi.string().valid('asc', 'desc').default('desc'),
-  states: Joi.array().items(Joi.string().valid('waiting', 'active', 'completed', 'failed', 'delayed', 'paused', 'waiting-children')),
+  states: Joi.array().items(Joi.string().valid(...JOB_STATES)),
   'timeRange.field': Joi.string().valid('createdAt', 'processedOn', 'finishedOn'),
   'timeRange.start': Joi.date().iso(),
   'timeRange.end': Joi.date().iso(),

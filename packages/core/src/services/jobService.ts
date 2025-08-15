@@ -492,7 +492,7 @@ export class JobService {
   /**
    * Get job state from job object using BullMQ's async getState method
    */
-  private static async getJobState(job: Job): Promise<keyof JobState> {
+  private static async getJobState(job: Job): Promise<JobState> {
     try {
       let state = await job.getState();
 

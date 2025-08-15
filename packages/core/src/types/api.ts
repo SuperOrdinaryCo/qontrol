@@ -1,4 +1,6 @@
 // Core API Types
+import {JOB_STATES} from '../constants';
+
 export interface QueueInfo {
   name: string;
   counts: {
@@ -14,21 +16,12 @@ export interface QueueInfo {
   isPaused: boolean;
 }
 
-export interface JobState {
-  waiting: number;
-  active: number;
-  completed: number;
-  failed: number;
-  delayed: number;
-  paused: number;
-  prioritized: number;
-  'waiting-children': number;
-}
+export type JobState = (typeof JOB_STATES)[number];
 
 export interface JobSummary {
   id: string;
   name: string;
-  state: keyof JobState;
+  state: JobState;
   createdAt: Date;
   processedOn?: Date;
   finishedOn?: Date;
@@ -71,7 +64,7 @@ export interface GetJobsRequest {
   pageSize?: number;
   sortBy?: 'createdAt' | 'processedOn' | 'finishedOn' | 'duration' | 'state' | 'name';
   sortOrder?: 'asc' | 'desc';
-  states?: Array<keyof JobState>;
+  states?: Array<JobState>;
   timeRange?: {
     field: 'createdAt' | 'processedOn' | 'finishedOn';
     start?: Date;
@@ -143,7 +136,7 @@ export interface ApiError {
 export interface CleanQueueRequest {
   grace?: number; // Grace period in milliseconds (jobs older than this will be cleaned)
   limit?: number; // Maximum number of jobs to clean (0 = no limit)
-  type?: 'completed' | 'failed' | 'active' | 'delayed' | 'waiting' | 'paused' | 'prioritized';
+  type?: JobState; // Type of jobs to clean (completed, failed, etc.)
 }
 
 export interface CleanQueueResponse {

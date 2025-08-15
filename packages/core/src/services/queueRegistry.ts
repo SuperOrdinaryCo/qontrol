@@ -1,6 +1,6 @@
 import { Queue } from 'bullmq';
 import { RedisConnection } from '../config/redis';
-import { QueueInfo } from '../types/api';
+import {JobState, QueueInfo} from '../types/api';
 import { Logger } from '../config/logger';
 
 export class QueueRegistry {
@@ -169,7 +169,7 @@ export class QueueRegistry {
   /**
    * Clean jobs from a queue by state
    */
-  static async cleanQueue(queueName: string, grace: number = 0, limit: number = 0, type: 'completed' | 'failed' | 'active' | 'delayed' | 'waiting' | 'paused' | 'prioritized' = 'completed'): Promise<number> {
+  static async cleanQueue(queueName: string, grace: number = 0, limit: number = 0, type: 'completed' | 'wait' | 'waiting' | 'active' | 'paused' | 'prioritized' | 'delayed' | 'failed' = 'completed'): Promise<number> {
     const logger = Logger.getInstance();
 
     try {
@@ -179,7 +179,8 @@ export class QueueRegistry {
       const cleanedCount = await queue.clean(grace, limit, type);
 
       logger.info(`Cleaned ${cleanedCount} ${type} jobs from queue "${queueName}"`);
-      return cleanedCount;
+
+      return cleanedCount.length;
     } catch (error) {
       logger.error(`Failed to clean ${type} jobs from queue ${queueName}:`, error);
       throw error;

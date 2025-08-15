@@ -24,17 +24,6 @@ export interface Config {
     level: string;
     filePath: string;
   };
-
-  // Rate Limiting Configuration
-  rateLimit: {
-    windowMs: number;
-    maxRequests: number;
-  };
-
-  // Security Configuration
-  cors: {
-    origin: string;
-  };
 }
 
 export class ConfigManager {
@@ -56,14 +45,6 @@ export class ConfigManager {
 
     if (isNaN(config.redis.db) || config.redis.db < 0) {
       throw new Error('Invalid REDIS_DB: must be a non-negative number');
-    }
-
-    if (isNaN(config.rateLimit.windowMs) || config.rateLimit.windowMs < 1000) {
-      throw new Error('Invalid RATE_LIMIT_WINDOW_MS: must be at least 1000ms');
-    }
-
-    if (isNaN(config.rateLimit.maxRequests) || config.rateLimit.maxRequests < 1) {
-      throw new Error('Invalid RATE_LIMIT_MAX_REQUESTS: must be at least 1');
     }
 
     return config;
