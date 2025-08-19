@@ -140,4 +140,13 @@ export const apiClient = {
     const response = await api.get<HealthCheckResponse>('/healthz');
     return response.data;
   },
+
+  // Redis stats
+  async getRedisStats(): Promise<{
+    info: Record<string, any>;
+    timestamp: Date;
+  }> {
+    const response = await api.get('/redis/stats');
+    return response.data;
+  },
 };

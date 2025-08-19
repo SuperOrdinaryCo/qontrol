@@ -216,6 +216,46 @@ export class JobService {
   }
 
   /**
+   * Get detailed Redis statistics
+   */
+  static async getRedisStats(): Promise<{
+    info: Record<string, any>;
+    timestamp: Date;
+  }> {
+    const logger = Logger.getInstance();
+
+    try {
+      const redis = await RedisConnection.getInstance();
+      const infoString = await redis.info();
+
+      // Parse Redis INFO output into structured data
+      const info: Record<string, any> = {};
+      const sections = infoString.split('\r\n');
+
+      for (const line of sections) {
+        if (line.startsWith('#') || line.trim() === '') continue;
+
+        const [key, value] = line.split(':');
+        if (key && value !== undefined) {
+          // Try to convert numeric values
+          const numValue = Number(value);
+          info[key] = isNaN(numValue) ? value : numValue;
+        }
+      }
+
+      logger.info('Redis stats retrieved successfully');
+
+      return {
+        info,
+        timestamp: new Date(),
+      };
+    } catch (error) {
+      logger.error('Failed to get Redis stats:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Retry a failed job
    */
   static async retryJob(queueName: string, jobId: string): Promise<boolean> {

@@ -90,6 +90,11 @@ export class BullDash {
     return JobService.getHealth();
   }
 
+  // Redis stats
+  async getRedisStats() {
+    return JobService.getRedisStats();
+  }
+
   // Get info for a specific queue
   async getQueueInfo(queueName: string) {
     return QueueRegistry.getQueueInfo(queueName);

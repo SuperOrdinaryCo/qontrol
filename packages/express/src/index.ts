@@ -587,6 +587,28 @@ export function createBullDashRouter(bullDash: BullDash, options: BullDashExpres
   });
 
   /**
+   * GET /api/redis/stats
+   * Get detailed Redis statistics
+   */
+  router.get('/api/redis/stats', async (req, res) => {
+    try {
+      const stats = await bullDash.getRedisStats();
+
+      res.json({
+        info: stats.info,
+        timestamp: stats.timestamp,
+      });
+    } catch (error) {
+      console.error('Redis stats error:', error);
+      res.status(500).json({
+        message: 'Failed to retrieve Redis statistics',
+        code: 'REDIS_STATS_ERROR',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  /**
    * POST /api/queues/:queue/clean
    * Clean jobs from a specific queue
    */

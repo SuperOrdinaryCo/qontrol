@@ -8,6 +8,7 @@
       </div>
 
       <div class="flex items-center space-x-3">
+        <!-- Refresh Button -->
         <button
           @click="refreshQueues"
           :disabled="loading"

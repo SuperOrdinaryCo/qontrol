@@ -1,10 +1,15 @@
 <template>
-  <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
+  <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
     <div class="flex items-center">
-      <component :is="iconComponent" class="w-8 h-8 mr-4" :class="iconColor" />
-      <div>
-        <p class="text-sm font-medium text-gray-500 dark:text-gray-200">{{ title }}</p>
-        <p class="text-2xl font-bold" :class="textColor">{{ formattedValue }}</p>
+      <div :class="[
+        'flex-shrink-0 p-3 rounded-lg',
+        colorClasses
+      ]">
+        <component :is="iconComponent" class="w-6 h-6" />
+      </div>
+      <div class="ml-4 flex-1">
+        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ title }}</p>
+        <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ formattedValue }}</p>
       </div>
     </div>
   </div>
@@ -13,51 +18,47 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import {
-  QueueListIcon,
-  BriefcaseIcon,
-  PlayIcon,
-  ExclamationTriangleIcon
+  ServerIcon,
+  CpuChipIcon,
+  ClockIcon,
+  UsersIcon
 } from '@heroicons/vue/24/outline'
 
 interface Props {
   title: string
-  value: number
+  value: string | number
   icon: string
-  color: 'primary' | 'success' | 'danger' | 'warning'
+  color: string
 }
 
 const props = defineProps<Props>()
 
-const iconComponents = {
-  QueueListIcon,
-  BriefcaseIcon,
-  PlayIcon,
-  ExclamationTriangleIcon,
-}
-
-const iconComponent = computed(() => iconComponents[props.icon as keyof typeof iconComponents])
-
-const iconColor = computed(() => {
-  const colors = {
-    primary: 'text-primary-600 dark:text-primary-800',
-    success: 'text-success-600 dark:text-success-800',
-    danger: 'text-danger-600 dark:text-danger-800',
-    warning: 'text-warning-600 dark:text-warning-800',
+const iconComponent = computed(() => {
+  const icons = {
+    server: ServerIcon,
+    memory: CpuChipIcon,
+    clock: ClockIcon,
+    users: UsersIcon
   }
-  return colors[props.color]
+
+  return icons[props.icon as keyof typeof icons] || ServerIcon
 })
 
-const textColor = computed(() => {
+const colorClasses = computed(() => {
   const colors = {
-    primary: 'text-primary-900 dark:text-primary-700',
-    success: 'text-success-900 dark:text-success-700',
-    danger: 'text-danger-900 dark:text-danger-700',
-    warning: 'text-warning-900 dark:text-warning-700',
+    blue: 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400',
+    green: 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400',
+    purple: 'bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400',
+    orange: 'bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-400'
   }
-  return colors[props.color]
+
+  return colors[props.color as keyof typeof colors] || colors.blue
 })
 
 const formattedValue = computed(() => {
-  return props.value.toLocaleString()
+  if (typeof props.value === 'number' && props.value >= 1000) {
+    return props.value.toLocaleString()
+  }
+  return props.value.toString()
 })
 </script>

@@ -33,6 +33,7 @@
 
           <!-- Auto-refresh controls -->
           <div class="flex items-center space-x-4">
+            <RedisStats />
             <AutoRefreshControl />
             <HealthIndicator />
           </div>
@@ -56,6 +57,7 @@ import { useSettingsStore } from '@/stores/settings'
 import AutoRefreshControl from '@/components/AutoRefreshControl.vue'
 import HealthIndicator from '@/components/HealthIndicator.vue'
 import JobDetailDrawer from '@/components/JobDetailDrawer.vue'
+import RedisStats from '@/components/RedisStats.vue';
 
 const settingsStore = useSettingsStore()
 
