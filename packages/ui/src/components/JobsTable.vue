@@ -3,7 +3,7 @@ import {formatDuration, formatTimestamp} from '@/utils/date.ts';
 import {ArrowPathIcon, ArrowUpIcon, EllipsisVerticalIcon, StopIcon, TrashIcon} from '@heroicons/vue/24/outline';
 import {storeToRefs} from 'pinia';
 import {useJobsStore} from '@/stores/jobs.ts';
-import {computed, ref} from 'vue';
+import {computed, onMounted, onUnmounted, ref} from 'vue';
 import {useConfirmStore} from '@/stores/confirm.ts';
 
 const props = defineProps<{
@@ -255,6 +255,21 @@ async function handleRemoveJob(jobId: string) {
 
   confirmStore.show(true);
 }
+
+function handleClickOutside() {
+  // Close dropdown if clicked outside
+  if (activeDropdown.value) {
+    activeDropdown.value = null
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 </script>
 
 <template>

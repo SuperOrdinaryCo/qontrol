@@ -112,9 +112,6 @@ const sortBy = ref('createdAt')
 const sortOrder = ref('desc')
 const jobIdQuery = ref('')
 
-// Dropdown menu state
-const activeDropdown = ref<string | null>(null)
-
 // Auto-refresh
 let refreshInterval: ReturnType<typeof setInterval> | null = null
 
@@ -246,9 +243,6 @@ onMounted(() => {
 
   // Setup auto-refresh
   setupAutoRefresh()
-
-  // Add click outside handler for dropdown
-  document.addEventListener('click', handleClickOutside)
 })
 
 onUnmounted(() => {
@@ -256,20 +250,9 @@ onUnmounted(() => {
     clearInterval(refreshInterval)
   }
 
-  // Remove click outside handler
-  document.removeEventListener('click', handleClickOutside)
-
   // Reset jobs store when leaving
   jobsStore.reset()
 })
-
-// Add click outside handler function
-function handleClickOutside() {
-  // Close dropdown if clicked outside
-  if (activeDropdown.value) {
-    activeDropdown.value = null
-  }
-}
 
 // Watch for tab changes to save to localStorage
 watch(selectedStateTab, (newState) => {
