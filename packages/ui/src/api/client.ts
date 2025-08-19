@@ -70,6 +70,11 @@ export const apiClient = {
     return response.data;
   },
 
+  async addJob(queueName: string, jobData: { name: string; data: any; options: any }): Promise<{ jobId: string; queueName: string; timestamp: Date }> {
+    const response = await api.post(`/queues/${queueName}/jobs`, jobData);
+    return response.data;
+  },
+
   async getJobById(queueName: string, jobId: string): Promise<GetJobsResponse> {
     const response = await api.get<GetJobsResponse>(`/queues/${queueName}/job-by-id/${jobId}`);
     return response.data;

@@ -41,6 +41,11 @@ export class BullDash {
     return JobService.getJobDetail(queueName, jobId);
   }
 
+  // Add job
+  async addJob(queueName: string, jobData: { name: string; data: any; options: any }) {
+    return JobService.addJob(queueName, jobData);
+  }
+
   // Remove job
   async removeJob(queueName: string, jobId: string) {
     return JobService.removeJob(queueName, jobId);

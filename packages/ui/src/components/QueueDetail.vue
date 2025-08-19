@@ -13,6 +13,15 @@
       </div>
 
       <div class="flex items-center space-x-3">
+        <!-- Add Job Button -->
+        <button
+          @click="showAddJobDrawer = true"
+          class="btn-primary px-4 py-2 text-sm font-medium rounded-lg shadow-sm hover:shadow-md transition-shadow flex items-center space-x-2"
+        >
+          <PlusIcon class="w-4 h-4" />
+          <span>Add Job</span>
+        </button>
+
         <!-- Queue Clean Button -->
         <CleanAction :queue-name="queueName" :queue-state="selectedStateTab" @cleaned="refreshJobs" />
 
@@ -69,6 +78,14 @@
 
     <!-- Custom Confirmation Dialog -->
     <ConfirmDialog />
+
+    <!-- Add Job Drawer -->
+    <AddJobDrawer
+      :is-open="showAddJobDrawer"
+      :queue-name="queueName"
+      @close="showAddJobDrawer = false"
+      @submit="handleAddJob"
+    />
   </div>
 </template>
 
@@ -79,7 +96,8 @@ import { storeToRefs } from 'pinia'
 import { useJobsStore } from '@/stores/jobs'
 import { useQueuesStore } from '@/stores/queues'
 import { useSettingsStore } from '@/stores/settings'
-import { ArrowLeftIcon } from '@heroicons/vue/24/outline'
+import { apiClient } from '@/api/client'
+import { ArrowLeftIcon, PlusIcon } from '@heroicons/vue/24/outline'
 import ConfirmDialog from './ConfirmDialog.vue'
 import JobsTable from '@/components/JobsTable.vue';
 import QueueTabs from '@/components/QueueTabs.vue';
@@ -89,6 +107,7 @@ import CleanAction from '@/components/queue-actions/CleanAction.vue';
 import PaginationBlock from '@/components/PaginationBlock.vue';
 import SortOrder from '@/components/SortOrder.vue';
 import SearchInput from '@/components/SearchInput.vue';
+import AddJobDrawer from '@/components/AddJobDrawer.vue';
 
 const route = useRoute()
 const jobsStore = useJobsStore()
@@ -111,6 +130,9 @@ const searchQuery = ref('')
 const sortBy = ref('createdAt')
 const sortOrder = ref('desc')
 const jobIdQuery = ref('')
+
+// Add job drawer state
+const showAddJobDrawer = ref(false)
 
 // Auto-refresh
 let refreshInterval: ReturnType<typeof setInterval> | null = null
@@ -180,6 +202,24 @@ function clearSearch() {
   jobIdQuery.value = ''
   // Clear job ID search and return to normal view
   fetchJobs(false)
+}
+
+async function handleAddJob(jobData: { name: string; data: any; options: any }) {
+  try {
+    await apiClient.addJob(queueName.value, jobData)
+
+    // Close the drawer
+    showAddJobDrawer.value = false
+
+    // Refresh jobs to show the new job
+    refreshJobs()
+
+    // Show success message (you could add a toast notification here)
+    console.log('Job added successfully')
+  } catch (error) {
+    console.error('Failed to add job:', error)
+    // You could show an error message to the user here
+  }
 }
 
 function setupAutoRefresh() {

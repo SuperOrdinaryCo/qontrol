@@ -211,6 +211,91 @@ export function createBullDashRouter(bullDash: BullDash, options: BullDashExpres
   });
 
   /**
+   * POST /api/queues/:queue/jobs
+   * Add a new job to the queue
+   */
+  router.post('/api/queues/:queue/jobs', async (req, res) => {
+    try {
+      const { queue: queueName } = req.params;
+      const { name, data, options } = req.body;
+
+      // Validate required fields
+      if (!name || typeof name !== 'string') {
+        return res.status(400).json({
+          message: 'Job name is required and must be a string',
+          code: 'INVALID_JOB_NAME',
+        });
+      }
+
+      // Validate data - if provided as string, try to parse as JSON
+      let parsedData = {};
+      if (data !== undefined) {
+        if (typeof data === 'string') {
+          try {
+            parsedData = JSON.parse(data);
+          } catch (e) {
+            return res.status(400).json({
+              message: 'Job data must be valid JSON',
+              code: 'INVALID_JOB_DATA_JSON',
+              details: 'Unable to parse data as JSON'
+            });
+          }
+        } else if (typeof data === 'object' && data !== null) {
+          parsedData = data;
+        } else {
+          return res.status(400).json({
+            message: 'Job data must be a valid JSON object or string',
+            code: 'INVALID_JOB_DATA',
+          });
+        }
+      }
+
+      // Validate options - if provided as string, try to parse as JSON
+      let parsedOptions = {};
+      if (options !== undefined) {
+        if (typeof options === 'string') {
+          try {
+            parsedOptions = JSON.parse(options);
+          } catch (e) {
+            return res.status(400).json({
+              message: 'Job options must be valid JSON',
+              code: 'INVALID_JOB_OPTIONS_JSON',
+              details: 'Unable to parse options as JSON'
+            });
+          }
+        } else if (typeof options === 'object' && options !== null) {
+          parsedOptions = options;
+        } else {
+          return res.status(400).json({
+            message: 'Job options must be a valid JSON object or string',
+            code: 'INVALID_JOB_OPTIONS',
+          });
+        }
+      }
+
+      const result = await bullDash.addJob(queueName, {
+        name: name.trim(),
+        data: parsedData,
+        options: parsedOptions
+      });
+
+      res.status(201).json({
+        message: 'Job added successfully',
+        jobId: result.jobId,
+        queueName: result.queueName,
+        timestamp: new Date(),
+      });
+    } catch (error) {
+      console.error('Add job error:', error);
+      res.status(500).json({
+        message: 'Failed to add job',
+        code: 'JOB_ADD_ERROR',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  /**
    * DELETE /api/queues/:queue/jobs/:id
    * Remove a specific job by ID with removeChildren flag
    */

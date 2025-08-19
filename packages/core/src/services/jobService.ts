@@ -101,7 +101,29 @@ export class JobService {
       const jobSummary = await this.jobToSummary(job);
       return { jobs: [jobSummary], total: 1 };
     } catch (error) {
-      logger.error(`Failed to get job ${jobId} from queue ${queueName}:`, error);
+      logger.error(`Failed to get job ${jobId} for queue ${queueName}:`, error);
+      return { jobs: [], total: 0 };
+    }
+  }
+
+  /**
+   * Add a new job to the queue
+   */
+  static async addJob(queueName: string, jobData: { name: string; data: any; options: any }): Promise<{ jobId: string; queueName: string }> {
+    const logger = Logger.getInstance();
+
+    try {
+      const queue = QueueRegistry.getQueue(queueName);
+      const job = await queue.add(jobData.name, jobData.data, jobData.options);
+
+      logger.info(`Job ${job.id} added to queue ${queueName}`);
+
+      return {
+        jobId: job.id!,
+        queueName
+      };
+    } catch (error) {
+      logger.error(`Failed to add job to queue ${queueName}:`, error);
       throw error;
     }
   }
