@@ -30,20 +30,20 @@
           <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
             <!-- Title -->
             <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100" id="modal-title">
-              {{ title || 'Confirm Action' }}
+              {{ data.title || 'Confirm Action' }}
             </h3>
 
             <!-- Message -->
             <div class="mt-2">
               <p class="text-sm text-gray-500 dark:text-gray-300">
-                {{ message }}
+                {{ data.message }}
               </p>
             </div>
 
             <!-- Additional details if provided -->
-            <div v-if="details" class="mt-3 p-3 bg-gray-50 dark:bg-gray-500 rounded-md">
+            <div v-if="data.details" class="mt-3 p-3 bg-gray-50 dark:bg-gray-500 rounded-md">
               <p class="text-xs text-gray-600 dark:text-gray-100">
-                {{ details }}
+                {{ data.details }}
               </p>
             </div>
           </div>
@@ -57,7 +57,7 @@
             @click="handleConfirm"
             :disabled="loading"
           >
-            {{ loading ? 'Processing...' : (confirmText || 'Confirm') }}
+            {{ loading ? 'Processing...' : (data.confirmText || 'Confirm') }}
           </button>
           <button
             type="button"
@@ -65,7 +65,7 @@
             @click="handleCancel"
             :disabled="loading"
           >
-            {{ cancelText || 'Cancel' }}
+            {{ data.cancelText || 'Cancel' }}
           </button>
         </div>
       </div>
@@ -74,44 +74,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed } from 'vue'
 import { ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
+import {useConfirmStore} from '@/stores/confirm.ts';
 
-interface Props {
-  isOpen: boolean
-  title?: string
-  message: string
-  details?: string
-  confirmText?: string
-  cancelText?: string
-  loading?: boolean
-}
+const confirmStore = useConfirmStore();
 
-interface Emits {
-  (e: 'confirm'): void
-  (e: 'cancel'): void
-  (e: 'update:isOpen', value: boolean): void
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  title: 'Confirm Action',
-  confirmText: 'Confirm',
-  cancelText: 'Cancel',
-  loading: false,
-})
-
-const emit = defineEmits<Emits>()
+const isOpen = computed(() => confirmStore.isOpen);
+const data = computed(() => confirmStore.data);
+const loading = computed(() => confirmStore.loading);
 
 function handleConfirm() {
-  if (!props.loading) {
-    emit('confirm')
+  if (!confirmStore.loading) {
+    confirmStore.confirmAction()
   }
 }
 
 function handleCancel() {
-  if (!props.loading) {
-    emit('cancel')
-    emit('update:isOpen', false)
+  if (!confirmStore.loading) {
+    confirmStore.cancelAction()
   }
 }
 </script>
