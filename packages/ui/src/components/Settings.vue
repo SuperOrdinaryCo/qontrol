@@ -144,12 +144,8 @@
           </dd>
         </div>
         <div>
-          <dt class="text-sm text-gray-500 dark:text-gray-400">Application Version</dt>
-          <dd class="text-sm text-gray-900 dark:text-gray-100">{{ appVersion }}</dd>
-        </div>
-        <div>
-          <dt class="text-sm text-gray-500 dark:text-gray-400">UI Version</dt>
-          <dd class="text-sm text-gray-900 dark:text-gray-100">{{ uiVersion }}</dd>
+          <dt class="text-sm text-gray-500 dark:text-gray-400">Version</dt>
+          <dd class="text-sm text-gray-900 dark:text-gray-100">{{ version }}</dd>
         </div>
       </dl>
     </div>
@@ -164,8 +160,7 @@ import { formatTimestamp } from '@/utils/date'
 import type { AppSettings } from '@/types'
 
 // Version information
-const appVersion = '1.0.0'
-const uiVersion = '1.0.0'
+const version = __APP_VERSION__ || 'unknown'
 
 const settingsStore = useSettingsStore()
 const { settings, autoRefreshEnabled, isDarkMode } = storeToRefs(settingsStore)
