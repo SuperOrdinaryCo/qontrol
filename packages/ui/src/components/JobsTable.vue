@@ -32,6 +32,9 @@ const bulkRemoving = ref(false)
 // Bulk retry state
 const bulkRetrying = ref(false)
 
+// Bulk export state
+const bulkExporting = ref(false)
+
 // Removal state
 const removingJobId = ref<string | null>(null)
 
@@ -217,6 +220,32 @@ function handleBulkRetry() {
       })
 }
 
+function handleBulkExport() {
+  // Collect all selected job IDs
+  const jobIds = Array.from(selection.value.selectedIds)
+
+  if (jobIds.length === 0) return
+
+  bulkExporting.value = true
+
+  jobsStore.bulkExportJobs(queueName.value, jobIds)
+      .then((result) => {
+        console.log(`Bulk export completed: ${result.success} success, ${result.failed} failed`)
+        if (result.failed > 0) {
+          // Show errors if any jobs failed to export
+          const errorMessage = `${result.success} jobs exported successfully. ${result.failed} jobs failed to export.`
+          alert(errorMessage)
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to bulk export jobs:', error)
+        alert('Failed to bulk export jobs. Please try again.')
+      })
+      .finally(() => {
+        bulkExporting.value = false
+      })
+}
+
 async function handleRemoveJob(jobId: string) {
   if (removingJobId.value) return // Prevent multiple simultaneous removals
 
@@ -295,6 +324,14 @@ onUnmounted(() => {
                 class="text-xs px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {{ bulkRetrying ? 'Retrying...' : 'Retry Selected' }}
+            </button>
+            <!-- Bulk Export Button -->
+            <button
+                @click="handleBulkExport"
+                :disabled="bulkExporting"
+                class="text-xs px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {{ bulkExporting ? 'Exporting...' : 'Export Selected' }}
             </button>
             <!-- Bulk Remove Button -->
             <button

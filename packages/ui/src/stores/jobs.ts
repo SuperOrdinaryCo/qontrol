@@ -435,6 +435,98 @@ export const useJobsStore = defineStore('jobs', () => {
     }
   }
 
+  async function bulkExportJobs(queueName: string, jobIds: string[]) {
+    try {
+      const result = {
+        success: 0,
+        failed: 0,
+        errors: [] as Array<{ jobId: string; error: string }>,
+      };
+
+      // Fetch all job details in parallel with concurrency limit
+      const concurrencyLimit = 10;
+      const chunks = [];
+      for (let i = 0; i < jobIds.length; i += concurrencyLimit) {
+        chunks.push(jobIds.slice(i, i + concurrencyLimit));
+      }
+
+      const allJobDetails = [];
+
+      for (const chunk of chunks) {
+        const promises = chunk.map(async (jobId) => {
+          try {
+            const job = await apiClient.getJobDetail(queueName, jobId);
+            result.success++;
+            return {
+              ...job,
+              createdAt: job.createdAt,
+              processedOn: job.processedOn,
+              finishedOn: job.finishedOn,
+            };
+          } catch (error) {
+            result.failed++;
+            result.errors.push({
+              jobId,
+              error: error instanceof Error ? error.message : 'Unknown error'
+            });
+            console.error(`Failed to fetch job ${jobId} for export:`, error);
+            return null;
+          }
+        });
+
+        const chunkResults = await Promise.all(promises);
+        allJobDetails.push(...chunkResults.filter(job => job !== null));
+      }
+
+      if (allJobDetails.length === 0) {
+        throw new Error('No jobs could be exported');
+      }
+
+      // Create bulk export data
+      const exportData = {
+        exportType: 'bulk',
+        exportedAt: new Date().toISOString(),
+        exportedFrom: {
+          queue: queueName,
+          timestamp: new Date().toISOString()
+        },
+        summary: {
+          totalJobs: allJobDetails.length,
+          successfulExports: result.success,
+          failedExports: result.failed,
+          errors: result.errors
+        },
+        jobs: allJobDetails
+      };
+
+      // Create a blob and download the file
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+        type: 'application/json'
+      });
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const dateStr = new Date().toISOString().split('T')[0];
+      link.download = `bulk-export-${queueName}-${allJobDetails.length}-jobs-${dateStr}.json`;
+
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Clean up the URL object
+      URL.revokeObjectURL(url);
+
+      console.log(`Bulk export completed: ${result.success} success, ${result.failed} failed`);
+      return result;
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to bulk export jobs';
+      console.error('Failed to bulk export jobs:', err);
+      throw err;
+    }
+  }
+
   function openAddJobDrawer() {
     duplicateJobData.value = null;
     showAddJobDrawer.value = true;
@@ -543,6 +635,7 @@ export const useJobsStore = defineStore('jobs', () => {
     addJob,
     duplicateJob,
     exportJob,
+    bulkExportJobs,
     openAddJobDrawer,
     closeAddJobDrawer,
     updateFilters,
