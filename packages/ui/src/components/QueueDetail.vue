@@ -15,7 +15,7 @@
       <div class="flex items-center space-x-3">
         <!-- Add Job Button -->
         <button
-          @click="showAddJobDrawer = true"
+          @click="jobsStore.openAddJobDrawer()"
           class="btn-primary px-4 py-2 text-sm font-medium rounded-lg shadow-sm hover:shadow-md transition-shadow flex items-center space-x-2"
         >
           <PlusIcon class="w-4 h-4" />
@@ -83,7 +83,8 @@
     <AddJobDrawer
       :is-open="showAddJobDrawer"
       :queue-name="queueName"
-      @close="showAddJobDrawer = false"
+      :duplicate-job="duplicateJobData"
+      @close="closeAddJobDrawer"
       @submit="handleAddJob"
     />
   </div>
@@ -96,7 +97,6 @@ import { storeToRefs } from 'pinia'
 import { useJobsStore } from '@/stores/jobs'
 import { useQueuesStore } from '@/stores/queues'
 import { useSettingsStore } from '@/stores/settings'
-import { apiClient } from '@/api/client'
 import { ArrowLeftIcon, PlusIcon } from '@heroicons/vue/24/outline'
 import ConfirmDialog from './ConfirmDialog.vue'
 import JobsTable from '@/components/JobsTable.vue';
@@ -120,6 +120,8 @@ const {
   loading,
   pagination,
   filters,
+  showAddJobDrawer,
+  duplicateJobData,
 } = storeToRefs(jobsStore)
 
 const { settings, autoRefreshEnabled } = storeToRefs(settingsStore)
@@ -130,9 +132,6 @@ const searchQuery = ref('')
 const sortBy = ref('createdAt')
 const sortOrder = ref('desc')
 const jobIdQuery = ref('')
-
-// Add job drawer state
-const showAddJobDrawer = ref(false)
 
 // Auto-refresh
 let refreshInterval: ReturnType<typeof setInterval> | null = null
@@ -206,10 +205,10 @@ function clearSearch() {
 
 async function handleAddJob(jobData: { name: string; data: any; options: any }) {
   try {
-    await apiClient.addJob(queueName.value, jobData)
+    await jobsStore.addJob(queueName.value, jobData)
 
-    // Close the drawer
-    showAddJobDrawer.value = false
+    // Close the drawer using store method
+    jobsStore.closeAddJobDrawer()
 
     // Refresh jobs to show the new job
     refreshJobs()
@@ -220,6 +219,10 @@ async function handleAddJob(jobData: { name: string; data: any; options: any }) 
     console.error('Failed to add job:', error)
     // You could show an error message to the user here
   }
+}
+
+function closeAddJobDrawer() {
+  jobsStore.closeAddJobDrawer()
 }
 
 function setupAutoRefresh() {

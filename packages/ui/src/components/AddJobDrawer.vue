@@ -12,7 +12,9 @@
       <div class="flex h-full flex-col">
         <!-- Header -->
         <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Add Job</h3>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            {{ duplicateJob ? 'Duplicate Job' : 'Add Job' }}
+          </h3>
           <button
             @click="cancel"
             class="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
@@ -106,6 +108,7 @@
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue'
 import { XMarkIcon } from '@heroicons/vue/24/outline'
+import type { JobDetail } from '@/types'
 
 interface AddJobData {
   name: string
@@ -116,6 +119,7 @@ interface AddJobData {
 interface Props {
   isOpen: boolean
   queueName: string
+  duplicateJob?: JobDetail | null
 }
 
 interface Emits {
@@ -139,12 +143,41 @@ const errors = reactive({
   options: ''
 })
 
-function validateForm() {
-  // Reset errors
+// Watch for duplicate job data and pre-fill the form
+watch(() => props.duplicateJob, (duplicateJob) => {
+  if (duplicateJob && props.isOpen) {
+    form.name = duplicateJob.name
+    form.data = JSON.stringify(duplicateJob.data, null, 2)
+    form.options = JSON.stringify(duplicateJob.opts, null, 2)
+  }
+}, { immediate: true })
+
+// Reset form when drawer opens/closes
+watch(() => props.isOpen, (isOpen) => {
+  if (isOpen && !props.duplicateJob) {
+    // Only reset if not duplicating
+    resetForm()
+  } else if (!isOpen) {
+    // Always reset when closing
+    resetForm()
+    clearErrors()
+  }
+})
+
+function resetForm() {
+  form.name = ''
+  form.data = '{}'
+  form.options = '{}'
+}
+
+function clearErrors() {
   errors.name = ''
   errors.data = ''
   errors.options = ''
+}
 
+function validateForm(): boolean {
+  clearErrors()
   let isValid = true
 
   // Validate name
@@ -154,65 +187,50 @@ function validateForm() {
   }
 
   // Validate JSON data
-  try {
-    JSON.parse(form.data)
-  } catch (e) {
-    errors.data = 'Invalid JSON format'
-    isValid = false
+  if (form.data.trim()) {
+    try {
+      JSON.parse(form.data)
+    } catch (e) {
+      errors.data = 'Invalid JSON format'
+      isValid = false
+    }
   }
 
   // Validate JSON options
-  try {
-    JSON.parse(form.options)
-  } catch (e) {
-    errors.options = 'Invalid JSON format'
-    isValid = false
+  if (form.options.trim()) {
+    try {
+      JSON.parse(form.options)
+    } catch (e) {
+      errors.options = 'Invalid JSON format'
+      isValid = false
+    }
   }
 
   return isValid
 }
 
-function clearForm() {
-  form.name = ''
-  form.data = '{}'
-  form.options = '{}'
-  errors.name = ''
-  errors.data = ''
-  errors.options = ''
-}
-
-function cancel() {
-  clearForm()
-  emit('close')
-}
-
 async function submit() {
-  if (!validateForm()) {
-    return
-  }
+  if (!validateForm()) return
 
   loading.value = true
 
   try {
-    const jobData: AddJobData = {
-      name: form.name.trim(),
-      data: JSON.parse(form.data),
-      options: JSON.parse(form.options)
-    }
+    const data = form.data.trim() ? JSON.parse(form.data) : {}
+    const options = form.options.trim() ? JSON.parse(form.options) : {}
 
-    emit('submit', jobData)
-    clearForm()
+    emit('submit', {
+      name: form.name.trim(),
+      data,
+      options
+    })
   } catch (error) {
-    console.error('Error submitting job:', error)
+    console.error('Form submission error:', error)
   } finally {
     loading.value = false
   }
 }
 
-// Reset form when drawer closes
-watch(() => props.isOpen, (newValue) => {
-  if (!newValue) {
-    clearForm()
-  }
-})
+function cancel() {
+  emit('close')
+}
 </script>

@@ -12,6 +12,10 @@ export const useJobsStore = defineStore('jobs', () => {
   const error = ref<string | null>(null);
   const currentQueue = ref<string>('');
   
+  // Job duplication state
+  const duplicateJobData = ref<JobDetail | null>(null);
+  const showAddJobDrawer = ref(false);
+
   // Pagination and filters
   const pagination = reactive({
     page: 1,
@@ -342,6 +346,61 @@ export const useJobsStore = defineStore('jobs', () => {
     }
   }
 
+  async function addJob(queueName: string, jobData: { name: string; data: any; options: any }) {
+    try {
+      const result = await apiClient.addJob(queueName, jobData);
+
+      // Refresh jobs to show the newly added job
+      await fetchJobs(queueName, filters, false, true);
+
+      // Update queue counts
+      const { useQueuesStore } = await import('@/stores/queues');
+      const queuesStore = useQueuesStore();
+      queuesStore.updateJobCount(queueName, 'waiting', 1);
+
+      console.log(`Successfully added job ${result.jobId} to queue ${queueName}`);
+      return result;
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to add job';
+      console.error('Failed to add job:', err);
+      throw err;
+    }
+  }
+
+  async function duplicateJob(queueName: string, jobId: string) {
+    try {
+      // First get the job detail to duplicate
+      const job = await apiClient.getJobDetail(queueName, jobId);
+
+      // Store the job data for duplication
+      duplicateJobData.value = {
+        ...job,
+        createdAt: new Date(job.createdAt),
+        processedOn: job.processedOn ? new Date(job.processedOn) : undefined,
+        finishedOn: job.finishedOn ? new Date(job.finishedOn) : undefined,
+      };
+
+      // Show the add job drawer
+      showAddJobDrawer.value = true;
+
+      console.log(`Preparing to duplicate job ${jobId} from queue ${queueName}`);
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to prepare job duplication';
+      console.error('Failed to prepare job duplication:', err);
+      throw err;
+    }
+  }
+
+  function openAddJobDrawer() {
+    duplicateJobData.value = null;
+    showAddJobDrawer.value = true;
+  }
+
+  function closeAddJobDrawer() {
+    showAddJobDrawer.value = false;
+    duplicateJobData.value = null;
+  }
+
   function updateFilters(newFilters: Partial<GetJobsRequest>) {
     Object.assign(filters, newFilters);
     filters.page = 1; // Reset to first page when filters change
@@ -419,7 +478,9 @@ export const useJobsStore = defineStore('jobs', () => {
     pagination,
     filters,
     selection,
-    
+    duplicateJobData,
+    showAddJobDrawer,
+
     // Getters
     hasSelection,
     selectedJobs,
@@ -435,6 +496,10 @@ export const useJobsStore = defineStore('jobs', () => {
     promoteJob,
     bulkRemoveJobs,
     bulkRetryJobs,
+    addJob,
+    duplicateJob,
+    openAddJobDrawer,
+    closeAddJobDrawer,
     updateFilters,
     updatePage,
     toggleJobSelection,
