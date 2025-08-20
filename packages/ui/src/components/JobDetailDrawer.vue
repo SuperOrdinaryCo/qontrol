@@ -103,7 +103,7 @@
           <!-- Job Data -->
           <div>
             <h3 class="text-sm font-medium text-gray-900 mb-3 dark:text-gray-200">Job Data</h3>
-            <pre class="bg-gray-50 dark:bg-gray-800 dark:text-gray-100 rounded-lg p-4 text-sm overflow-x-auto">{{ JSON.stringify(jobDetail.data, null, 2) }}</pre>
+            <pre class="bg-gray-50 dark:bg-gray-700 dark:text-gray-100 rounded-lg p-4 text-sm overflow-x-auto">{{ JSON.stringify(jobDetail.data, null, 2) }}</pre>
           </div>
 
           <!-- Result -->
@@ -132,7 +132,7 @@
           <!-- Options -->
           <div v-if="Object.keys(jobDetail.opts).length > 0">
             <h3 class="text-sm font-medium text-gray-900 dark:text-gray-200 mb-3">Options</h3>
-            <pre class="bg-gray-50 dark:bg-gray-800 dark:text-gray-100 rounded-lg p-4 text-sm overflow-x-auto">{{ JSON.stringify(jobDetail.opts, null, 2) }}</pre>
+            <pre class="bg-gray-50 dark:bg-gray-700 dark:text-gray-100 rounded-lg p-4 text-sm overflow-x-auto">{{ JSON.stringify(jobDetail.opts, null, 2) }}</pre>
           </div>
 
           <!-- Parent/Children -->

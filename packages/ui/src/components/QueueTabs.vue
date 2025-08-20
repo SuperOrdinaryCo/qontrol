@@ -32,7 +32,7 @@ function getStateTabStyle(isSelected: boolean) {
     </div>
 
     <!-- Tab Navigation -->
-    <div class="border-b border-gray-200 dark:border-gray-800">
+    <div class="border-b border-gray-200 dark:border-gray-800 w-full overflow-x-auto">
       <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
         <button
             v-for="[state, count] in Object.entries(queueInfo.counts)"
