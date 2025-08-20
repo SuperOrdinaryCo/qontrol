@@ -47,7 +47,7 @@
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">Sort by</label>
           <select
             v-model="sortBy"
-            class="block w-36 py-3 px-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 focus:outline-none transition-all duration-200 sm:text-sm"
+            class="input-field px-3"
           >
             <option value="createdAt">Created</option>
             <option value="processedOn">Processed</option>
@@ -63,7 +63,7 @@
 
         <!-- Apply Filters -->
         <div class="flex items-end h-full mt-2 pt-[20px]">
-          <button @click="applyFilters" class="btn-primary py-3 px-6 shadow-sm hover:shadow-md transition-shadow">
+          <button @click="applyFilters" class="btn-primary py-2 px-6 shadow-sm hover:shadow-md transition-shadow">
             Apply Filters
           </button>
         </div>

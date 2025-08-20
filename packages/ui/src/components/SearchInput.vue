@@ -76,7 +76,7 @@ function clearSearch() {
           v-model="unifiedSearchQuery"
           type="text"
           :placeholder="getSearchPlaceholder()"
-          class="block w-full pl-28 pr-12 py-3 border dark:text-gray-800 border-gray-300 dark:border-gray-600 rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 sm:text-sm"
+          class="input-field pl-28"
           @keyup.enter="executeSearch"
           @change="handleChange"
       />

@@ -74,7 +74,7 @@
               v-model="searchQuery"
               type="text"
               placeholder="Search queues..."
-              class="block w-full pl-10 pr-3 py-2 border dark:text-gray-100 border-gray-300 dark:border-gray-200 dark:bg-gray-800 rounded-md leading-5 bg-white placeholder-gray-500 dark:placeholder-gray-200 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              class="input-field"
             />
             <div v-if="searchQuery" class="absolute inset-y-0 right-0 pr-3 flex items-center">
               <button
