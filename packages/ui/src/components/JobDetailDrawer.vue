@@ -135,6 +135,30 @@
             <pre class="bg-gray-50 dark:bg-gray-700 dark:text-gray-100 rounded-lg p-4 text-sm overflow-x-auto">{{ JSON.stringify(jobDetail.opts, null, 2) }}</pre>
           </div>
 
+          <!-- Job Logs -->
+          <div v-if="jobDetail.logs && (jobDetail.logs.count > 0 || jobDetail.logs.entries.length > 0)">
+            <h3 class="text-sm font-medium text-gray-900 dark:text-gray-200 mb-3">
+              Job Logs
+              <span v-if="jobDetail.logs.count > 0" class="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                ({{ jobDetail.logs.count }} entries)
+              </span>
+            </h3>
+            <div class="bg-gray-900 rounded-lg p-4 text-sm overflow-x-auto">
+              <div v-if="jobDetail.logs.entries.length === 0" class="text-gray-400 italic">
+                No logs available for this job
+              </div>
+              <div v-else>
+                <div
+                  v-for="(logEntry, index) in jobDetail.logs.entries"
+                  :key="index"
+                  class="text-green-400 font-mono text-xs mb-1 whitespace-pre-wrap"
+                >
+                  {{ logEntry }}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Parent/Children -->
           <div v-if="jobDetail.parent || jobDetail.children?.length">
             <h3 class="text-sm font-medium text-gray-900 dark:text-gray-200 mb-3">Relationships</h3>

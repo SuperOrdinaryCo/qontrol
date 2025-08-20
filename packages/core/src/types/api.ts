@@ -36,6 +36,10 @@ export interface JobDetail extends JobSummary {
   result?: any;
   failedReason?: string;
   stacktrace?: string[];
+  logs?: {
+    entries: string[];
+    count: number;
+  };
   opts: {
     attempts?: number;
     backoff?: any;

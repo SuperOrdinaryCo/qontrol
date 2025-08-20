@@ -150,6 +150,33 @@ export class JobService {
   }
 
   /**
+   * Get job logs
+   */
+  static async getJobLogs(queueName: string, jobId: string, start = 0, end = -1): Promise<{
+    logs: string[];
+    count: number;
+  }> {
+    const logger = Logger.getInstance();
+
+    try {
+      const queue = QueueRegistry.getQueue(queueName);
+      const { logs, count } = await queue.getJobLogs(jobId, start, end);
+
+      return {
+        logs: logs || [],
+        count: count || 0,
+      };
+    } catch (error) {
+      logger.error(`Failed to get job logs for ${jobId} in queue ${queueName}:`, error);
+      // Return empty logs instead of throwing to allow the UI to still function
+      return {
+        logs: [],
+        count: 0,
+      };
+    }
+  }
+
+  /**
    * Remove a single job
    */
   static async removeJob(queueName: string, jobId: string): Promise<boolean> {
@@ -529,12 +556,30 @@ export class JobService {
   private static async jobToDetail(job: Job): Promise<JobDetail> {
     const summary = await this.jobToSummary(job);
 
+    // Get job logs
+    let logs: { entries: string[]; count: number } | undefined;
+    try {
+      const queue = QueueRegistry.getQueue(job.queueName);
+      const { logs: logEntries, count } = await queue.getJobLogs(job.id!, 0, -1);
+      logs = {
+        entries: logEntries || [],
+        count: count || 0,
+      };
+    } catch (error) {
+      // If logs can't be retrieved, set to empty
+      logs = {
+        entries: [],
+        count: 0,
+      };
+    }
+
     return {
       ...summary,
       data: this.sanitizeJobData(job.data),
       result: this.sanitizeJobData(job.returnvalue),
       failedReason: job.failedReason,
       stacktrace: job.stacktrace,
+      logs,
       opts: {
         attempts: job.opts.attempts,
         backoff: job.opts.backoff,

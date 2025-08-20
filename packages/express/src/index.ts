@@ -211,6 +211,31 @@ export function createBullDashRouter(bullDash: BullDash, options: BullDashExpres
   });
 
   /**
+   * GET /api/queues/:queue/jobs/:id/logs
+   * Get logs for a specific job
+   */
+  router.get('/api/queues/:queue/jobs/:id/logs', async (req, res) => {
+    try {
+      const { queue: queueName, id: jobId } = req.params;
+      const start = parseInt(req.query.start as string) || 0;
+      const end = parseInt(req.query.end as string) || -1;
+
+      const logsData = await bullDash.getJobLogs(queueName, jobId, start, end);
+
+      res.json({
+        logs: logsData.logs,
+        count: logsData.count,
+        timestamp: new Date(),
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: 'Failed to fetch job logs',
+        code: 'JOB_LOGS_FETCH_ERROR',
+      });
+    }
+  });
+
+  /**
    * POST /api/queues/:queue/jobs
    * Add a new job to the queue
    */

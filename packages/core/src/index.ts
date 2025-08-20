@@ -41,6 +41,11 @@ export class BullDash {
     return JobService.getJobDetail(queueName, jobId);
   }
 
+  // Get job logs
+  async getJobLogs(queueName: string, jobId: string, start = 0, end = -1) {
+    return JobService.getJobLogs(queueName, jobId, start, end);
+  }
+
   // Add job
   async addJob(queueName: string, jobData: { name: string; data: any; options: any }) {
     return JobService.addJob(queueName, jobData);
