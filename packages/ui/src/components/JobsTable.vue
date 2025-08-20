@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {formatDuration, formatTimestamp} from '@/utils/date.ts';
-import {ArrowPathIcon, ArrowUpIcon, EllipsisVerticalIcon, StopIcon, TrashIcon, DocumentDuplicateIcon} from '@heroicons/vue/24/outline';
+import {ArrowPathIcon, ArrowUpIcon, EllipsisVerticalIcon, StopIcon, TrashIcon, DocumentDuplicateIcon, ArrowDownTrayIcon} from '@heroicons/vue/24/outline';
 import {storeToRefs} from 'pinia';
 import {useJobsStore} from '@/stores/jobs.ts';
 import {computed, onMounted, onUnmounted, ref} from 'vue';
@@ -440,6 +440,16 @@ onUnmounted(() => {
             >
               <DocumentDuplicateIcon class="h-4 w-4" />
               <span>Duplicate Job</span>
+            </button>
+
+            <!-- Export Job action (always available) -->
+            <div class="border-t border-gray-100 my-1"></div>
+            <button
+                @click="() => { jobsStore.exportJob(queueName, job.id) }"
+                class="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 flex items-center space-x-2"
+            >
+              <ArrowDownTrayIcon class="h-4 w-4" />
+              <span>Export Job</span>
             </button>
 
             <!-- Separator if there are state-specific actions -->

@@ -391,6 +391,50 @@ export const useJobsStore = defineStore('jobs', () => {
     }
   }
 
+  async function exportJob(queueName: string, jobId: string) {
+    try {
+      // Get the job detail to export
+      const job = await apiClient.getJobDetail(queueName, jobId);
+
+      // Create export data with formatted dates
+      const exportData = {
+        ...job,
+        createdAt: job.createdAt,
+        processedOn: job.processedOn,
+        finishedOn: job.finishedOn,
+        exportedAt: new Date().toISOString(),
+        exportedFrom: {
+          queue: queueName,
+          timestamp: new Date().toISOString()
+        }
+      };
+
+      // Create a blob and download the file
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+        type: 'application/json'
+      });
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `job-${jobId}-${queueName}-${new Date().toISOString().split('T')[0]}.json`;
+
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Clean up the URL object
+      URL.revokeObjectURL(url);
+
+      console.log(`Successfully exported job ${jobId} from queue ${queueName}`);
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to export job';
+      console.error('Failed to export job:', err);
+      throw err;
+    }
+  }
+
   function openAddJobDrawer() {
     duplicateJobData.value = null;
     showAddJobDrawer.value = true;
@@ -498,6 +542,7 @@ export const useJobsStore = defineStore('jobs', () => {
     bulkRetryJobs,
     addJob,
     duplicateJob,
+    exportJob,
     openAddJobDrawer,
     closeAddJobDrawer,
     updateFilters,
