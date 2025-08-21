@@ -3,8 +3,9 @@ import {formatDuration, formatTimestamp} from '@/utils/date.ts';
 import {ArrowPathIcon, ArrowUpIcon, EllipsisVerticalIcon, StopIcon, TrashIcon, DocumentDuplicateIcon, ArrowDownTrayIcon} from '@heroicons/vue/24/outline';
 import {storeToRefs} from 'pinia';
 import {useJobsStore} from '@/stores/jobs.ts';
-import {computed, onMounted, onUnmounted, ref} from 'vue';
+import {computed, onMounted, onUnmounted, ref, nextTick} from 'vue';
 import {useConfirmStore} from '@/stores/confirm.ts';
+import JobDataTooltip from './JobDataTooltip.vue';
 
 const props = defineProps<{
   queueName: string
@@ -41,6 +42,13 @@ const removingJobId = ref<string | null>(null)
 // Bulk selection state
 const lastSelectedIndex = ref<number>(-1)
 
+// Job data tooltip state
+const tooltipVisible = ref(false)
+const tooltipX = ref(0)
+const tooltipY = ref(0)
+const tooltipJobData = ref<any>(null)
+let tooltipTimeout: ReturnType<typeof setTimeout> | null = null
+
 // Check if any selected jobs are failed (for bulk retry feature)
 const hasFailedJobsSelected = computed(() => {
   if (!hasSelection.value) return false
@@ -49,8 +57,61 @@ const hasFailedJobsSelected = computed(() => {
   return selectedJobs.some(job => job.state === 'failed')
 })
 
+// Job data tooltip functions
+async function showJobDataTooltip(event: MouseEvent, job: any) {
+  const x = event.pageX
+  const y = event.pageY
+
+  tooltipX.value = x + 5
+  tooltipY.value = y - 5
+  tooltipVisible.value = true
+
+  await new Promise((resolve, reject) => {
+    // Clear any existing timeout
+    if (tooltipTimeout) {
+      clearTimeout(tooltipTimeout)
+      reject(null)
+    }
+
+    tooltipTimeout = setTimeout(() => {
+      resolve(null)
+    }, 3000)
+  })
+      .then(() => {
+        if (jobsStore.jobDetail?.id !== job.id) {
+          return jobsStore.fetchJobDetail(queueName.value, job.id)
+        }
+      })
+      .then(() => {
+        nextTick(() => {
+          tooltipJobData.value = jobsStore.jobDetail?.data
+        })
+      })
+      .catch(e => {
+        console.error('Error fetching job detail:', e)
+      })
+}
+
+function hideJobDataTooltip() {
+  // Clear timeout if user moves mouse away before tooltip shows
+  if (tooltipTimeout) {
+    clearTimeout(tooltipTimeout)
+    tooltipTimeout = null
+  }
+
+  tooltipVisible.value = false
+  tooltipJobData.value = null
+}
+
 function viewJobDetail(jobId: string) {
-  jobsStore.fetchJobDetail(queueName.value, jobId)
+  if (jobsStore.jobDetail?.id !== jobId) {
+    jobsStore.fetchJobDetail(queueName.value, jobId)
+        .then(() => {
+          jobsStore.showJobDetailDrawer = true;
+        })
+  } else {
+    jobsStore.showJobDetailDrawer = true;
+  }
 }
 
 function clearSelection() {
@@ -298,6 +359,12 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+
+  // Clean up tooltip timeout to prevent memory leaks
+  if (tooltipTimeout) {
+    clearTimeout(tooltipTimeout)
+    tooltipTimeout = null
+  }
 })
 </script>
 
@@ -390,6 +457,8 @@ onUnmounted(() => {
             :key="job.id"
             class="px-6 py-4 hover:bg-gray-50 hover:dark:bg-gray-700 cursor-pointer relative"
             @click="handleJobClick(job.id, index, $event)"
+            @mouseenter="showJobDataTooltip($event, job)"
+            @mouseleave="hideJobDataTooltip"
         >
           <div class="flex items-center">
             <input
@@ -508,6 +577,14 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
+
+    <!-- Job Data Tooltip -->
+    <JobDataTooltip
+        :visible="tooltipVisible"
+        :x="tooltipX"
+        :y="tooltipY"
+        :job-data="tooltipJobData"
+    />
   </div>
 </template>
 

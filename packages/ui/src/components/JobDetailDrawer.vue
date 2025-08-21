@@ -199,12 +199,13 @@ import { XMarkIcon } from '@heroicons/vue/24/outline'
 import { formatTimestamp, formatDuration } from '@/utils/date'
 
 const jobsStore = useJobsStore()
-const { jobDetail, loadingDetail } = storeToRefs(jobsStore)
+const { jobDetail, loadingDetail, showJobDetailDrawer } = storeToRefs(jobsStore)
 
-const isOpen = computed(() => jobDetail.value !== null)
+const isOpen = computed(() => showJobDetailDrawer.value)
 
 function close() {
   jobsStore.jobDetail = null
+  jobsStore.showJobDetailDrawer = false
 }
 
 function formatDelayRemaining(delay: number, createdAt: Date): string {

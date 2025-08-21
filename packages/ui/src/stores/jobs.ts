@@ -11,6 +11,7 @@ export const useJobsStore = defineStore('jobs', () => {
   const loadingDetail = ref<LoadingState['jobDetail']>(false);
   const error = ref<string | null>(null);
   const currentQueue = ref<string>('');
+  const showJobDetailDrawer = ref(false);
   
   // Job duplication state
   const duplicateJobData = ref<JobDetail | null>(null);
@@ -616,6 +617,7 @@ export const useJobsStore = defineStore('jobs', () => {
     selection,
     duplicateJobData,
     showAddJobDrawer,
+    showJobDetailDrawer,
 
     // Getters
     hasSelection,
