@@ -539,8 +539,23 @@ export const useJobsStore = defineStore('jobs', () => {
   }
 
   function updateFilters(newFilters: Partial<GetJobsRequest>) {
+    // Check if any non-pagination filters are changing
+    const nonPaginationFilters = { ...newFilters };
+    delete nonPaginationFilters.page;
+    delete nonPaginationFilters.pageSize;
+
+    // Only reset to page 1 if actual filters (not pagination) are changing
+    const shouldResetPage = Object.keys(nonPaginationFilters).length > 0 &&
+      Object.keys(nonPaginationFilters).some(key =>
+        newFilters[key as keyof GetJobsRequest] !== filters[key as keyof GetJobsRequest]
+      );
+
     Object.assign(filters, newFilters);
-    filters.page = 1; // Reset to first page when filters change
+
+    // Reset to first page only when actual filters change, not during pagination or auto-refresh
+    if (shouldResetPage && !newFilters.page) {
+      filters.page = 1;
+    }
   }
 
   function updatePage(page: number) {
