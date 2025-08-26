@@ -429,7 +429,7 @@ onUnmounted(() => {
 
     <div v-else>
       <!-- Table Header -->
-      <div class="bg-gray-50 dark:bg-gray-700 px-6 py-3 border-b border-gray-200 dark:border-gray-600">
+      <div class="bg-gray-50 dark:bg-gray-700 px-6 py-3 border-b border-gray-200 dark:border-gray-600 sticky top-0 z-50">
         <div class="flex items-center">
           <input
               type="checkbox"
@@ -506,7 +506,7 @@ onUnmounted(() => {
           <!-- Dropdown Menu (moved to row level) -->
           <div
               v-if="activeDropdown === job.id"
-              class="absolute right-6 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50"
+              class="absolute right-6 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-40"
               @click.stop
           >
             <!-- State-specific actions -->
