@@ -66,18 +66,11 @@ export interface GetQueuesResponse {
 export interface GetJobsRequest {
   page?: number;
   pageSize?: number;
-  sortBy?: 'createdAt' | 'processedOn' | 'finishedOn' | 'duration' | 'state' | 'name';
   sortOrder?: 'asc' | 'desc';
   states?: Array<JobState>;
-  timeRange?: {
-    field: 'createdAt' | 'processedOn' | 'finishedOn';
-    start?: Date;
-    end?: Date;
-  };
-  minDuration?: number; // milliseconds
-  minAttempts?: number;
-  search?: string; // substring search in name and data
-  searchType?: 'name' | 'data'; // New search modes
+  all?: boolean;
+  search?: string;
+  searchType?: string;
 }
 
 export interface GetJobsResponse {

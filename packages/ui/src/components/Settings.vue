@@ -100,7 +100,7 @@
           <div class="space-x-3">
             <button
               @click="saveSettings"
-              class="btn-primary"
+              class="btn-primary cursor-pointer"
               :disabled="!hasChanges"
             >
               Save Changes

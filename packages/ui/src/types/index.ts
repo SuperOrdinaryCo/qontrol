@@ -70,6 +70,7 @@ export interface GetJobsRequest {
   sortBy?: 'createdAt' | 'processedOn' | 'finishedOn' | 'duration' | 'state' | 'name';
   sortOrder?: 'asc' | 'desc';
   states?: Array<keyof JobState>;
+  all?: boolean;
   timeRange?: {
     field: 'createdAt' | 'processedOn' | 'finishedOn';
     start?: Date;
@@ -117,6 +118,7 @@ export interface AppSettings {
   autoRefreshInterval: number;
   timezone: 'local' | 'utc';
   theme: 'light' | 'dark' | 'system';
+  autoRefreshEnabled: boolean;
 }
 
 // UI-specific types

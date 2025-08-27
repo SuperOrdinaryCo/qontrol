@@ -1,0 +1,28 @@
+import { Request, Response } from 'express';
+import { BullDash } from '@bulldash/core';
+
+export class RedisController {
+  constructor(private bullDash: BullDash) {}
+
+  /**
+   * GET /api/redis/stats
+   * Get detailed Redis statistics
+   */
+  async getStats(req: Request, res: Response) {
+    try {
+      const stats = await this.bullDash.getRedisStats();
+
+      res.json({
+        info: stats.info,
+        timestamp: stats.timestamp,
+      });
+    } catch (error) {
+      console.error('Redis stats error:', error);
+      res.status(500).json({
+        message: 'Failed to retrieve Redis statistics',
+        code: 'REDIS_STATS_ERROR',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+}

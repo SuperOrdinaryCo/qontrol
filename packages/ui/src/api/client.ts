@@ -7,6 +7,7 @@ import type {
   GetJobsResponse,
   GetJobDetailResponse,
   HealthCheckResponse,
+  JobSummary,
 } from '@/types';
 import {getBaseUrl} from '@/utils/base-url.ts';
 
@@ -55,19 +56,38 @@ export const apiClient = {
   },
 
   // Job operations
-  async getJobs(queueName: string, params: GetJobsRequest = {}): Promise<GetJobsResponse> {
-    const response = await api.get<GetJobsResponse>(`/queues/${queueName}/jobs`, {
-      params: {
-        ...params,
-        // Flatten timeRange for query params
-        ...(params.timeRange && {
-          'timeRange.field': params.timeRange.field,
-          'timeRange.start': params.timeRange.start?.toISOString(),
-          'timeRange.end': params.timeRange.end?.toISOString(),
-        }),
-      },
+  async *getJobs(queueName: string, params: GetJobsRequest = {}): AsyncGenerator<{ jobs: JobSummary[]; total: number }> {
+    const response = await api.get(`/queues/${queueName}/jobs`, {
+      responseType: 'stream',
+      adapter: 'fetch',
+      params,
     });
-    return response.data;
+
+    const stream = response.data; // The response data will be a ReadableStream
+    const reader = stream.pipeThrough(new TextDecoderStream()).getReader();
+
+    let buffer = '';
+
+    while (true) {
+      const {
+        value,
+        done
+      } = await reader.read();
+      if (done) break;
+      buffer += value;
+    }
+
+    for (const line of buffer.split('\n')) {
+      const _line = line.trim();
+
+      if (!_line) continue;
+
+      try {
+        yield JSON.parse(_line);
+      } catch (e) {
+        console.error(e);
+      }
+    }
   },
 
   async addJob(queueName: string, jobData: { name: string; data: any; options: any }): Promise<{ jobId: string; queueName: string; timestamp: Date }> {
@@ -148,23 +168,5 @@ export const apiClient = {
   }> {
     const response = await api.get('/redis/stats');
     return response.data;
-  },
-
-  async searchJobs(queueName: string, params: GetJobsRequest = {}) {
-    const response = await api.get(`/queues/${queueName}/jobs/search`, {
-      responseType: 'stream',
-      params: {
-        ...params,
-        // Flatten timeRange for query params
-        ...(params.timeRange && {
-          'timeRange.field': params.timeRange.field,
-          'timeRange.start': params.timeRange.start?.toISOString(),
-          'timeRange.end': params.timeRange.end?.toISOString(),
-        }),
-      },
-    });
-    response.data.on('data', (chunk: any) => {
-      console.log(chunk)
-    });
   },
 };

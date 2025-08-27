@@ -6,6 +6,7 @@ const STORAGE_KEY = 'bulldash-settings';
 
 const defaultSettings: AppSettings = {
   autoRefreshInterval: 10, // seconds
+  autoRefreshEnabled: true,
   timezone: 'local',
   theme: 'system',
 };
@@ -13,7 +14,10 @@ const defaultSettings: AppSettings = {
 export const useSettingsStore = defineStore('settings', () => {
   // State
   const settings = ref<AppSettings>({ ...defaultSettings });
-  const autoRefreshEnabled = ref(true);
+  const autoRefreshEnabled = computed({
+    get: () => settings.value.autoRefreshEnabled,
+    set: (value: boolean) => settings.value.autoRefreshEnabled = value,
+  });
 
   // Theme management
   const isDarkMode = computed(() => {
@@ -83,7 +87,7 @@ export const useSettingsStore = defineStore('settings', () => {
   }
 
   function toggleAutoRefresh() {
-    autoRefreshEnabled.value = !autoRefreshEnabled.value;
+    settings.value.autoRefreshEnabled = !settings.value.autoRefreshEnabled;
   }
 
   // Initialize

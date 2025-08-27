@@ -1,23 +1,31 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { watch } from 'vue';
 import { XMarkIcon } from '@heroicons/vue/24/outline';
+import {useSettingsStore} from '@/stores/settings.ts';
 
 type SearchType = 'id' | 'name' | 'data';
 type Emits = {
   (e: 'search', value: { query: string, type: SearchType }): void;
-  (e: 'change', value: { query: string, type: SearchType }): void;
+  (e: 'type-change', value: { query: string, type: SearchType }): void;
   (e: 'clear'): void;
 }
 
-// Unified search state
-const unifiedSearchQuery = ref('')
-const searchType = ref<SearchType>('id')
+const settingsStore = useSettingsStore()
 
+const query = defineModel<string>('query',{
+  required: true,
+})
+
+const type = defineModel<SearchType>('type',{
+  required: true,
+})
+
+// Unified search state
 const emit = defineEmits<Emits>()
 
 // Unified search helper functions
 function getSearchPlaceholder(): string {
-  switch (searchType.value) {
+  switch (type.value) {
     case 'id':
       return 'Enter job ID for instant lookup...'
     case 'name':
@@ -30,34 +38,27 @@ function getSearchPlaceholder(): string {
 }
 
 function executeSearch() {
-  if (!unifiedSearchQuery.value.trim()) {
+  if (!query.value.trim()) {
     emit('clear')
     return;
   }
 
   emit('search', {
-    query: unifiedSearchQuery.value.trim(),
-    type: searchType.value
-  })
-}
-
-function handleChange() {
-  if (!unifiedSearchQuery.value.trim()) {
-    emit('clear')
-    return;
-  }
-
-  emit('change', {
-    query: unifiedSearchQuery.value.trim(),
-    type: searchType.value
+    query: query.value.trim(),
+    type: type.value,
   })
 }
 
 function clearSearch() {
-  unifiedSearchQuery.value = ''
+  query.value = ''
 
   emit('clear')
 }
+
+watch(type, () => {
+  const isLongSearch = ['data', 'name'].includes(type.value);
+  settingsStore.autoRefreshEnabled = !isLongSearch;
+})
 </script>
 
 <template>
@@ -67,7 +68,7 @@ function clearSearch() {
       <!-- Search Type Selector -->
       <div class="absolute inset-y-0 left-0 flex items-center">
         <select
-            v-model="searchType"
+            v-model="type"
             class="h-full rounded-l-lg border-0 bg-transparent py-0 pl-3 pr-7 text-gray-500 dark:text-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm"
         >
           <option value="id">ID</option>
@@ -79,16 +80,15 @@ function clearSearch() {
 
       <!-- Search Input -->
       <input
-          v-model="unifiedSearchQuery"
+          v-model="query"
           type="text"
           :placeholder="getSearchPlaceholder()"
           class="input-field pl-28"
-          @keyup.enter="executeSearch"
-          @change="handleChange"
+          @keydown.enter="executeSearch"
       />
 
       <!-- Clear Button -->
-      <div v-if="unifiedSearchQuery" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+      <div v-if="query" class="absolute inset-y-0 right-0 pr-3 flex items-center">
         <button
             @click="clearSearch"
             class="text-gray-400 dark:text-gray-100 hover:text-gray-600 hover:dark:text-gray-400 transition-colors"
@@ -99,9 +99,9 @@ function clearSearch() {
     </div>
 
     <!-- Search Info -->
-    <div v-if="unifiedSearchQuery" class="mt-1 text-xs text-gray-600 dark:text-gray-200">
-      <span v-if="searchType === 'id'" class="text-blue-600">Press Enter for instant job lookup</span>
-      <span v-else-if="searchType === 'name'" class="text-green-600">Press Enter to search job names</span>
+    <div v-if="query" class="mt-1 text-xs text-gray-600 dark:text-gray-200">
+      <span v-if="type === 'id'" class="text-blue-600">Press Enter for instant job lookup</span>
+      <span v-else-if="type === 'name'" class="text-green-600">Press Enter to search job names</span>
       <span v-else class="text-orange-600">Press Enter to search job data content</span>
     </div>
   </div>

@@ -6,15 +6,11 @@ import { GetJobsRequest, Logger, JOB_STATES } from '@bulldash/core';
 const getJobsSchema = Joi.object({
   page: Joi.number().integer().min(1).default(1),
   pageSize: Joi.number().integer().min(1).max(1000).default(500),
-  sortBy: Joi.string().valid('createdAt', 'processedOn', 'finishedOn', 'duration', 'state', 'name'),
   sortOrder: Joi.string().valid('asc', 'desc').default('desc'),
   states: Joi.array().items(Joi.string().valid(...JOB_STATES)),
-  'timeRange.field': Joi.string().valid('createdAt', 'processedOn', 'finishedOn'),
-  'timeRange.start': Joi.date().iso(),
-  'timeRange.end': Joi.date().iso(),
-  minDuration: Joi.number().integer().min(0),
-  minAttempts: Joi.number().integer().min(0),
-  search: Joi.string().max(500),
+  all: Joi.boolean().default(false),
+  search: Joi.string().max(500).empty(),
+  searchType: Joi.string().valid('name', 'data', 'id').optional(),
 });
 
 // Request validation middleware
@@ -36,22 +32,12 @@ export const validateGetJobs = (req: Request, res: Response, next: NextFunction)
   const params: GetJobsRequest = {
     page: value.page,
     pageSize: value.pageSize,
-    sortBy: value.sortBy,
     sortOrder: value.sortOrder,
     states: value.states,
-    minDuration: value.minDuration,
-    minAttempts: value.minAttempts,
+    all: value.all,
     search: value.search,
+    searchType: value.searchType,
   };
-
-  // Handle timeRange nesting
-  if (value['timeRange.field']) {
-    params.timeRange = {
-      field: value['timeRange.field'],
-      start: value['timeRange.start'] ? new Date(value['timeRange.start']) : undefined,
-      end: value['timeRange.end'] ? new Date(value['timeRange.end']) : undefined,
-    };
-  }
 
   req.validatedQuery = params;
   next();

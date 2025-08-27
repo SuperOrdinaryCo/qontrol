@@ -1,6 +1,7 @@
 import { configManager, Config } from './config/env';
 import { QueueRegistry } from './services/queueRegistry';
 import { JobService } from './services/jobService';
+import { GetJobsRequest, QueueInfo } from './types/api';
 
 export * from './services/jobService';
 export * from './services/queueRegistry';
@@ -22,12 +23,12 @@ export class BullDash {
   }
 
   // Get monitoring data for all queues
-  async getQueues() {
+  async getQueues(): Promise<QueueInfo[]> {
     return QueueRegistry.getAllQueuesInfo();
   }
 
   // Get jobs for a specific queue
-  async getJobs(queueName: string, options?: any) {
+  getJobs(queueName: string, options: GetJobsRequest = {}) {
     return JobService.getJobs(queueName, options);
   }
 
@@ -126,9 +127,5 @@ export class BullDash {
 
   async drainQueue(queueName: string) {
     return QueueRegistry.drainQueue(queueName);
-  }
-
-  searchJobs(queueName: string, options?: any) {
-    return JobService.searchJobs(queueName, options)
   }
 }

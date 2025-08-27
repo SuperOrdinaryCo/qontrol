@@ -11,7 +11,7 @@ const emit = defineEmits<Emits>();
 
 const jobsStore = useJobsStore()
 
-const { pagination, jobs } = storeToRefs(jobsStore)
+const { pagination } = storeToRefs(jobsStore)
 
 const visiblePages = computed(() => {
   const current = pagination.value.page
@@ -37,7 +37,7 @@ function goToPage(page: number) {
 <template>
   <div class="flex items-center justify-between sticky bottom-0 z-50 bg-gray-800 py-4 px-6 text-gray-100 rounded-md">
     <div class="text-sm text-gray-700 dark:text-gray-100">
-      Showing {{ jobs.length }} from {{ pagination.pageSize * (pagination.page - 1) + 1 }} to {{ Math.min(pagination.pageSize * pagination.page, pagination.total) }} of {{ pagination.total }} jobs
+      Showing {{ pagination.pageSize * (pagination.page - 1) + 1 }} to {{ Math.min(pagination.pageSize * pagination.page, pagination.total) }} of {{ pagination.total }} jobs
     </div>
 
     <div class="flex items-center space-x-2">

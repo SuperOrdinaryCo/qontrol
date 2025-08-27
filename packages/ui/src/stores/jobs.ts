@@ -36,6 +36,7 @@ export const useJobsStore = defineStore('jobs', () => {
     minAttempts: undefined,
     search: '',
     searchType: '',
+    all: false,
   });
 
   // Selection state
@@ -74,24 +75,43 @@ export const useJobsStore = defineStore('jobs', () => {
       // Merge with current filters
       const mergedFilters = { ...filters, ...requestFilters };
 
-      // if (['data', 'name'].includes(mergedFilters.searchType as string)) {
-      //   await apiClient.searchJobs(queueName, mergedFilters);
-      // }
+      if (mergedFilters.search === '') {
+        delete mergedFilters.search;
+      }
 
-      const response: GetJobsResponse = await apiClient.getJobs(queueName, mergedFilters);
-      
-      jobs.value = response.jobs.map(job => ({
-        ...job,
-        createdAt: new Date(job.createdAt),
-        processedOn: job.processedOn ? new Date(job.processedOn) : undefined,
-        finishedOn: job.finishedOn ? new Date(job.finishedOn) : undefined,
-      }));
+      const chunks = apiClient.getJobs(queueName, mergedFilters);
+
+      const paginationFactory = (total: number) => ({
+        page: mergedFilters.page || 1,
+        pageSize: mergedFilters.pageSize || 500,
+        total,
+        totalPages: Math.ceil(total / (mergedFilters.pageSize || 500)),
+      });
+
+      let _pagination = {};
+
+      const _jobs = [];
+
+      for await (const chunk of chunks) {
+        _pagination = paginationFactory(chunk.total);
+
+        const jobsChunk = chunk.jobs.map(job => ({
+          ...job,
+          createdAt: new Date(job.createdAt),
+          processedOn: job.processedOn ? new Date(job.processedOn) : undefined,
+          finishedOn: job.finishedOn ? new Date(job.finishedOn) : undefined,
+        }))
+
+        _jobs.push(...jobsChunk)
+      }
+
+      jobs.value = _jobs;
 
       // Update pagination
-      Object.assign(pagination, response.pagination);
+      Object.assign(pagination, _pagination);
       
       // Update filters with response filters
-      Object.assign(filters, response.filters);
+      Object.assign(filters, mergedFilters);
 
       // Handle selection based on preserveSelection flag
       if (preserveSelection && previousSelection.size > 0) {
@@ -619,6 +639,8 @@ export const useJobsStore = defineStore('jobs', () => {
       minDuration: undefined,
       minAttempts: undefined,
       search: '',
+      searchType: '',
+      all: false,
     });
 
     clearSelection();

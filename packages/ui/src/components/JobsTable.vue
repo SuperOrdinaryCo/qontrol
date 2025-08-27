@@ -412,7 +412,7 @@ onUnmounted(() => {
         </div>
 
         <span class="text-sm text-gray-500">
-          {{ pagination.total }} total jobs
+          Showing {{ jobs.length }} of {{ pagination.total }} total jobs
         </span>
       </div>
     </div>

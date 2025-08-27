@@ -40,7 +40,7 @@
     <div class="bg-white dark:bg-gray-800  rounded-lg border border-gray-200 dark:border-gray-800 p-6">
       <div class="flex flex-wrap items-start gap-6">
         <!-- Job ID Search -->
-        <SearchInput class="flex-1" @search="searchJobs" @clear="clearSearch" @change="searchJobs" />
+        <SearchInput class="flex-1" @search="searchJobs" @clear="clearSearch" v-model:query="searchQuery" v-model:type="searchType" />
 
         <!-- Sort Order -->
         <SortOrder v-model="sortOrder" />
@@ -58,7 +58,7 @@
     <JobsTable :queue-name="queueName" />
 
     <!-- Pagination -->
-    <PaginationBlock v-if="pagination.totalPages > 1" @to-page="fetchJobs(false)" />
+    <PaginationBlock v-if="pagination.totalPages > 1 && !filters.all" @to-page="fetchJobs(false)" />
 
     <!-- Custom Confirmation Dialog -->
     <ConfirmDialog />
@@ -75,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import {ref, computed, watch, onMounted, onUnmounted} from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useJobsStore } from '@/stores/jobs'
@@ -113,10 +113,9 @@ const { settings, autoRefreshEnabled } = storeToRefs(settingsStore)
 // Local filter state
 const selectedStateTab = ref<string>('waiting')
 const searchQuery = ref('')
-const searchType = ref('')
+const searchType = ref<'id' | 'name' | 'data'>('id')
 const sortBy = ref('createdAt')
 const sortOrder = ref('desc')
-const jobIdQuery = ref('')
 
 // Auto-refresh
 let refreshInterval: ReturnType<typeof setInterval> | null = null
@@ -142,9 +141,9 @@ function selectStateTab(state: string) {
 }
 
 function applyFilters() {
-  if (jobIdQuery.value.trim()) {
+  if (searchType.value === 'id' && searchQuery.value.trim() != '') {
     // Refresh the job ID search silently to avoid dropping/refilling table
-    jobsStore.fetchJobById(queueName.value, jobIdQuery.value.trim(), true)
+    jobsStore.fetchJobById(queueName.value, searchQuery.value.trim(), true)
 
     return;
   }
@@ -153,6 +152,7 @@ function applyFilters() {
     states: [selectedStateTab.value] as any,
     search: searchQuery.value || undefined,
     searchType: searchType.value || undefined,
+    all: ['data', 'name'].includes(searchType.value),
     sortBy: sortBy.value as any,
     sortOrder: sortOrder.value as any,
     page: 1, // Reset to first page
@@ -174,19 +174,26 @@ function fetchJobs(preserveSelection = false, silentRefresh = false) {
 
 function searchJobs({ query, type }: { query: string, type: 'id' | 'name' | 'data' }) {
   if (type === 'id') {
-    jobIdQuery.value = query.trim()
     jobsStore.fetchJobById(queueName.value, query.trim())
     return;
   }
 
-  searchQuery.value = query.trim()
-  searchType.value = type
+  jobsStore.updateFilters({
+    searchType: type,
+    search: query,
+    all: ['data', 'name'].includes(type),
+  })
+
+  fetchJobs(false)
 }
 
 function clearSearch() {
-  searchQuery.value = ''
-  searchType.value = ''
-  jobIdQuery.value = ''
+  jobsStore.updateFilters({
+    searchType: searchType.value,
+    search: searchQuery.value,
+    all: ['data', 'name'].includes(searchType.value),
+  })
+
   // Clear job ID search and return to normal view
   fetchJobs(false)
 }
@@ -222,9 +229,9 @@ function setupAutoRefresh() {
     refreshInterval = setInterval(() => {
       if (document.visibilityState === 'visible') {
         // Check if we're in job ID search mode
-        if (jobIdQuery.value.trim()) {
+        if (searchType.value === 'id' && searchQuery.value.trim() !== '') {
           // Refresh the job ID search silently to avoid dropping/refilling table
-          jobsStore.fetchJobById(queueName.value, jobIdQuery.value.trim(), true)
+          jobsStore.fetchJobById(queueName.value, searchQuery.value.trim(), true)
         } else {
           // Update filters with current search state before auto-refresh
           jobsStore.updateFilters({
@@ -233,6 +240,7 @@ function setupAutoRefresh() {
             searchType: searchType.value || undefined,
             sortBy: sortBy.value as any,
             sortOrder: sortOrder.value as any,
+            all: ['data', 'name'].includes(searchType.value),
             page: filters.value.page, // Keep current page
           })
 
@@ -266,6 +274,7 @@ onMounted(() => {
     states: [selectedStateTab.value] as any,
     search: searchQuery.value || undefined,
     searchType: searchType.value || undefined,
+    all: ['data', 'name'].includes(searchType.value),
     sortBy: sortBy.value as any,
     sortOrder: sortOrder.value as any,
     page: 1,
