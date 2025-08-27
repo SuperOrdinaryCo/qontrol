@@ -173,14 +173,38 @@ function toggleDropdown(jobId: string) {
 
 function handleRetryJob(jobId: string) {
   activeDropdown.value = null
-  jobsStore.retryJob(queueName.value, jobId)
-      .then(() => {
-        console.log(`Job ${jobId} retried successfully`)
-      })
-      .catch((error) => {
-        console.error('Failed to retry job:', error)
-        alert('Failed to retry job. Please try again.')
-      })
+
+  // Show confirmation dialog
+  confirmStore.updateData({
+    title: 'Confirm Job Retry',
+    message: `Are you sure you want to retry job ${jobId}?`,
+    details: '',
+  })
+
+  confirmStore.confirm(() => {
+    confirmStore.setLoading(true)
+
+    jobsStore.retryJob(queueName.value, jobId)
+        .then(() => {
+          console.log(`Job ${jobId} retried successfully`)
+        })
+        .catch((error) => {
+          console.error('Failed to retry job:', error)
+          alert('Failed to retry job. Please try again.')
+        })
+        .finally(() => {
+          confirmStore.setLoading(false)
+          confirmStore.show(false)
+          confirmStore.clear()
+        })
+  })
+
+  confirmStore.cancel(() => {
+    confirmStore.show(false);
+    confirmStore.clear()
+  })
+
+  confirmStore.show(true);
 }
 
 function handleDiscardJob(jobId: string) {
