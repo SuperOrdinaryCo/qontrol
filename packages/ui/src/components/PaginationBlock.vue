@@ -35,8 +35,8 @@ function goToPage(page: number) {
 </script>
 
 <template>
-  <div class="flex items-center justify-between">
-    <div class="text-sm text-gray-700">
+  <div class="flex items-center justify-between sticky bottom-0 z-50 bg-gray-800 py-4 px-6 text-gray-100 rounded-md">
+    <div class="text-sm text-gray-700 dark:text-gray-100">
       Showing page {{ pagination.page }} of {{ pagination.totalPages }}
       ({{ pagination.total }} total jobs)
     </div>
