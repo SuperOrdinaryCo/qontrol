@@ -159,17 +159,42 @@ export function createBullDashRouter(bullDash: BullDash, options: BullDashExpres
 
       const readable = bullDash.searchJobs(queueName, params);
 
-      res.setHeader('Content-Type', 'application/json');
-      // res.setHeader('Content-Disposition', 'attachment; filename="jobs.json"');
+      // Set proper headers for streaming JSON
+      res.setHeader('Content-Type', 'application/x-ndjson'); // Newline-delimited JSON
+      res.setHeader('Transfer-Encoding', 'chunked');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
 
-      readable.pipe(res).on('error', (err) => {
+      // Handle stream events
+      readable.on('error', (err) => {
+        console.error('Stream error:', err);
+        if (!res.headersSent) {
+          res.status(500).json({
+            message: 'Failed to stream jobs',
+            code: 'JOBS_STREAM_ERROR',
+            error: err.message
+          });
+        } else {
+          res.end();
+        }
+      });
+
+      readable.on('end', () => {
         res.end();
       });
+
+      // Pipe the readable stream to response
+      readable.pipe(res, { end: false });
+
     } catch (error) {
-      res.status(500).json({
-        message: 'Failed to fetch jobs',
-        code: 'JOBS_FETCH_ERROR',
-      });
+      console.error('Route error:', error);
+      if (!res.headersSent) {
+        res.status(500).json({
+          message: 'Failed to fetch jobs',
+          code: 'JOBS_FETCH_ERROR',
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
     }
   });
 

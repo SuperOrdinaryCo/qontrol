@@ -735,43 +735,95 @@ export class JobService {
 
     const nameTransformer = new Transform({
       objectMode: true,
-      transform: async (chunk, encoding, callback) => {
-        const jobs = chunk.jobs.filter((job: Job) => job.name.includes(params.search || ''));
-        callback({
-          ...chunk,
-          jobs,
-        })
+      transform(chunk, encoding, callback) {
+        try {
+          const jobs = chunk.jobs.filter((job: JobSummary) =>
+            job.name === params.search
+          );
+
+          callback(null, {
+            ...chunk,
+            jobs,
+          });
+        } catch (error) {
+          callback(error instanceof Error ? error : new Error(String(error)));
+        }
       }
     });
 
     const dataTransformer = new Transform({
       objectMode: true,
-      transform: async (chunk, encoding, callback) => {
+      transform(chunk, encoding, callback) {
+        try {
+          const { isKeyValue, regex, key, value } = JobService.parseDataSearchQuery(params.search || '');
 
-        const { isKeyValue, regex, key, value } = this.parseDataSearchQuery(params.search || '');
+          let jobs = chunk.jobs;
 
-        let jobs = chunk.jobs;
+          if (isKeyValue) {
+            jobs = jobs.filter((job: JobSummary) => {
+              // For JobSummary, we need to get the actual job data
+              // Since JobSummary doesn't contain the full data, we'll search in available fields
+              const searchableData = {
+                id: job.id,
+                name: job.name,
+                state: job.state,
+                createdAt: job.createdAt?.toISOString(),
+                processedOn: job.processedOn?.toISOString(),
+                finishedOn: job.finishedOn?.toISOString(),
+                attempts: job.attempts,
+                priority: job.priority,
+                delay: job.delay
+              };
+              return JobService.matchesKeyValueSearch(searchableData, key!, value!);
+            });
+          } else {
+            jobs = jobs.filter((job: JobSummary) => {
+              const searchableData = {
+                id: job.id,
+                name: job.name,
+                state: job.state,
+                createdAt: job.createdAt?.toISOString(),
+                processedOn: job.processedOn?.toISOString(),
+                finishedOn: job.finishedOn?.toISOString(),
+                attempts: job.attempts,
+                priority: job.priority,
+                delay: job.delay
+              };
+              return JobService.matchesRegexSearch(searchableData, regex!);
+            });
+          }
 
-        if (isKeyValue) {
-          jobs = jobs.filter((job: Job) => this.matchesKeyValueSearch(job.data, key!, value!));
-        } else {
-          jobs = jobs.filter((job: Job) => this.matchesRegexSearch(job.data, regex!));
+          callback(null, {
+            ...chunk,
+            jobs,
+          });
+        } catch (error) {
+          callback(error instanceof Error ? error : new Error(String(error)));
         }
-
-        callback({
-          ...chunk,
-          jobs,
-        })
       }
-    })
+    });
 
-    const transformer = params.searchType === 'data' ? dataTransformer : nameTransformer
+    // JSON serializer transform to convert objects to JSON strings
+    const jsonTransformer = new Transform({
+      objectMode: true,
+      transform(chunk, encoding, callback) {
+        try {
+          const jsonString = JSON.stringify(chunk) + '\n';
+          callback(null, jsonString);
+        } catch (error) {
+          callback(error instanceof Error ? error : new Error(String(error)));
+        }
+      }
+    });
+
+    const transformer = params.searchType === 'data' ? dataTransformer : nameTransformer;
 
     return Readable.from(this.getAllJobsByStateInChunks(queueName, state, {
       chunkSize: 1000,
       includeJobData: params.searchType === 'data',
     }))
-        .pipe(transformer)
+      .pipe(transformer)
+      .pipe(jsonTransformer);
   }
 
   /**
