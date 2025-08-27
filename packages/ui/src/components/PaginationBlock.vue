@@ -35,7 +35,7 @@ function goToPage(page: number) {
 </script>
 
 <template>
-  <div class="flex items-center justify-between sticky bottom-0 z-50 bg-gray-800 py-4 px-6 text-gray-100 rounded-md">
+  <div class="flex items-center justify-between sticky bottom-0 z-40 bg-gray-800 py-4 px-6 text-gray-100 rounded-md">
     <div class="text-sm text-gray-700 dark:text-gray-100">
       Showing {{ pagination.pageSize * (pagination.page - 1) + 1 }} to {{ Math.min(pagination.pageSize * pagination.page, pagination.total) }} of {{ pagination.total }} jobs
     </div>

@@ -395,7 +395,7 @@ onUnmounted(() => {
 
 <template>
   <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-visible">
-    <div class="px-6 py-4 border-b bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 sticky top-0 z-50">
+    <div class="px-6 py-4 border-b bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 sticky top-0 z-40">
       <div class="flex items-center justify-between">
         <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Jobs</h3>
 
@@ -454,7 +454,7 @@ onUnmounted(() => {
 
     <div v-else>
       <!-- Table Header -->
-      <div class="bg-gray-50 dark:bg-gray-700 px-6 py-3 border-b border-gray-200 dark:border-gray-600 sticky top-[3.5rem] z-50">
+      <div class="bg-gray-50 dark:bg-gray-700 px-6 py-3 border-b border-gray-200 dark:border-gray-600 sticky top-[3.5rem] z-40">
         <div class="flex items-center">
           <input
               type="checkbox"
@@ -482,8 +482,6 @@ onUnmounted(() => {
             :key="job.id"
             class="px-6 py-4 hover:bg-gray-50 hover:dark:bg-gray-700 cursor-pointer relative"
             @click="handleJobClick(job.id, index, $event)"
-            @mouseenter="showJobDataTooltip($event, job)"
-            @mouseleave="hideJobDataTooltip"
         >
           <div class="flex items-center">
             <input
@@ -495,7 +493,10 @@ onUnmounted(() => {
             <div class="jobs-table-grid items-center text-sm">
               <div class="font-mono text-xs truncate dark:text-gray-100" :title="job.id">{{ job.id }}</div>
               <div class="truncate dark:text-gray-100" :title="job.name">{{ job.name }}</div>
-              <div>
+              <div
+                  @mouseenter="showJobDataTooltip($event, job)"
+                  @mouseleave="hideJobDataTooltip"
+              >
                 <span :class="`state-${job.state} dark:text-gray-100`">{{ job.state }}</span>
               </div>
               <div class="text-gray-500 dark:text-gray-100 truncate" :title="formatTimestamp(job.createdAt)">
@@ -531,7 +532,7 @@ onUnmounted(() => {
           <!-- Dropdown Menu (moved to row level) -->
           <div
               v-if="activeDropdown === job.id"
-              class="absolute right-6 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-40"
+              class="absolute right-6 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-20"
               @click.stop
           >
             <!-- State-specific actions -->
