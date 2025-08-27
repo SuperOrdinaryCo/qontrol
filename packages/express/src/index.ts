@@ -81,6 +81,7 @@ export function createBullDashRouter(bullDash: BullDash, options: BullDashExpres
   router.post('/api/queues/:queue/pause', (req, res) => queueController.pauseQueue(req, res));
   router.post('/api/queues/:queue/resume', (req, res) => queueController.resumeQueue(req, res));
   router.post('/api/queues/:queue/clean', (req, res) => queueController.cleanQueue(req, res));
+  router.delete('/api/queues/:queue/obliterate', (req, res) => queueController.removeQueue(req, res));
 
   // Job routes
   router.get('/api/queues/:queue/jobs', validateGetJobs, (req, res) => jobsController.getJobs(req, res));

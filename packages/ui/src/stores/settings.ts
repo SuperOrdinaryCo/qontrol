@@ -10,6 +10,7 @@ const defaultSettings: AppSettings = {
   timezone: 'local',
   theme: 'system',
   tooltipDelay: 0,
+  showDangerActions: false,
 };
 
 export const useSettingsStore = defineStore('settings', () => {

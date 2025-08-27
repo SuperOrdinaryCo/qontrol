@@ -13,6 +13,9 @@
       </div>
 
       <div class="flex items-center space-x-3">
+        <!-- Remove Queue Button -->
+        <RemoveAction v-if="settings.showDangerActions" :queue-name="queueName" @removed="$router.back()"/>
+
         <!-- Add Job Button -->
         <button
           @click="jobsStore.openAddJobDrawer()"
@@ -92,6 +95,7 @@ import PaginationBlock from '@/components/PaginationBlock.vue';
 import SortOrder from '@/components/SortOrder.vue';
 import SearchInput from '@/components/SearchInput.vue';
 import AddJobDrawer from '@/components/AddJobDrawer.vue';
+import RemoveAction from '@/components/queue-actions/RemoveAction.vue';
 
 const route = useRoute()
 const jobsStore = useJobsStore()

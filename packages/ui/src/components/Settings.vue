@@ -110,6 +110,24 @@
           </p>
         </div>
 
+        <!-- Auto-refresh Toggle -->
+        <div>
+          <div class="flex items-center">
+            <input
+                id="enable-auto-refresh"
+                v-model="localSettings.showDangerActions"
+                type="checkbox"
+                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-gray-600 rounded"
+            />
+            <label for="enable-auto-refresh" class="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Show danger actions
+            </label>
+          </div>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Show actions like "Remove queue and jobs" in the UI
+          </p>
+        </div>
+
         <!-- Actions -->
         <div class="flex justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
           <button

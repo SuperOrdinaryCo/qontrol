@@ -121,6 +121,7 @@ export interface AppSettings {
   theme: 'light' | 'dark' | 'system';
   autoRefreshEnabled: boolean;
   tooltipDelay: number;
+  showDangerActions: boolean;
 }
 
 // UI-specific types

@@ -142,4 +142,29 @@ export class QueueController {
       });
     }
   }
+
+  /**
+   * DELETE /api/queues/:queue
+   * Remove a specific queue
+   */
+  async removeQueue(req: Request, res: Response) {
+    try {
+      const queueName = req.params.queue;
+
+      await this.bullDash.obliterateQueue(queueName);
+
+      const response = {
+        queueName,
+        timestamp: new Date(),
+      };
+
+      res.json(response);
+    } catch (error: any) {
+      res.status(500).json({
+        message: `Failed to remove queue ${req.params.queue}`,
+        code: 'QUEUE_REMOVE_ERROR',
+        details: error.message,
+      });
+    }
+  }
 }
