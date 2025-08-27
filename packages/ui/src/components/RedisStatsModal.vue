@@ -91,13 +91,13 @@
                 title="Redis Version"
                 :value="stats.info.redis_version"
                 icon="server"
-                color="blue"
+                color="primary"
               />
               <StatCard
                 title="Uptime"
                 :value="formatUptime(stats.info.uptime_in_seconds)"
                 icon="clock"
-                color="green"
+                color="success"
               />
               <StatCard
                 title="Connected Clients"

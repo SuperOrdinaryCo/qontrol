@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-800 hover:shadow-md transition-shadow cursor-pointer" @click="$emit('click')">
+  <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-800 hover:shadow-md transition-shadow cursor-pointer" @click="$emit('click')">
     <div class="p-6">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-3">
@@ -21,7 +21,7 @@
       </div>
 
       <!-- Job State Counters with Colors -->
-      <div class="mt-4 grid grid-cols-4 gap-1.5">
+      <div class="mt-4 grid grid-cols-8 gap-1.5">
         <template v-for="[state, count] in Object.entries(queue.counts)" :key="state">
           <div class="flex flex-col items-center px-2 py-2 rounded-lg" :class="getStateBackgroundClass(state)">
             <span class="text-xs font-medium text-center leading-tight" :class="getStateTextClass(state)">
@@ -58,27 +58,29 @@ const totalJobs = computed(() => {
 
 function getStateBackgroundClass(state: string): string {
   const backgroundClasses: Record<string, string> = {
-    waiting: 'bg-yellow-50 dark:bg-yellow-800',
-    active: 'bg-blue-50 dark:bg-blue-800',
-    completed: 'bg-green-50 dark:bg-green-800',
-    failed: 'bg-red-50 dark:bg-red-800',
-    delayed: 'bg-purple-50 dark:bg-purple-800',
-    paused: 'bg-gray-50 dark:bg-gray-800',
-    'waiting-children': 'bg-yellow-50 dark:bg-yellow-800',
+    waiting: 'bg-[#feb204]',
+    active: 'bg-[#06768d]',
+    completed: 'bg-[#306844]',
+    failed: 'bg-[#940000]',
+    delayed: 'bg-[#090088]',
+    paused: 'bg-[#696969]',
+    'waiting-children': 'bg-[#feb204]',
+    prioritized: 'bg-[#02006c]'
   }
-  return backgroundClasses[state] || 'bg-gray-50 dark:bg-gray-800'
+  return backgroundClasses[state] || 'bg-gray-500'
 }
 
 function getStateTextClass(state: string): string {
   const textClasses: Record<string, string> = {
-    waiting: 'text-yellow-700 dark:text-yellow-300',
-    active: 'text-blue-700 dark:text-blue-300',
-    completed: 'text-green-700 dark:text-green-300',
-    failed: 'text-red-700 dark:text-red-300',
-    delayed: 'text-purple-700 dark:text-purple-300',
-    paused: 'text-gray-700 dark:text-gray-300',
-    'waiting-children': 'text-yellow-700 dark:text-yellow-300',
+    waiting: 'text-gray-900',
+    active: 'text-gray-100',
+    completed: 'text-gray-100',
+    failed: 'text-gray-100',
+    delayed: 'text-gray-100',
+    paused: 'text-gray-100',
+    'waiting-children': 'text-gray-900',
+    prioritized: 'text-gray-100'
   }
-  return textClasses[state] || 'text-gray-700 dark:text-gray-300'
+  return textClasses[state] || 'text-gray-900'
 }
 </script>

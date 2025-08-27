@@ -12,7 +12,7 @@
         <button
           @click="refreshQueues"
           :disabled="loading"
-          class="btn-secondary"
+          class="btn-secondary flex items-center"
         >
           <ArrowPathIcon class="w-4 h-4 mr-2" :class="{ 'animate-spin': loading }" />
           Refresh
@@ -23,28 +23,37 @@
     <!-- Stats Overview -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <StatCard
+        class="border-gray-200 dark:border-gray-800 border"
         title="Total Queues"
         :value="filteredQueues.length"
         icon="QueueListIcon"
         color="primary"
       />
       <StatCard
+        class="border-gray-200 dark:border-gray-800 border"
         title="Total Jobs"
         :value="totalJobs"
         icon="BriefcaseIcon"
         color="primary"
       />
       <StatCard
+        class="border-gray-200 dark:border-gray-800 border"
         title="Active Jobs"
         :value="queuesByState.active || 0"
         icon="PlayIcon"
         color="success"
       />
       <StatCard
+        class="cursor-pointer border"
+        :class="{
+          'border-blue-400': shouldShowFailedQueues,
+          'border-gray-200 dark:border-gray-800': !shouldShowFailedQueues
+        }"
         title="Failed Jobs"
         :value="queuesByState.failed || 0"
         icon="ExclamationTriangleIcon"
         color="danger"
+        @click="toggleFailedFilter"
       />
     </div>
 
@@ -94,7 +103,7 @@
         </div>
       </div>
 
-      <div v-else-if="sortedQueues.length === 0 && searchQuery" class="p-6 text-center text-gray-500 dark:text-gray-100">
+      <div v-else-if="filteredAndSortedQueues.length === 0 && searchQuery" class="p-6 text-center text-gray-500 dark:text-gray-100">
         <div class="space-y-2">
           <MagnifyingGlassIcon class="h-8 w-8 text-gray-300 dark:text-gray-100 mx-auto" />
           <p>No queues found matching "{{ searchQuery }}"</p>
@@ -111,9 +120,9 @@
         No queues found
       </div>
 
-      <div v-else class="divide-y divide-gray-200">
+      <div v-else class="divide-y divide-x-0 divide-gray-200 rounded-lg overflow-hidden">
         <QueueCard
-          v-for="queue in sortedQueues"
+          v-for="queue in filteredAndSortedQueues"
           :key="queue.name"
           :queue="queue"
           @click="navigateToQueue(queue.name)"
@@ -129,7 +138,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import {onMounted, onUnmounted, ref, computed} from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useQueuesStore } from '@/stores/queues'
@@ -156,8 +165,20 @@ const {
 } = storeToRefs(queuesStore)
 
 const { settings, autoRefreshEnabled } = storeToRefs(settingsStore)
+const shouldShowFailedQueues = ref(false)
+
+const filteredAndSortedQueues = computed(() => {
+  if (shouldShowFailedQueues.value) {
+    return sortedQueues.value.filter(queue => queue.counts.failed > 0)
+  }
+  return sortedQueues.value
+})
 
 let refreshInterval: ReturnType<typeof setInterval> | null = null
+
+function toggleFailedFilter() {
+  shouldShowFailedQueues.value = !shouldShowFailedQueues.value
+}
 
 function refreshQueues() {
   queuesStore.fetchQueues()

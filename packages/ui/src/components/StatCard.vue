@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+  <div class="bg-white dark:bg-gray-800 rounded-lg p-6">
     <div class="flex items-center">
       <div :class="[
         'flex-shrink-0 p-3 rounded-lg',
@@ -46,10 +46,11 @@ const iconComponent = computed(() => {
 
 const colorClasses = computed(() => {
   const colors = {
-    blue: 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400',
-    green: 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400',
+    primary: 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400',
+    success: 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400',
     purple: 'bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400',
-    orange: 'bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-400'
+    orange: 'bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-400',
+    danger: 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400',
   }
 
   return colors[props.color as keyof typeof colors] || colors.blue
