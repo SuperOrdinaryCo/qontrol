@@ -149,6 +149,31 @@ export function createBullDashRouter(bullDash: BullDash, options: BullDashExpres
   });
 
   /**
+   * GET /api/queues/:queue/jobs
+   * Get jobs for a specific queue with pagination, filtering, and search
+   */
+  router.get('/api/queues/:queue/jobs/search', validateGetJobs, async (req, res) => {
+    try {
+      const queueName = req.params.queue;
+      const params = req.validatedQuery!;
+
+      const readable = bullDash.searchJobs(queueName, params);
+
+      res.setHeader('Content-Type', 'application/json');
+      // res.setHeader('Content-Disposition', 'attachment; filename="jobs.json"');
+
+      readable.pipe(res).on('error', (err) => {
+        res.end();
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: 'Failed to fetch jobs',
+        code: 'JOBS_FETCH_ERROR',
+      });
+    }
+  });
+
+  /**
    * GET /api/queues/:queue/job-by-id/:id
    * Fast lookup for a specific job by ID
    */

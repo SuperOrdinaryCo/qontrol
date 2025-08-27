@@ -127,4 +127,8 @@ export class BullDash {
   async drainQueue(queueName: string) {
     return QueueRegistry.drainQueue(queueName);
   }
+
+  searchJobs(queueName: string, options?: any) {
+    return JobService.searchJobs(queueName, options)
+  }
 }

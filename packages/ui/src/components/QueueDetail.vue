@@ -42,22 +42,6 @@
         <!-- Job ID Search -->
         <SearchInput class="flex-1" @search="searchJobs" @clear="clearSearch" @change="searchJobs" />
 
-        <!-- Sort -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">Sort by</label>
-          <select
-            v-model="sortBy"
-            class="input-field px-3"
-          >
-            <option value="createdAt">Created</option>
-            <option value="processedOn">Processed</option>
-            <option value="finishedOn">Finished</option>
-            <option value="duration">Duration</option>
-            <option value="state">State</option>
-            <option value="name">Name</option>
-          </select>
-        </div>
-
         <!-- Sort Order -->
         <SortOrder v-model="sortOrder" />
 
@@ -129,6 +113,7 @@ const { settings, autoRefreshEnabled } = storeToRefs(settingsStore)
 // Local filter state
 const selectedStateTab = ref<string>('waiting')
 const searchQuery = ref('')
+const searchType = ref('')
 const sortBy = ref('createdAt')
 const sortOrder = ref('desc')
 const jobIdQuery = ref('')
@@ -167,6 +152,7 @@ function applyFilters() {
   jobsStore.updateFilters({
     states: [selectedStateTab.value] as any,
     search: searchQuery.value || undefined,
+    searchType: searchType.value || undefined,
     sortBy: sortBy.value as any,
     sortOrder: sortOrder.value as any,
     page: 1, // Reset to first page
@@ -194,10 +180,12 @@ function searchJobs({ query, type }: { query: string, type: 'id' | 'name' | 'dat
   }
 
   searchQuery.value = query.trim()
+  searchType.value = type
 }
 
 function clearSearch() {
   searchQuery.value = ''
+  searchType.value = ''
   jobIdQuery.value = ''
   // Clear job ID search and return to normal view
   fetchJobs(false)
@@ -242,6 +230,7 @@ function setupAutoRefresh() {
           jobsStore.updateFilters({
             states: [selectedStateTab.value] as any,
             search: searchQuery.value || undefined,
+            searchType: searchType.value || undefined,
             sortBy: sortBy.value as any,
             sortOrder: sortOrder.value as any,
             page: filters.value.page, // Keep current page
@@ -276,6 +265,7 @@ onMounted(() => {
   jobsStore.updateFilters({
     states: [selectedStateTab.value] as any,
     search: searchQuery.value || undefined,
+    searchType: searchType.value || undefined,
     sortBy: sortBy.value as any,
     sortOrder: sortOrder.value as any,
     page: 1,

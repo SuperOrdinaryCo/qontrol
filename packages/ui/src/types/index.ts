@@ -78,6 +78,7 @@ export interface GetJobsRequest {
   minDuration?: number;
   minAttempts?: number;
   search?: string;
+  searchType?: string;
 }
 
 export interface GetJobsResponse {

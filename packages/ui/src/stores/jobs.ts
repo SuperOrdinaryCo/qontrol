@@ -35,6 +35,7 @@ export const useJobsStore = defineStore('jobs', () => {
     minDuration: undefined,
     minAttempts: undefined,
     search: '',
+    searchType: '',
   });
 
   // Selection state
@@ -72,7 +73,11 @@ export const useJobsStore = defineStore('jobs', () => {
 
       // Merge with current filters
       const mergedFilters = { ...filters, ...requestFilters };
-      
+
+      // if (['data', 'name'].includes(mergedFilters.searchType as string)) {
+      //   await apiClient.searchJobs(queueName, mergedFilters);
+      // }
+
       const response: GetJobsResponse = await apiClient.getJobs(queueName, mergedFilters);
       
       jobs.value = response.jobs.map(job => ({

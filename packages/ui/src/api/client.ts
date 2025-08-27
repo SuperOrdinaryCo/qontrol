@@ -149,4 +149,22 @@ export const apiClient = {
     const response = await api.get('/redis/stats');
     return response.data;
   },
+
+  async searchJobs(queueName: string, params: GetJobsRequest = {}) {
+    const response = await api.get(`/queues/${queueName}/jobs/search`, {
+      responseType: 'stream',
+      params: {
+        ...params,
+        // Flatten timeRange for query params
+        ...(params.timeRange && {
+          'timeRange.field': params.timeRange.field,
+          'timeRange.start': params.timeRange.start?.toISOString(),
+          'timeRange.end': params.timeRange.end?.toISOString(),
+        }),
+      },
+    });
+    response.data.on('data', (chunk: any) => {
+      console.log(chunk)
+    });
+  },
 };

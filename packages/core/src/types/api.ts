@@ -77,6 +77,7 @@ export interface GetJobsRequest {
   minDuration?: number; // milliseconds
   minAttempts?: number;
   search?: string; // substring search in name and data
+  searchType?: 'name' | 'data'; // New search modes
 }
 
 export interface GetJobsResponse {
@@ -89,6 +90,7 @@ export interface GetJobsResponse {
   };
   filters: GetJobsRequest;
   timestamp: Date;
+  isStreaming?: boolean; // Indicates if this is a streaming response
 }
 
 export interface GetJobDetailResponse {

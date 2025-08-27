@@ -30,7 +30,10 @@ function getSearchPlaceholder(): string {
 }
 
 function executeSearch() {
-  if (!unifiedSearchQuery.value.trim()) return
+  if (!unifiedSearchQuery.value.trim()) {
+    emit('clear')
+    return;
+  }
 
   emit('search', {
     query: unifiedSearchQuery.value.trim(),
@@ -39,7 +42,10 @@ function executeSearch() {
 }
 
 function handleChange() {
-  if (!unifiedSearchQuery.value.trim()) return
+  if (!unifiedSearchQuery.value.trim()) {
+    emit('clear')
+    return;
+  }
 
   emit('change', {
     query: unifiedSearchQuery.value.trim(),
@@ -85,7 +91,7 @@ function clearSearch() {
       <div v-if="unifiedSearchQuery" class="absolute inset-y-0 right-0 pr-3 flex items-center">
         <button
             @click="clearSearch"
-            class="text-gray-400 hover:text-gray-600 dark:text-gray-800 hover:dark:text-gray-600 transition-colors"
+            class="text-gray-400 dark:text-gray-100 hover:text-gray-600 hover:dark:text-gray-400 transition-colors"
         >
           <XMarkIcon class="h-5 w-5" />
         </button>

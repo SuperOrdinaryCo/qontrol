@@ -370,7 +370,7 @@ onUnmounted(() => {
 
 <template>
   <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-visible">
-    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+    <div class="px-6 py-4 border-b bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 sticky top-0 z-50">
       <div class="flex items-center justify-between">
         <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Jobs</h3>
 
@@ -429,7 +429,7 @@ onUnmounted(() => {
 
     <div v-else>
       <!-- Table Header -->
-      <div class="bg-gray-50 dark:bg-gray-700 px-6 py-3 border-b border-gray-200 dark:border-gray-600 sticky top-0 z-50">
+      <div class="bg-gray-50 dark:bg-gray-700 px-6 py-3 border-b border-gray-200 dark:border-gray-600 sticky top-[3.5rem] z-50">
         <div class="flex items-center">
           <input
               type="checkbox"
