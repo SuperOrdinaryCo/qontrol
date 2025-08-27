@@ -141,6 +141,10 @@ function selectStateTab(state: string) {
 }
 
 function applyFilters() {
+  if (searchQuery.value.trim() === '') {
+    searchType.value = 'id'
+  }
+
   if (searchType.value === 'id' && searchQuery.value.trim() != '') {
     // Refresh the job ID search silently to avoid dropping/refilling table
     jobsStore.fetchJobById(queueName.value, searchQuery.value.trim(), true)
@@ -193,9 +197,6 @@ function clearSearch() {
     search: searchQuery.value,
     all: ['data', 'name'].includes(searchType.value),
   })
-
-  // Clear job ID search and return to normal view
-  fetchJobs(false)
 }
 
 async function handleAddJob(jobData: { name: string; data: any; options: any }) {

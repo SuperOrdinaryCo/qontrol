@@ -39,10 +39,14 @@ export class JobService {
         const total = totalJobs[state] || 0;
 
         // Convert to JobSummary format
-        let jobSummaries = await Promise.all(allJobs.map(job => this.jobToSummary(job)));
+        let jobSummaries = await Promise.all(allJobs.map(job => this.jobToSummary(job, params.all)));
 
         if (params.search && params.searchType === 'name') {
-          jobSummaries = jobSummaries.filter(job => job.name === params.search)
+          jobSummaries = this.filterJobsByName(jobSummaries, params.search)
+        }
+
+        if (params.search && params.searchType === 'data') {
+          jobSummaries = this.filterJobsByData(jobSummaries, params.search)
         }
 
         _page++;
@@ -512,7 +516,7 @@ export class JobService {
   /**
    * Convert Job to JobSummary
    */
-  private static async jobToSummary(job: Job): Promise<JobSummary> {
+  private static async jobToSummary(job: Job, includeData = false): Promise<JobSummary> {
     return {
       id: job.id!,
       name: job.name,
@@ -524,6 +528,7 @@ export class JobService {
       attempts: job.attemptsStarted,
       priority: job.opts.priority,
       delay: job.opts.delay,
+      data: includeData ? job.data : {},
     };
   }
 
@@ -649,287 +654,111 @@ export class JobService {
     }
   }
 
-  // static searchJobs(queueName: string, params: GetJobsRequest): Readable {
-  //   const states = params.states || ['waiting'];
-  //   const state = states[0];
-  //
-  //   const nameTransformer = new Transform({
-  //     objectMode: true,
-  //     transform(chunk, encoding, callback) {
-  //       try {
-  //         const jobs = chunk.jobs.filter((job: JobSummary) =>
-  //           job.name === params.search
-  //         );
-  //
-  //         callback(null, {
-  //           ...chunk,
-  //           jobs,
-  //         });
-  //       } catch (error) {
-  //         callback(error instanceof Error ? error : new Error(String(error)));
-  //       }
-  //     }
-  //   });
-  //
-  //   const dataTransformer = new Transform({
-  //     objectMode: true,
-  //     transform(chunk, encoding, callback) {
-  //       try {
-  //         const { isKeyValue, regex, key, value } = JobService.parseDataSearchQuery(params.search || '');
-  //
-  //         let jobs = chunk.jobs;
-  //
-  //         if (isKeyValue) {
-  //           jobs = jobs.filter((job: JobSummary) => {
-  //             // For JobSummary, we need to get the actual job data
-  //             // Since JobSummary doesn't contain the full data, we'll search in available fields
-  //             const searchableData = {
-  //               id: job.id,
-  //               name: job.name,
-  //               state: job.state,
-  //               createdAt: job.createdAt?.toISOString(),
-  //               processedOn: job.processedOn?.toISOString(),
-  //               finishedOn: job.finishedOn?.toISOString(),
-  //               attempts: job.attempts,
-  //               priority: job.priority,
-  //               delay: job.delay
-  //             };
-  //             return JobService.matchesKeyValueSearch(searchableData, key!, value!);
-  //           });
-  //         } else {
-  //           jobs = jobs.filter((job: JobSummary) => {
-  //             const searchableData = {
-  //               id: job.id,
-  //               name: job.name,
-  //               state: job.state,
-  //               createdAt: job.createdAt?.toISOString(),
-  //               processedOn: job.processedOn?.toISOString(),
-  //               finishedOn: job.finishedOn?.toISOString(),
-  //               attempts: job.attempts,
-  //               priority: job.priority,
-  //               delay: job.delay
-  //             };
-  //             return JobService.matchesRegexSearch(searchableData, regex!);
-  //           });
-  //         }
-  //
-  //         callback(null, {
-  //           ...chunk,
-  //           jobs,
-  //         });
-  //       } catch (error) {
-  //         callback(error instanceof Error ? error : new Error(String(error)));
-  //       }
-  //     }
-  //   });
-  //
-  //   // JSON serializer transform to convert objects to JSON strings
-  //   const jsonTransformer = new Transform({
-  //     objectMode: true,
-  //     transform(chunk, encoding, callback) {
-  //       try {
-  //         const jsonString = JSON.stringify(chunk) + '\n';
-  //         callback(null, jsonString);
-  //       } catch (error) {
-  //         callback(error instanceof Error ? error : new Error(String(error)));
-  //       }
-  //     }
-  //   });
-  //
-  //   const transformer = params.searchType === 'data' ? dataTransformer : nameTransformer;
-  //
-  //   return Readable.from(this.getAllJobsByStateInChunks(queueName, state, {
-  //     chunkSize: 1000,
-  //     includeJobData: params.searchType === 'data',
-  //   }))
-  //     .pipe(transformer)
-  //     .pipe(jsonTransformer);
-  // }
-
-  /**
-   * Get all jobs of a specific state using chunks approach as an async generator
-   * This provides better memory management by streaming chunks instead of accumulating all jobs
-   */
-  // static async* getAllJobsByStateInChunks(
-  //   queueName: string,
-  //   state: JobState,
-  //   options: {
-  //     chunkSize?: number;
-  //     includeJobData?: boolean;
-  //   } = {}
-  // ): AsyncGenerator<{
-  //   jobs: JobSummary[];
-  //   chunkIndex: number;
-  //   estimatedTotal: number;
-  //   processedSoFar: number;
-  // }, {
-  //   totalProcessed: number;
-  //   chunksProcessed: number;
-  // }, unknown> {
-  //   const logger = Logger.getInstance();
-  //   const { chunkSize = 1000, includeJobData = false } = options;
-  //
-  //   try {
-  //     const queue = QueueRegistry.getQueue(queueName);
-  //     let chunksProcessed = 0;
-  //     let start = 0;
-  //     let totalProcessed = 0;
-  //     let estimatedTotal = 0;
-  //
-  //     logger.info(`Starting chunked fetch generator for ${state} jobs in queue ${queueName} with chunk size ${chunkSize}`);
-  //
-  //     // First, get an estimate of total jobs for this state
-  //     try {
-  //       const counts = await queue.getJobCounts(state);
-  //       estimatedTotal = counts[state] || 0;
-  //       logger.info(`Estimated ${estimatedTotal} ${state} jobs in queue ${queueName}`);
-  //     } catch (error) {
-  //       logger.warn(`Could not get job count estimate for ${state} jobs in queue ${queueName}:`, error);
-  //     }
-  //
-  //     while (true) {
-  //       try {
-  //         // Fetch a chunk of jobs
-  //         const end = start + chunkSize - 1;
-  //         const chunkJobs = await queue.getJobs(state, start, end, includeJobData);
-  //
-  //         if (!chunkJobs || chunkJobs.length === 0) {
-  //           logger.info(`No more ${state} jobs found in queue ${queueName}. Stopping at chunk ${chunksProcessed + 1}`);
-  //           break;
-  //         }
-  //
-  //         // Convert jobs to JobSummary format
-  //         const jobSummaries = await Promise.all(
-  //           chunkJobs.map(job => this.jobToSummary(job))
-  //         );
-  //
-  //         totalProcessed += jobSummaries.length;
-  //         chunksProcessed++;
-  //
-  //         logger.debug(`Processed chunk ${chunksProcessed} with ${chunkJobs.length} ${state} jobs from queue ${queueName}`);
-  //
-  //         // Yield the current chunk with progress information
-  //         yield {
-  //           jobs: jobSummaries,
-  //           chunkIndex: chunksProcessed - 1,
-  //           estimatedTotal: Math.max(estimatedTotal, totalProcessed),
-  //           processedSoFar: totalProcessed
-  //         };
-  //
-  //         // If we got fewer jobs than requested, we've reached the end
-  //         if (chunkJobs.length < chunkSize) {
-  //           logger.info(`Reached end of ${state} jobs in queue ${queueName}. Final chunk had ${chunkJobs.length} jobs`);
-  //           break;
-  //         }
-  //
-  //         // Move to next chunk
-  //         start += chunkSize;
-  //
-  //         // Add a small delay to prevent overwhelming Redis
-  //         await new Promise(resolve => setTimeout(resolve, 10));
-  //
-  //       } catch (chunkError) {
-  //         logger.error(`Error processing chunk ${chunksProcessed + 1} for ${state} jobs in queue ${queueName}:`, chunkError);
-  //
-  //         // If this is the first chunk and it fails, throw the error
-  //         if (chunksProcessed === 0) {
-  //           throw chunkError;
-  //         }
-  //
-  //         // For subsequent chunks, log the error but continue
-  //         logger.warn(`Skipping failed chunk ${chunksProcessed + 1}, continuing with next chunk`);
-  //         start += chunkSize;
-  //         continue;
-  //       }
-  //     }
-  //
-  //     logger.info(`Completed chunked fetch generator for ${state} jobs in queue ${queueName}: ${totalProcessed} jobs processed in ${chunksProcessed} chunks`);
-  //
-  //     // Return final summary
-  //     return {
-  //       totalProcessed,
-  //       chunksProcessed
-  //     };
-  //
-  //   } catch (error) {
-  //     logger.error(`Failed to get all ${state} jobs for queue ${queueName} using chunks generator:`, error);
-  //     throw error;
-  //   }
-  // }
-
   /**
    * Parse data search query to determine if it's key-value or regex
    */
-  // static parseDataSearchQuery(query: string): {
-  //   isKeyValue: boolean;
-  //   key?: string;
-  //   value?: string;
-  //   regex?: RegExp;
-  // } {
-  //   // Check if it's a key-value search (contains =)
-  //   const equalSignIndex = query.indexOf('=');
-  //
-  //   if (equalSignIndex > 0) {
-  //     const key = query.substring(0, equalSignIndex).trim();
-  //     const value = query.substring(equalSignIndex + 1).trim();
-  //
-  //     return {
-  //       isKeyValue: true,
-  //       key,
-  //       value
-  //     };
-  //   } else {
-  //     // Treat as regex search
-  //     try {
-  //       const regex = new RegExp(query, 'i'); // Case insensitive
-  //       return {
-  //         isKeyValue: false,
-  //         regex
-  //       };
-  //     } catch {
-  //       // If regex is invalid, create a simple string search
-  //       const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  //       return {
-  //         isKeyValue: false,
-  //         regex: new RegExp(escapedQuery, 'i')
-  //       };
-  //     }
-  //   }
-  // }
-  //
-  // /**
-  //  * Check if job data matches key-value search
-  //  */
-  // static matchesKeyValueSearch(data: any, key: string, expectedValue: string): boolean {
-  //   try {
-  //     const keyParts = key.split('.');
-  //     let current = data;
-  //
-  //     // Navigate through nested object
-  //     for (const part of keyParts) {
-  //       if (current === null || current === undefined) {
-  //         return false;
-  //       }
-  //       current = current[part];
-  //     }
-  //
-  //     // Convert to string and compare
-  //     const actualValue = String(current);
-  //     return actualValue === expectedValue;
-  //   } catch {
-  //     return false;
-  //   }
-  // }
-  //
-  // /**
-  //  * Check if job data matches regex search
-  //  */
-  // static matchesRegexSearch(data: any, regex: RegExp): boolean {
-  //   try {
-  //     const dataString = JSON.stringify(data);
-  //     return regex.test(dataString);
-  //   } catch {
-  //     return false;
-  //   }
-  // }
+  static parseDataSearchQuery(query: string): {
+    isKeyValue: boolean;
+    key?: string;
+    value?: string;
+    regex?: RegExp;
+  } {
+    // Check if it's a key-value search (contains =)
+    const equalSignIndex = query.indexOf('=');
+
+    if (equalSignIndex > 0) {
+      const key = query.substring(0, equalSignIndex).trim();
+      const value = query.substring(equalSignIndex + 1).trim();
+
+      return {
+        isKeyValue: true,
+        key,
+        value
+      };
+    } else {
+      // Treat as regex search
+      try {
+        const regex = new RegExp(query, 'i'); // Case insensitive
+        return {
+          isKeyValue: false,
+          regex
+        };
+      } catch {
+        // If regex is invalid, create a simple string search
+        const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return {
+          isKeyValue: false,
+          regex: new RegExp(escapedQuery, 'i')
+        };
+      }
+    }
+  }
+
+  /**
+   * Check if job data matches key-value search
+   */
+  static matchesKeyValueSearch(data: any, key: string, expectedValue: string): boolean {
+    try {
+      const keyParts = key.split('.');
+      let current = data;
+
+      // Navigate through nested object
+      for (const part of keyParts) {
+        if (current === null || current === undefined) {
+          return false;
+        }
+        current = current[part];
+      }
+
+      // Convert to string and compare
+      const actualValue = String(current);
+      return actualValue === expectedValue;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Check if job data matches regex search
+   */
+  static matchesRegexSearch(data: any, regex: RegExp): boolean {
+    try {
+      const dataString = JSON.stringify(data);
+      return regex.test(dataString);
+    } catch {
+      return false;
+    }
+  }
+
+  static filterJobsByName(jobs: JobSummary[], search: string) {
+    return jobs.filter(job => {
+      const isMatched = job.name?.toLowerCase() === search.toLowerCase();
+
+      delete job.data;
+
+      return isMatched;
+    });
+  }
+
+  static filterJobsByData(jobs: JobSummary[], search: string) {
+    const { isKeyValue, key, value, regex } = this.parseDataSearchQuery(search);
+
+    if (isKeyValue) {
+      return jobs.filter(job => {
+        const isMatched = this.matchesKeyValueSearch((job as any).data, key!, value!)
+
+        delete job.data;
+
+        return isMatched;
+      });
+    }
+
+    return jobs.filter(job => {
+      const isMatched = this.matchesRegexSearch((job as any).data, regex!)
+
+      delete job.data;
+
+      return isMatched;
+    })
+  }
 }

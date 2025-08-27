@@ -29,6 +29,7 @@ export interface JobSummary {
   attempts: number;
   priority?: number;
   delay?: number;
+  data?: any;
 }
 
 export interface JobDetail extends JobSummary {
