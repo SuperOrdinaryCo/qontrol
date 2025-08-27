@@ -661,19 +661,22 @@ export class JobService {
     isKeyValue: boolean;
     key?: string;
     value?: string;
+    operator?: '=' | '!=' | '~' | '!~';
     regex?: RegExp;
   } {
-    // Check if it's a key-value search (contains =)
-    const equalSignIndex = query.indexOf('=');
+    const operators = ['!=', '=', '!~', '~',] as const;
 
-    if (equalSignIndex > 0) {
-      const key = query.substring(0, equalSignIndex).trim();
-      const value = query.substring(equalSignIndex + 1).trim();
+    // Check if it's a key-value search (contains =)
+    const operator = operators.find(op => query.includes(op))
+
+    if (operator) {
+      const [key, value] = query.split(operator);
 
       return {
         isKeyValue: true,
-        key,
-        value
+        key: key.trim(),
+        value: value.trim(),
+        operator,
       };
     } else {
       // Treat as regex search
@@ -697,7 +700,7 @@ export class JobService {
   /**
    * Check if job data matches key-value search
    */
-  static matchesKeyValueSearch(data: any, key: string, expectedValue: string): boolean {
+  static matchesKeyValueSearch(data: any, key: string, operator: string, expectedValue: string): boolean {
     try {
       const keyParts = key.split('.');
       let current = data;
@@ -712,7 +715,18 @@ export class JobService {
 
       // Convert to string and compare
       const actualValue = String(current);
-      return actualValue === expectedValue;
+
+      switch (operator) {
+        case '~':
+          return actualValue.includes(expectedValue);
+        case '!~':
+          return !actualValue.includes(expectedValue);
+        case '!=':
+          return actualValue != expectedValue;
+        case '=':
+        default:
+          return actualValue === expectedValue;
+      }
     } catch {
       return false;
     }
@@ -741,11 +755,11 @@ export class JobService {
   }
 
   static filterJobsByData(jobs: JobSummary[], search: string) {
-    const { isKeyValue, key, value, regex } = this.parseDataSearchQuery(search);
+    const { isKeyValue, key, value, operator, regex } = this.parseDataSearchQuery(search);
 
     if (isKeyValue) {
       return jobs.filter(job => {
-        const isMatched = this.matchesKeyValueSearch((job as any).data, key!, value!)
+        const isMatched = this.matchesKeyValueSearch((job as any).data, key!, operator!, value!)
 
         delete job.data;
 
