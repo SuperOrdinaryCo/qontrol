@@ -104,14 +104,11 @@ function hideJobDataTooltip() {
 }
 
 function viewJobDetail(jobId: string) {
-  if (jobsStore.jobDetail?.id !== jobId) {
-    jobsStore.fetchJobDetail(queueName.value, jobId)
-        .then(() => {
-          jobsStore.showJobDetailDrawer = true;
-        })
-  } else {
-    jobsStore.showJobDetailDrawer = true;
-  }
+  // Always fetch fresh job detail to ensure we have the latest data
+  jobsStore.fetchJobDetail(queueName.value, jobId)
+      .then(() => {
+        jobsStore.showJobDetailDrawer = true;
+      })
 }
 
 function clearSelection() {
