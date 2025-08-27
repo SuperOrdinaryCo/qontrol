@@ -71,6 +71,27 @@
           </p>
         </div>
 
+        <!-- Auto-refresh Interval -->
+        <div>
+          <label for="auto-refresh" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Job Data Preview Popover Delay
+          </label>
+          <div class="flex items-center space-x-3">
+            <input
+                id="auto-refresh"
+                v-model.number="localSettings.tooltipDelay"
+                type="number"
+                min="1"
+                max="300"
+                class="block w-32 rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+            />
+            <span class="text-sm text-gray-500 dark:text-gray-400">milliseconds</span>
+          </div>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            When hovering over a job row, this is the delay before the popover appears. (0 to disable, set to 3000 to have 3 seconds delay)
+          </p>
+        </div>
+
         <!-- Auto-refresh Toggle -->
         <div>
           <div class="flex items-center">

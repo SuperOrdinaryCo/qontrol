@@ -6,6 +6,7 @@ import {useJobsStore} from '@/stores/jobs.ts';
 import {computed, onMounted, onUnmounted, ref, nextTick} from 'vue';
 import {useConfirmStore} from '@/stores/confirm.ts';
 import JobDataTooltip from './JobDataTooltip.vue';
+import {useSettingsStore} from '@/stores/settings.ts';
 
 const props = defineProps<{
   queueName: string
@@ -13,6 +14,7 @@ const props = defineProps<{
 
 const jobsStore = useJobsStore()
 const confirmStore = useConfirmStore()
+const settingsStore = useSettingsStore()
 
 const queueName = computed(() => props.queueName)
 
@@ -66,6 +68,13 @@ async function showJobDataTooltip(event: MouseEvent, job: any) {
   tooltipY.value = y - 5
   tooltipVisible.value = true
 
+  const tooltipDelay = settingsStore.settings.tooltipDelay || 0;
+
+  if (!tooltipDelay || tooltipDelay < 0) {
+    tooltipJobData.value = job.data
+    return;
+  }
+
   await new Promise((resolve, reject) => {
     // Clear any existing timeout
     if (tooltipTimeout) {
@@ -75,16 +84,11 @@ async function showJobDataTooltip(event: MouseEvent, job: any) {
 
     tooltipTimeout = setTimeout(() => {
       resolve(null)
-    }, 3000)
+    }, tooltipDelay)
   })
       .then(() => {
-        if (jobsStore.jobDetail?.id !== job.id) {
-          return jobsStore.fetchJobDetail(queueName.value, job.id)
-        }
-      })
-      .then(() => {
         nextTick(() => {
-          tooltipJobData.value = jobsStore.jobDetail?.data
+          tooltipJobData.value = job.data
         })
       })
       .catch(e => {

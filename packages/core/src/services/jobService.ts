@@ -39,7 +39,7 @@ export class JobService {
         const total = totalJobs[state] || 0;
 
         // Convert to JobSummary format
-        let jobSummaries = await Promise.all(allJobs.map(job => this.jobToSummary(job, params.all)));
+        let jobSummaries = await Promise.all(allJobs.map(job => this.jobToSummary(job, true)));
 
         if (params.search && params.searchType === 'name') {
           jobSummaries = this.filterJobsByName(jobSummaries, params.search)
@@ -746,11 +746,7 @@ export class JobService {
 
   static filterJobsByName(jobs: JobSummary[], search: string) {
     return jobs.filter(job => {
-      const isMatched = job.name?.toLowerCase() === search.toLowerCase();
-
-      delete job.data;
-
-      return isMatched;
+      return job.name?.toLowerCase() === search.toLowerCase();
     });
   }
 
@@ -759,20 +755,12 @@ export class JobService {
 
     if (isKeyValue) {
       return jobs.filter(job => {
-        const isMatched = this.matchesKeyValueSearch((job as any).data, key!, operator!, value!)
-
-        delete job.data;
-
-        return isMatched;
+        return this.matchesKeyValueSearch((job as any).data, key!, operator!, value!)
       });
     }
 
     return jobs.filter(job => {
-      const isMatched = this.matchesRegexSearch((job as any).data, regex!)
-
-      delete job.data;
-
-      return isMatched;
+      return this.matchesRegexSearch((job as any).data, regex!)
     })
   }
 }

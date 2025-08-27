@@ -9,6 +9,7 @@ const defaultSettings: AppSettings = {
   autoRefreshEnabled: true,
   timezone: 'local',
   theme: 'system',
+  tooltipDelay: 0,
 };
 
 export const useSettingsStore = defineStore('settings', () => {

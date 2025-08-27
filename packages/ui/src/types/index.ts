@@ -36,6 +36,7 @@ export interface JobSummary {
   attempts: number;
   priority?: number;
   delay?: number;
+  data?: any;
 }
 
 export interface JobDetail extends JobSummary {
@@ -119,6 +120,7 @@ export interface AppSettings {
   timezone: 'local' | 'utc';
   theme: 'light' | 'dark' | 'system';
   autoRefreshEnabled: boolean;
+  tooltipDelay: number;
 }
 
 // UI-specific types
