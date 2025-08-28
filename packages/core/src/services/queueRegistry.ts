@@ -5,7 +5,6 @@ import { Logger } from '../config/logger';
 
 export class QueueRegistry {
   private static queues: Map<string, Queue> = new Map();
-  private static discoveredQueues: Set<string> = new Set();
 
   /**
    * Discover queues safely by filtering out corrupted keys
@@ -16,9 +15,16 @@ export class QueueRegistry {
     try {
       const redis = RedisConnection.getInstance();
       const prefix = RedisConnection.getPrefix();
+      const pattern = `${prefix}:*:meta`;
+      let cursor = '0';
+      const keys: string[] = [];
 
-      // Search for queue meta keys with the custom prefix
-      const keys = await redis.keys(`${prefix}:*:meta`);
+      // Non-blocking iteration over the keyspace
+      do {
+        const [nextCursor, batch] = await redis.scan(cursor, 'MATCH', pattern, 'COUNT', 1000);
+        cursor = nextCursor;
+        if (batch && batch.length) keys.push(...batch);
+      } while (cursor !== '0');
       console.log(`Found ${keys.length} potential queue keys`);
 
       const queueNames = keys
