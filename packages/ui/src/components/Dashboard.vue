@@ -44,16 +44,11 @@
         color="success"
       />
       <StatCard
-        class="cursor-pointer border"
-        :class="{
-          'border-blue-400': shouldShowFailedQueues,
-          'border-gray-200 dark:border-gray-800': !shouldShowFailedQueues
-        }"
+        class="border border-gray-200 dark:border-gray-800"
         title="Failed Jobs"
         :value="queuesByState.failed || 0"
         icon="ExclamationTriangleIcon"
         color="danger"
-        @click="toggleFailedFilter"
       />
     </div>
 
@@ -74,24 +69,45 @@
         <div class="flex justify-between items-center">
           <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Queues</h3>
           
-          <!-- Search Input -->
-          <div class="relative max-w-xs">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <MagnifyingGlassIcon class="h-5 w-5 text-gray-400 dark:text-gray-100" />
+          <div class="flex items-center space-x-3">
+            <!-- Search Input -->
+            <div class="relative max-w-xs">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <MagnifyingGlassIcon class="h-5 w-5 text-gray-400 dark:text-gray-100" />
+              </div>
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Search queues..."
+                class="input-field"
+              />
+              <div v-if="searchQuery" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <button
+                  @click="clearSearch"
+                  class="text-gray-400 hover:text-gray-600 dark:text-gray-100 hover:dark:text-gray-300"
+                >
+                  <XMarkIcon class="h-4 w-4" />
+                </button>
+              </div>
             </div>
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="Search queues..."
-              class="input-field"
-            />
-            <div v-if="searchQuery" class="absolute inset-y-0 right-0 pr-3 flex items-center">
-              <button
-                @click="clearSearch"
-                class="text-gray-400 hover:text-gray-600 dark:text-gray-100 hover:dark:text-gray-300"
+
+            <!-- Sort Dropdown -->
+            <div class="relative">
+              <select
+                v-model="sortOption"
+                @change="setSortOption"
+                class="input-field pr-8 min-w-[160px] text-gray-400 dark:text-gray-100"
               >
-                <XMarkIcon class="h-4 w-4" />
-              </button>
+                <option value="alphabetical">Alphabetically</option>
+                <option value="waiting">By Waiting Jobs</option>
+                <option value="active">By Active Jobs</option>
+                <option value="completed">By Completed Jobs</option>
+                <option value="failed">By Failed Jobs</option>
+                <option value="delayed">By Delayed Jobs</option>
+                <option value="paused">By Paused Jobs</option>
+                <option value="prioritized">By Prioritized Jobs</option>
+                <option value="waiting-children">By Waiting Children</option>
+              </select>
             </div>
           </div>
         </div>
@@ -103,7 +119,7 @@
         </div>
       </div>
 
-      <div v-else-if="filteredAndSortedQueues.length === 0 && searchQuery" class="p-6 text-center text-gray-500 dark:text-gray-100">
+      <div v-else-if="sortedQueues.length === 0 && searchQuery" class="p-6 text-center text-gray-500 dark:text-gray-100">
         <div class="space-y-2">
           <MagnifyingGlassIcon class="h-8 w-8 text-gray-300 dark:text-gray-100 mx-auto" />
           <p>No queues found matching "{{ searchQuery }}"</p>
@@ -122,7 +138,7 @@
 
       <div v-else class="divide-y divide-x-0 divide-gray-200 rounded-lg overflow-hidden">
         <QueueCard
-          v-for="queue in filteredAndSortedQueues"
+          v-for="queue in sortedQueues"
           :key="queue.name"
           :queue="queue"
           @click="navigateToQueue(queue.name)"
@@ -138,7 +154,7 @@
 </template>
 
 <script setup lang="ts">
-import {onMounted, onUnmounted, ref, computed} from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useQueuesStore } from '@/stores/queues'
@@ -162,23 +178,12 @@ const {
   filteredQueues,
   sortedQueues,
   searchQuery,
+  sortOption,
 } = storeToRefs(queuesStore)
 
 const { settings, autoRefreshEnabled } = storeToRefs(settingsStore)
-const shouldShowFailedQueues = ref(false)
-
-const filteredAndSortedQueues = computed(() => {
-  if (shouldShowFailedQueues.value) {
-    return sortedQueues.value.filter(queue => queue.counts.failed > 0)
-  }
-  return sortedQueues.value
-})
 
 let refreshInterval: ReturnType<typeof setInterval> | null = null
-
-function toggleFailedFilter() {
-  shouldShowFailedQueues.value = !shouldShowFailedQueues.value
-}
 
 function refreshQueues() {
   queuesStore.fetchQueues()
@@ -190,6 +195,11 @@ function navigateToQueue(queueName: string) {
 
 function clearSearch() {
   queuesStore.clearSearch()
+}
+
+function setSortOption() {
+  // The v-model will automatically update the sortOption value
+  // No additional action needed as the computed sortedQueues will react to the change
 }
 
 function setupAutoRefresh() {

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { apiClient } from '@/api/client';
-import type { QueueInfo, LoadingState } from '@/types';
+import type { QueueInfo, LoadingState, JobState } from '@/types';
 
 export const useQueuesStore = defineStore('queues', () => {
   // State
@@ -10,6 +10,7 @@ export const useQueuesStore = defineStore('queues', () => {
   const error = ref<string | null>(null);
   const lastUpdated = ref<Date | null>(null);
   const searchQuery = ref<string>('');
+  const sortOption = ref<string>('alphabetical');
 
   // Getters
   const totalJobs = computed(() => {
@@ -39,11 +40,34 @@ export const useQueuesStore = defineStore('queues', () => {
   });
 
   const sortedQueues = computed(() => {
-    return [...filteredQueues.value].sort((a, b) => {
-      const aTotal = Object.values(a.counts).reduce((sum, count) => sum + count, 0);
-      const bTotal = Object.values(b.counts).reduce((sum, count) => sum + count, 0);
-      return bTotal - aTotal; // Sort by total jobs descending
-    });
+    const filtered = [...filteredQueues.value];
+
+    switch (sortOption.value) {
+      case 'alphabetical':
+        return filtered.sort((a, b) => a.name.localeCompare(b.name));
+      case 'waiting':
+        return filtered.sort((a, b) => (b.counts.waiting || 0) - (a.counts.waiting || 0));
+      case 'active':
+        return filtered.sort((a, b) => (b.counts.active || 0) - (a.counts.active || 0));
+      case 'completed':
+        return filtered.sort((a, b) => (b.counts.completed || 0) - (a.counts.completed || 0));
+      case 'failed':
+        return filtered.sort((a, b) => (b.counts.failed || 0) - (a.counts.failed || 0));
+      case 'delayed':
+        return filtered.sort((a, b) => (b.counts.delayed || 0) - (a.counts.delayed || 0));
+      case 'paused':
+        return filtered.sort((a, b) => (b.counts.paused || 0) - (a.counts.paused || 0));
+      case 'prioritized':
+        return filtered.sort((a, b) => (b.counts.prioritized || 0) - (a.counts.prioritized || 0));
+      case 'waiting-children':
+        return filtered.sort((a, b) => (b.counts['waiting-children'] || 0) - (a.counts['waiting-children'] || 0));
+      default:
+        return filtered.sort((a, b) => {
+          const aTotal = Object.values(a.counts).reduce((sum, count) => sum + count, 0);
+          const bTotal = Object.values(b.counts).reduce((sum, count) => sum + count, 0);
+          return bTotal - aTotal; // Sort by total jobs descending
+        });
+    }
   });
 
   // Actions
@@ -51,8 +75,7 @@ export const useQueuesStore = defineStore('queues', () => {
     try {
       loading.value = true;
       error.value = null;
-      const data = await apiClient.getQueues();
-      queues.value = data;
+      queues.value = await apiClient.getQueues();
       lastUpdated.value = new Date();
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch queues';
@@ -93,6 +116,10 @@ export const useQueuesStore = defineStore('queues', () => {
     searchQuery.value = query;
   }
 
+  function setSortOption(option: string) {
+    sortOption.value = option;
+  }
+
   function clearSearch() {
     searchQuery.value = '';
   }
@@ -103,9 +130,10 @@ export const useQueuesStore = defineStore('queues', () => {
     error.value = null;
     lastUpdated.value = null;
     searchQuery.value = '';
+    sortOption.value = 'alphabetical';
   }
 
-  function updateJobCount(queueName: string, state: string, delta: number) {
+  function updateJobCount(queueName: string, state: keyof JobState, delta: number) {
     const queue = queues.value.find(q => q.name === queueName);
     if (queue && queue.counts[state] !== undefined) {
       queue.counts[state] = Math.max(0, queue.counts[state] + delta);
@@ -195,23 +223,21 @@ export const useQueuesStore = defineStore('queues', () => {
     error,
     lastUpdated,
     searchQuery,
-
+    sortOption,
     // Getters
     totalJobs,
     queuesByState,
     filteredQueues,
     sortedQueues,
-
     // Actions
     fetchQueues,
     fetchQueue,
     getQueueByName,
-    setSearchQuery,
     clearSearch,
+    reset,
     updateJobCount,
     pauseQueue,
     resumeQueue,
-    reset,
     cleanQueue,
     drainQueue,
     obliterateQueue,
