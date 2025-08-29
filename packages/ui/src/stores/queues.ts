@@ -12,6 +12,30 @@ export const useQueuesStore = defineStore('queues', () => {
   const searchQuery = ref<string>('');
   const sortOption = ref<string>('alphabetical');
 
+  // Initialize pinned queues from localStorage
+  const loadPinnedQueues = (): Set<string> => {
+    try {
+      const stored = sessionStorage.getItem('bulldash-pinned-queues');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return new Set(Array.isArray(parsed) ? parsed : []);
+      }
+    } catch (error) {
+      console.warn('Failed to load pinned queues from localStorage:', error);
+    }
+    return new Set();
+  };
+
+  const savePinnedQueues = (pinnedSet: Set<string>) => {
+    try {
+      sessionStorage.setItem('bulldash-pinned-queues', JSON.stringify(Array.from(pinnedSet)));
+    } catch (error) {
+      console.warn('Failed to save pinned queues to localStorage:', error);
+    }
+  };
+
+  const pinnedQueues = ref<Set<string>>(loadPinnedQueues());
+
   // Getters
   const totalJobs = computed(() => {
     return queues.value.reduce((total, queue) => {
@@ -42,32 +66,43 @@ export const useQueuesStore = defineStore('queues', () => {
   const sortedQueues = computed(() => {
     const filtered = [...filteredQueues.value];
 
-    switch (sortOption.value) {
-      case 'alphabetical':
-        return filtered.sort((a, b) => a.name.localeCompare(b.name));
-      case 'waiting':
-        return filtered.sort((a, b) => (b.counts.waiting || 0) - (a.counts.waiting || 0));
-      case 'active':
-        return filtered.sort((a, b) => (b.counts.active || 0) - (a.counts.active || 0));
-      case 'completed':
-        return filtered.sort((a, b) => (b.counts.completed || 0) - (a.counts.completed || 0));
-      case 'failed':
-        return filtered.sort((a, b) => (b.counts.failed || 0) - (a.counts.failed || 0));
-      case 'delayed':
-        return filtered.sort((a, b) => (b.counts.delayed || 0) - (a.counts.delayed || 0));
-      case 'paused':
-        return filtered.sort((a, b) => (b.counts.paused || 0) - (a.counts.paused || 0));
-      case 'prioritized':
-        return filtered.sort((a, b) => (b.counts.prioritized || 0) - (a.counts.prioritized || 0));
-      case 'waiting-children':
-        return filtered.sort((a, b) => (b.counts['waiting-children'] || 0) - (a.counts['waiting-children'] || 0));
-      default:
-        return filtered.sort((a, b) => {
+    // First, separate pinned and unpinned queues
+    const pinned = filtered.filter(queue => pinnedQueues.value.has(queue.name));
+    const unpinned = filtered.filter(queue => !pinnedQueues.value.has(queue.name));
+
+    // Sort each group separately
+    const sortFunction = (a: QueueInfo, b: QueueInfo) => {
+      switch (sortOption.value) {
+        case 'alphabetical':
+          return a.name.localeCompare(b.name);
+        case 'waiting':
+          return (b.counts.waiting || 0) - (a.counts.waiting || 0);
+        case 'active':
+          return (b.counts.active || 0) - (a.counts.active || 0);
+        case 'completed':
+          return (b.counts.completed || 0) - (a.counts.completed || 0);
+        case 'failed':
+          return (b.counts.failed || 0) - (a.counts.failed || 0);
+        case 'delayed':
+          return (b.counts.delayed || 0) - (a.counts.delayed || 0);
+        case 'paused':
+          return (b.counts.paused || 0) - (a.counts.paused || 0);
+        case 'prioritized':
+          return (b.counts.prioritized || 0) - (a.counts.prioritized || 0);
+        case 'waiting-children':
+          return (b.counts['waiting-children'] || 0) - (a.counts['waiting-children'] || 0);
+        default:
           const aTotal = Object.values(a.counts).reduce((sum, count) => sum + count, 0);
           const bTotal = Object.values(b.counts).reduce((sum, count) => sum + count, 0);
-          return bTotal - aTotal; // Sort by total jobs descending
-        });
-    }
+          return bTotal - aTotal;
+      }
+    };
+
+    pinned.sort(sortFunction);
+    unpinned.sort(sortFunction);
+
+    // Return pinned queues first, then unpinned
+    return [...pinned, ...unpinned];
   });
 
   // Actions
@@ -124,6 +159,28 @@ export const useQueuesStore = defineStore('queues', () => {
     searchQuery.value = '';
   }
 
+  function togglePinQueue(queueName: string) {
+    if (pinnedQueues.value.has(queueName)) {
+      pinnedQueues.value.delete(queueName);
+    } else {
+      pinnedQueues.value.add(queueName);
+    }
+    // Trigger reactivity and save to localStorage
+    pinnedQueues.value = new Set(pinnedQueues.value);
+    savePinnedQueues(pinnedQueues.value);
+  }
+
+  function unpinAllQueues() {
+    pinnedQueues.value.clear();
+    // Trigger reactivity and save to localStorage
+    pinnedQueues.value = new Set();
+    savePinnedQueues(pinnedQueues.value);
+  }
+
+  function isQueuePinned(queueName: string): boolean {
+    return pinnedQueues.value.has(queueName);
+  }
+
   function reset() {
     queues.value = [];
     loading.value = false;
@@ -131,6 +188,8 @@ export const useQueuesStore = defineStore('queues', () => {
     lastUpdated.value = null;
     searchQuery.value = '';
     sortOption.value = 'alphabetical';
+    pinnedQueues.value.clear();
+    savePinnedQueues(pinnedQueues.value);
   }
 
   function updateJobCount(queueName: string, state: keyof JobState, delta: number) {
@@ -224,6 +283,7 @@ export const useQueuesStore = defineStore('queues', () => {
     lastUpdated,
     searchQuery,
     sortOption,
+    pinnedQueues,
     // Getters
     totalJobs,
     queuesByState,
@@ -234,6 +294,9 @@ export const useQueuesStore = defineStore('queues', () => {
     fetchQueue,
     getQueueByName,
     clearSearch,
+    togglePinQueue,
+    unpinAllQueues,
+    isQueuePinned,
     reset,
     updateJobCount,
     pauseQueue,

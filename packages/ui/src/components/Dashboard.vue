@@ -8,6 +8,16 @@
       </div>
 
       <div class="flex items-center space-x-3">
+        <!-- Unpin All Button (only show if there are pinned queues) -->
+        <button
+          v-if="pinnedQueues.size > 0"
+          @click="unpinAllQueues"
+          class="btn-secondary flex items-center text-sm"
+        >
+          <XMarkIcon class="w-4 h-4 mr-2" />
+          Unpin All ({{ pinnedQueues.size }})
+        </button>
+
         <!-- Refresh Button -->
         <button
           @click="refreshQueues"
@@ -136,7 +146,7 @@
         No queues found
       </div>
 
-      <div v-else class="divide-y divide-x-0 divide-gray-200 rounded-lg overflow-hidden">
+      <div v-else class="divide-y divide-x-0 divide-gray-200 rounded-b-lg overflow-hidden">
         <QueueCard
           v-for="queue in sortedQueues"
           :key="queue.name"
@@ -179,6 +189,7 @@ const {
   sortedQueues,
   searchQuery,
   sortOption,
+  pinnedQueues,
 } = storeToRefs(queuesStore)
 
 const { settings, autoRefreshEnabled } = storeToRefs(settingsStore)
@@ -200,6 +211,10 @@ function clearSearch() {
 function setSortOption() {
   // The v-model will automatically update the sortOption value
   // No additional action needed as the computed sortedQueues will react to the change
+}
+
+function unpinAllQueues() {
+  queuesStore.unpinAllQueues()
 }
 
 function setupAutoRefresh() {
