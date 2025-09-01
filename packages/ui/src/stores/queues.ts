@@ -147,14 +147,6 @@ export const useQueuesStore = defineStore('queues', () => {
     return queues.value.find(queue => queue.name === name);
   }
 
-  function setSearchQuery(query: string) {
-    searchQuery.value = query;
-  }
-
-  function setSortOption(option: string) {
-    sortOption.value = option;
-  }
-
   function clearSearch() {
     searchQuery.value = '';
   }

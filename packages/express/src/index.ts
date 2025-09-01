@@ -37,7 +37,7 @@ export function createBullDashRouter(bullDash: BullDash, options: BullDashExpres
     router.use('/assets', express.static(path.join(uiDistPath, 'assets')));
 
     // Serve the main dashboard HTML at root with corrected asset paths
-    router.get('/', (req, res) => {
+    router.get(['/', '/queue/:name', '/settings'], (req, res) => {
       const indexPath = path.join(uiDistPath, 'index.html');
 
       // Read and modify the HTML to use absolute paths for assets

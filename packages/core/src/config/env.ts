@@ -4,9 +4,6 @@
 export interface Config {
   nodeEnv: string;
 
-  // Frontend Configuration
-  frontendUrl: string;
-
   // Redis Configuration
   redis: {
     host: string;
