@@ -11,7 +11,7 @@ export const loggerFactory = () => {
   const logger = winston.createLogger({
     level: configManager.config.logging.level,
     format: logFormat,
-    defaultMeta: { service: 'bulldash' },
+    defaultMeta: { service: 'qontrol' },
     transports: [
       new winston.transports.File({
         filename: `${configManager.config.logging.filePath}/error.log`,

@@ -1,4 +1,4 @@
-# BullDash Development Workflow
+# Qontrol Development Workflow
 
 ## 🚀 Quick Development Setup
 
@@ -106,7 +106,7 @@ Root Project
 ├── packages/core/        → TypeScript watch → dist/
 ├── packages/express/     → TypeScript watch → dist/
 ├── packages/ui/          → Vite dev server → localhost:5173
-└── examples/express/     → tsx watch → localhost:3000
+└── apps/backend/         → tsx watch → localhost:3000
 ```
 
 ## 🔧 IDE Setup Recommendations
@@ -122,7 +122,7 @@ Root Project
 {
   "typescript.preferences.includePackageJsonAutoImports": "on",
   "typescript.suggest.autoImports": true,
-  "eslint.workingDirectories": ["packages/*", "examples/*", "frontend"],
+  "eslint.workingDirectories": ["packages/*", "examples/*", "apps/*"],
   "files.watcherExclude": {
     "**/node_modules/**": true,
     "**/dist/**": true

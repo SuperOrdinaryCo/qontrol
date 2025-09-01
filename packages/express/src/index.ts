@@ -1,36 +1,26 @@
 import express from 'express';
 import path from 'path';
-import { BullDash } from '@bulldash/core';
+import { Qontrol } from '@qontrol/core';
 import { validateGetJobs } from './validation';
 import { HealthController } from './health.controller';
 import { RedisController } from './redis.controller';
 import { QueueController } from './queue.controller';
 import { JobsController } from './jobs.controller';
-import fs from 'fs';
 
-let expressVersion: string = require('express/package.json').version;
+export interface ExpressOptions {}
 
-let isExpressV5 = false;
-
-if (expressVersion) {
-  const [major] = expressVersion.split('.').map(Number);
-  isExpressV5 = major === 5
-}
-
-export interface BullDashExpressOptions {}
-
-export function createBullDashRouter(bullDash: BullDash, options: BullDashExpressOptions = {}) {
+export function createQontrolRouter(qontrol: Qontrol, options: ExpressOptions = {}) {
   const router = express.Router();
 
   // Initialize controllers
-  const healthController = new HealthController(bullDash);
-  const redisController = new RedisController(bullDash);
-  const queueController = new QueueController(bullDash);
-  const jobsController = new JobsController(bullDash);
+  const healthController = new HealthController(qontrol);
+  const redisController = new RedisController(qontrol);
+  const queueController = new QueueController(qontrol);
+  const jobsController = new JobsController(qontrol);
 
-  // Serve UI assets from @bulldash/ui package
+  // Serve UI assets from @qontrol/ui package
   try {
-    const uiPackagePath = path.dirname(require.resolve('@bulldash/ui/package.json'));
+    const uiPackagePath = path.dirname(require.resolve('@qontrol/ui/package.json'));
     const uiDistPath = path.join(uiPackagePath, 'dist');
 
     // Serve static assets (JS, CSS, images) from /assets route
@@ -54,18 +44,21 @@ export function createBullDashRouter(bullDash: BullDash, options: BullDashExpres
       res.send(html);
     });
 
-    console.log(`✅ Serving BullDash UI from: ${uiDistPath}`);
+    console.log(`✅ Serving qontrol UI from: ${uiDistPath}`);
   } catch (error: any) {
-    console.error('❌ Could not locate @bulldash/ui package:', error.message);
+    console.error('❌ Could not locate @qontrol/ui package:', error.message);
 
     // Fallback: serve a simple error page
-    router.get('/', (req, res) => {
-      res.status(500).send(`
-        <h1>BullDash UI Error</h1>
-        <p>Could not load the dashboard UI. Please ensure @bulldash/ui is installed:</p>
-        <pre>npm install @bulldash/ui</pre>
+    const fallbackHtml = `
+      <div style="padding: 20px; font-family: sans-serif;">
+        <h1>Dashboard Not Available</h1>
+        <p>Could not load the dashboard UI. Please ensure @qontrol/ui is installed:</p>
+        <pre>npm install @qontrol/ui</pre>
         <p>Error: ${error.message}</p>
-      `);
+      </div>
+    `;
+    router.get('/', (req, res) => {
+      res.status(500).send(fallbackHtml);
     });
   }
 

@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { BullDash } from '@bulldash/core';
+import { Qontrol } from '@qontrol/core';
 
 export class RedisController {
-  constructor(private bullDash: BullDash) {}
+  constructor(private qontrol: Qontrol) {}
 
   /**
    * GET /api/redis/stats
@@ -10,7 +10,7 @@ export class RedisController {
    */
   async getStats(req: Request, res: Response) {
     try {
-      const stats = await this.bullDash.getRedisStats();
+      const stats = await this.qontrol.getRedisStats();
 
       res.json({
         info: stats.info,

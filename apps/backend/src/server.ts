@@ -1,8 +1,9 @@
-import { config as loadConfig } from 'dotenv';
+import dotenv from 'dotenv';
+dotenv.config();
+import {Qontrol} from '@qontrol/core';
+import {createQontrolRouter} from '@qontrol/express';
 import express from'express';
-import {createBullDashApp} from 'bulldash';
 import {configFactory} from './env';
-import { resolve } from 'node:path';
 import {setupQueue, QueueInput} from './bullmq';
 import {JobsOptions} from 'bullmq';
 import { createBullBoard } from '@bull-board/api';
@@ -11,8 +12,6 @@ import { ExpressAdapter } from '@bull-board/express';
 import { createQueueDashExpressMiddleware } from "@queuedash/api";
 import {BullMonitorExpress} from '@bull-monitor/express';
 import { BullMQAdapter as BMQ } from "@bull-monitor/root/dist/bullmq-adapter";
-
-loadConfig({ path: resolve(__dirname, '../../../.env') })
 
 const app = express();
 
@@ -23,8 +22,9 @@ const config = configFactory();
 const serverAdapter = new ExpressAdapter();
 serverAdapter.setBasePath('/admin/queues2');
 
-// Create BullDash monitoring
-const { router, bullDash } = createBullDashApp(config);
+// Create Qontrol monitoring
+const qontrol = new Qontrol(config);
+const router = createQontrolRouter(qontrol);
 const { DefaultQueue, DefaultQueueWorker, disconnect } = setupQueue(config);
 
 createBullBoard({
@@ -56,7 +56,7 @@ monitor.init().then(() => {
   app.use('/admin/queues4', monitor.router);
 });
 
-// Mount BullDash dashboard
+// Mount Qontrol dashboard
 app.use('/admin/queues', router);
 app.use('/admin/queues2', serverAdapter.getRouter());
 app.use('/admin/queues3', createQueueDashExpressMiddleware({
@@ -74,8 +74,8 @@ app.use('/admin/queues3', createQueueDashExpressMiddleware({
 // Basic route
 app.get('/', (req, res) => {
   res.send(`
-    <h1>BullDash Test Application</h1>
-    <p>This is a test application using your BullDash packages!</p>
+    <h1>Qontrol Test Application</h1>
+    <p>This is a test application using your Qontrol packages!</p>
     <ul>
       <li><a href="/admin/queues">View Queue Dashboard</a></li>
     </ul>
@@ -114,14 +114,14 @@ app.post('/add-job', async (req, res) => {
 
 app.listen(config.port, async () => {
   console.log(`Redis located at ${config.redis.host}:${config.redis.port}. DB: ${config.redis.db}`)
-  console.log(`🚀 BullDash test server running on http://localhost:${config.port}`);
+  console.log(`🚀 Qontrol test server running on http://localhost:${config.port}`);
   console.log(`📊 Dashboard available at http://localhost:${config.port}/admin/queues`);
 });
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('Shutting down gracefully...');
-  await bullDash.cleanup();
+  await qontrol.cleanup();
   await disconnect();
   process.exit(0);
 });

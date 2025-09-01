@@ -1,6 +1,6 @@
 import { Queue, Worker } from 'bullmq';
 import IORedis from 'ioredis';
-import {Config} from '@bulldash/core';
+import {Config} from '@qontrol/core';
 
 export type QueueInput = {
   name: string;

@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { BullDash, GetQueuesResponse } from '@bulldash/core';
+import { Qontrol, GetQueuesResponse } from '@qontrol/core';
 
 export class QueueController {
-  constructor(private bullDash: BullDash) {}
+  constructor(private qontrol: Qontrol) {}
 
   /**
    * GET /api/queues
@@ -10,7 +10,7 @@ export class QueueController {
    */
   async getQueues(req: Request, res: Response) {
     try {
-      const queues = await this.bullDash.getQueues();
+      const queues = await this.qontrol.getQueues();
 
       const response: GetQueuesResponse = {
         queues,
@@ -33,7 +33,7 @@ export class QueueController {
   async getQueue(req: Request, res: Response) {
     try {
       const queueName = req.params.queue;
-      const queues = await this.bullDash.getQueues();
+      const queues = await this.qontrol.getQueues();
       const queue = queues.find(q => q.name === queueName);
 
       if (!queue) {
@@ -63,7 +63,7 @@ export class QueueController {
     try {
       const { queue: queueName } = req.params;
 
-      const success = await this.bullDash.pauseQueue(queueName);
+      const success = await this.qontrol.pauseQueue(queueName);
 
       if (!success) {
         return res.status(500).json({
@@ -93,7 +93,7 @@ export class QueueController {
     try {
       const { queue: queueName } = req.params;
 
-      const success = await this.bullDash.resumeQueue(queueName);
+      const success = await this.qontrol.resumeQueue(queueName);
 
       if (!success) {
         return res.status(500).json({
@@ -124,7 +124,7 @@ export class QueueController {
       const queueName = req.params.queue;
       const { grace = 0, limit = 0, type = 'completed' } = req.body;
 
-      const cleaned = await this.bullDash.cleanQueue(queueName, grace, limit, type);
+      const cleaned = await this.qontrol.cleanQueue(queueName, grace, limit, type);
 
       const response = {
         cleaned,
@@ -151,7 +151,7 @@ export class QueueController {
     try {
       const queueName = req.params.queue;
 
-      await this.bullDash.obliterateQueue(queueName);
+      await this.qontrol.obliterateQueue(queueName);
 
       const response = {
         queueName,

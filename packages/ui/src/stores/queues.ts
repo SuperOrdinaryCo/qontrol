@@ -15,7 +15,7 @@ export const useQueuesStore = defineStore('queues', () => {
   // Initialize pinned queues from localStorage
   const loadPinnedQueues = (): Set<string> => {
     try {
-      const stored = sessionStorage.getItem('bulldash-pinned-queues');
+      const stored = sessionStorage.getItem('qontrol-pinned-queues');
       if (stored) {
         const parsed = JSON.parse(stored);
         return new Set(Array.isArray(parsed) ? parsed : []);
@@ -28,7 +28,7 @@ export const useQueuesStore = defineStore('queues', () => {
 
   const savePinnedQueues = (pinnedSet: Set<string>) => {
     try {
-      sessionStorage.setItem('bulldash-pinned-queues', JSON.stringify(Array.from(pinnedSet)));
+      sessionStorage.setItem('qontrol-pinned-queues', JSON.stringify(Array.from(pinnedSet)));
     } catch (error) {
       console.warn('Failed to save pinned queues to localStorage:', error);
     }

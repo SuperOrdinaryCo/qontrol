@@ -1,5 +1,5 @@
 {
-  "name": "@bulldash/express",
+  "name": "@qontrol/express",
   "version": "1.0.0",
   "description": "Express.js middleware for BullMQ monitoring",
   "main": "dist/index.js",
@@ -8,6 +8,7 @@
     "dist/"
   ],
   "scripts": {
+    "prebuild": "rimraf dist",
     "build": "tsc",
     "dev": "tsc --watch",
     "prepublishOnly": "npm run build"
@@ -19,8 +20,8 @@
     "monitoring"
   ],
   "dependencies": {
-    "@bulldash/core": "^1.0.0",
-    "@bulldash/ui": "^1.0.0",
+    "@qontrol/core": "^1.0.0",
+    "@qontrol/ui": "^1.0.0",
     "joi": "^18.0.0"
   },
   "peerDependencies": {

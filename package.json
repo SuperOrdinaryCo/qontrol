@@ -1,5 +1,5 @@
 {
-  "name": "bulldash",
+  "name": "qontrol",
   "version": "1.0.0",
   "description": "BullMQ Monitoring Dashboard - Complete Solution",
   "main": "dist/index.js",

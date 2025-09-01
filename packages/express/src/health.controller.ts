@@ -1,11 +1,11 @@
 import {Request, Response} from 'express';
-import {BullDash, HealthCheckResponse} from '@bulldash/core';
+import {Qontrol, HealthCheckResponse} from '@qontrol/core';
 
 export class HealthController {
-  constructor(protected bullDash: BullDash) {}
+  constructor(protected qontrol: Qontrol) {}
 
   async heathCheck(req: Request, res: Response) {
-    const redis = await this.bullDash.getHealth();
+    const redis = await this.qontrol.getHealth();
 
     const response: HealthCheckResponse = {
       status: redis.status,

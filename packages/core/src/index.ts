@@ -11,8 +11,8 @@ export * from './types/api';
 export * from './constants';
 export { Config } from './config/env';
 
-// Main BullDash class for easy setup
-export class BullDash {
+// Main Qontrol class for easy setup
+export class Qontrol {
   constructor(config: Config) {
     configManager.config = config;
   }

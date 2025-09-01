@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, watch, computed } from 'vue';
 import type { AppSettings } from '@/types';
 
-const STORAGE_KEY = 'bulldash-settings';
+const STORAGE_KEY = 'qontrol-settings';
 
 const defaultSettings: AppSettings = {
   autoRefreshInterval: 10, // seconds

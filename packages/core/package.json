@@ -1,5 +1,5 @@
 {
-  "name": "@bulldash/core",
+  "name": "@qontrol/core",
   "version": "1.0.0",
   "description": "Core BullMQ monitoring functionality",
   "main": "dist/index.js",
@@ -8,6 +8,7 @@
     "dist/"
   ],
   "scripts": {
+    "prebuild": "rimraf dist",
     "build": "tsc",
     "dev": "tsc --watch",
     "prepublishOnly": "npm run build"

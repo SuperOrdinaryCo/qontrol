@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
 import Joi from 'joi';
-import { GetJobsRequest, Logger, JOB_STATES } from '@bulldash/core';
+import { Request, Response, NextFunction } from 'express';
+import { GetJobsRequest, Logger, JOB_STATES } from '@qontrol/core';
 
 // Validation schemas
 const getJobsSchema = Joi.object({

@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { BullDash, GetJobsResponse, GetJobDetailResponse, BulkActionResponse } from '@bulldash/core';
+import { Qontrol, GetJobsResponse, GetJobDetailResponse, BulkActionResponse } from '@qontrol/core';
 import { Readable, Transform } from 'node:stream';
 
 export class JobsController {
-  constructor(private bullDash: BullDash) {}
+  constructor(private qontrol: Qontrol) {}
 
   /**
    * GET /api/queues/:queue/jobs
@@ -14,8 +14,8 @@ export class JobsController {
     const params = req.validatedQuery!;
 
     try {
-      // Get the async generator from BullDash
-      const jobsGenerator = this.bullDash.getJobs(queueName, params);
+      // Get the async generator from Qontrol
+      const jobsGenerator = this.qontrol.getJobs(queueName, params);
 
       const toJsonTransform = new Transform({
         objectMode: true,
@@ -89,7 +89,7 @@ export class JobsController {
     try {
       const { queue: queueName, id: jobId } = req.params;
 
-      const { jobs, total } = await this.bullDash.getJobById(queueName, jobId);
+      const { jobs, total } = await this.qontrol.getJobById(queueName, jobId);
 
       const response: GetJobsResponse = {
         jobs,
@@ -120,7 +120,7 @@ export class JobsController {
     try {
       const { queue: queueName, id: jobId } = req.params;
 
-      const job = await this.bullDash.getJobDetail(queueName, jobId);
+      const job = await this.qontrol.getJobDetail(queueName, jobId);
 
       if (!job) {
         return res.status(404).json({
@@ -153,7 +153,7 @@ export class JobsController {
       const start = parseInt(req.query.start as string) || 0;
       const end = parseInt(req.query.end as string) || -1;
 
-      const logsData = await this.bullDash.getJobLogs(queueName, jobId, start, end);
+      const logsData = await this.qontrol.getJobLogs(queueName, jobId, start, end);
 
       res.json({
         logs: logsData.logs,
@@ -231,7 +231,7 @@ export class JobsController {
         }
       }
 
-      const result = await this.bullDash.addJob(queueName, {
+      const result = await this.qontrol.addJob(queueName, {
         name: name.trim(),
         data: parsedData,
         options: parsedOptions
@@ -261,7 +261,7 @@ export class JobsController {
     try {
       const { queue: queueName, id: jobId } = req.params;
 
-      const success = await this.bullDash.removeJob(queueName, jobId);
+      const success = await this.qontrol.removeJob(queueName, jobId);
 
       if (!success) {
         return res.status(404).json({
@@ -292,7 +292,7 @@ export class JobsController {
     try {
       const { queue: queueName, id: jobId } = req.params;
 
-      const success = await this.bullDash.retryJob(queueName, jobId);
+      const success = await this.qontrol.retryJob(queueName, jobId);
 
       if (!success) {
         return res.status(404).json({
@@ -323,7 +323,7 @@ export class JobsController {
     try {
       const { queue: queueName, id: jobId } = req.params;
 
-      const success = await this.bullDash.discardJob(queueName, jobId);
+      const success = await this.qontrol.discardJob(queueName, jobId);
 
       if (!success) {
         return res.status(404).json({
@@ -354,7 +354,7 @@ export class JobsController {
     try {
       const { queue: queueName, id: jobId } = req.params;
 
-      const success = await this.bullDash.promoteJob(queueName, jobId);
+      const success = await this.qontrol.promoteJob(queueName, jobId);
 
       if (!success) {
         return res.status(404).json({
@@ -402,7 +402,7 @@ export class JobsController {
         });
       }
 
-      const result = await this.bullDash.bulkRemoveJobs(queueName, jobIds);
+      const result = await this.qontrol.bulkRemoveJobs(queueName, jobIds);
 
       const response: BulkActionResponse = {
         success: result.success,
@@ -445,7 +445,7 @@ export class JobsController {
         });
       }
 
-      const result = await this.bullDash.bulkRetryJobs(queueName, jobIds);
+      const result = await this.qontrol.bulkRetryJobs(queueName, jobIds);
 
       const response: BulkActionResponse = {
         success: result.success,
