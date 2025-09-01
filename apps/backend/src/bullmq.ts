@@ -21,8 +21,19 @@ export const setupQueue = (config: Config) => {
   });
 
   const queueName = 'default';
+  const queueName2 = 'default2';
 
   const DefaultQueue = new Queue(queueName, {
+    connection: connection,
+    prefix: config.queuePrefix,
+    defaultJobOptions: {
+      removeOnComplete: false,
+      removeOnFail: false,
+      attempts: 3
+    },
+  });
+
+  const DefaultQueue2 = new Queue(queueName2, {
     connection: connection,
     prefix: config.queuePrefix,
     defaultJobOptions: {
@@ -41,6 +52,30 @@ export const setupQueue = (config: Config) => {
 
         const input: QueueInput = job.data;
 
+        job.log('Job started');
+
+        if (input.awaited) {
+          await new Promise(resolve => setTimeout(resolve, input.awaited));
+        }
+
+        if (input.failable) {
+          throw new Error('Job failed');
+        }
+      },
+      { connection, prefix: config.queuePrefix },
+  );
+
+  const DefaultQueueWorker2 = new Worker(
+      queueName2,
+      async job => {
+        // Will print { foo: 'bar'} for the first job
+        // and { qux: 'baz' } for the second.
+        console.log(job.data);
+
+        const input: QueueInput = job.data;
+
+        job.log('Job started');
+
         if (input.awaited) {
           await new Promise(resolve => setTimeout(resolve, input.awaited));
         }
@@ -53,7 +88,7 @@ export const setupQueue = (config: Config) => {
   );
 
   DefaultQueueWorker.client.then(client => {
-    console.log('worker connected to', client.options.host, client.options.port, client.options.db);
+    console.log('worker connected to', client.options?.host, client.options?.port, client.options?.db);
   })
 
   DefaultQueueWorker.on('closing', () => {
@@ -74,11 +109,16 @@ export const setupQueue = (config: Config) => {
 
   return {
     DefaultQueue,
+    DefaultQueue2,
     DefaultQueueWorker,
+    DefaultQueueWorker2,
     queueName,
+    queueName2,
     disconnect: async () => {
       await DefaultQueue.close();
+      await DefaultQueue2.close();
       await DefaultQueueWorker.close();
+      await DefaultQueueWorker2.close();
       await connection.quit();
     }
   }
