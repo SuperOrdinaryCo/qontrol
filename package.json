@@ -9,12 +9,12 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently --kill-others-on-fail \"npm run dev:packages\" \"npm run dev:ui\" \"npm run dev:express\"",
+    "dev": "concurrently --kill-others-on-fail \"npm run dev:packages\" \"npm run dev:ui\" \"npm run dev:backend\"",
     "dev:packages": "concurrently \"npm run dev:core\" \"npm run dev:express-pkg\"",
     "dev:core": "cd packages/core && npm run dev",
     "dev:express-pkg": "cd packages/express && npm run dev",
     "dev:ui": "cd packages/ui && npm run dev",
-    "dev:express": "cd examples/express && npm run dev",
+    "dev:backend": "cd apps/backend && npm run dev",
 
     "build": "npm run build:packages",
     "build:packages": "npm run build --workspaces --if-present",
