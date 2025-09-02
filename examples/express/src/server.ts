@@ -14,7 +14,9 @@ app.use(express.json());
 const config = configFactory();
 
 // Create Qontrol monitoring
-const qontrol = new Qontrol(config);
+const qontrol = new Qontrol({
+  config,
+});
 const router = createQontrolRouter(qontrol);
 
 // Express v5

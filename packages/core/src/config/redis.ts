@@ -40,7 +40,7 @@ export class RedisConnection {
   }
 
   static getPrefix(): string {
-    return configManager.config.queuePrefix;
+    return configManager.config.queuePrefix || '';
   }
 
   static async getHealthCheck(): Promise<{ connected: boolean; latency?: number }> {

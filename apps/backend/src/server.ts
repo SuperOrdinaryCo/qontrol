@@ -25,7 +25,9 @@ const serverAdapter = new ExpressAdapter();
 serverAdapter.setBasePath('/admin/queues2');
 
 // Create Qontrol monitoring
-const qontrol = new Qontrol(config);
+const qontrol = new Qontrol({
+  config,
+});
 const router = createQontrolRouter(qontrol);
 const { DefaultQueue, DefaultQueueWorker, disconnect } = setupQueue(config);
 

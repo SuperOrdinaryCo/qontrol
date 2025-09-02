@@ -1,47 +1,49 @@
-import winston from 'winston';
-import { configManager } from './env';
+// Abstract logger interface that any logger implementation can follow
+export interface ILogger {
+  debug(message: string, meta?: any): void;
+  info(message: string, meta?: any): void;
+  warn(message: string, meta?: any): void;
+  error(message: string | Error, meta?: any): void;
+}
 
-const logFormat = winston.format.combine(
-  winston.format.timestamp(),
-  winston.format.errors({ stack: true }),
-  winston.format.json()
-);
+// No-op logger for when logging is disabled or no logger is provided
+export class NoOpLogger implements ILogger {
+  debug(): void {}
+  info(): void {}
+  warn(): void {}
+  error(): void {}
+}
 
-export const loggerFactory = () => {
-  const logger = winston.createLogger({
-    level: configManager.config.logging.level,
-    format: logFormat,
-    defaultMeta: { service: 'qontrol' },
-    transports: [
-      new winston.transports.File({
-        filename: `${configManager.config.logging.filePath}/error.log`,
-        level: 'error'
-      }),
-      new winston.transports.File({
-        filename: `${configManager.config.logging.filePath}/combined.log`
-      }),
-    ],
-  })
+// Logger registry that manages the logger instance
+export class Logger {
+  private static instance: ILogger | null = null;
 
-  if (configManager.config.nodeEnv !== 'production') {
-    logger.add(new winston.transports.Console({
-      format: winston.format.combine(
-          winston.format.colorize(),
-          winston.format.simple()
-      )
-    }));
+  static setLogger(logger: ILogger): void {
+    Logger.instance = logger;
   }
 
-  return logger;
-};
-
-export class Logger {
-  private static instance: winston.Logger;
-
-  static getInstance() {
+  static getInstance(): ILogger {
     if (!Logger.instance) {
-      Logger.instance = loggerFactory();
+      // Default to no-op logger if none is set
+      Logger.instance = new NoOpLogger();
     }
     return Logger.instance;
   }
+
+  static clearLogger(): void {
+    Logger.instance = null;
+  }
+
+  // Convenience method to disable logging
+  static disableLogging(): void {
+    Logger.instance = new NoOpLogger();
+  }
+
+  // Check if a logger has been set
+  static hasLogger(): boolean {
+    return Logger.instance !== null && !(Logger.instance instanceof NoOpLogger);
+  }
 }
+
+// Factory function for creating a no-op logger
+export const createNoOpLogger = (): ILogger => new NoOpLogger();

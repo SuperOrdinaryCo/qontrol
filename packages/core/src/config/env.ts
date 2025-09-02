@@ -2,8 +2,6 @@
  * Configuration module that loads and validates environment variables
  */
 export interface Config {
-  nodeEnv: string;
-
   // Redis Configuration
   redis: {
     host: string;
@@ -14,13 +12,7 @@ export interface Config {
   };
 
   // Queue Configuration
-  queuePrefix: string;
-
-  // Logging Configuration
-  logging: {
-    level: string;
-    filePath: string;
-  };
+  queuePrefix?: string;
 }
 
 export class ConfigManager {

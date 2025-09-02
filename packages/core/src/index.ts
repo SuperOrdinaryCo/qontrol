@@ -2,6 +2,7 @@ import { configManager, Config } from './config/env';
 import { QueueRegistry } from './services/queueRegistry';
 import { JobService } from './services/jobService';
 import { GetJobsRequest, QueueInfo } from './types/api';
+import { ILogger, Logger } from './config/logger';
 
 export * from './services/jobService';
 export * from './services/queueRegistry';
@@ -11,10 +12,20 @@ export * from './types/api';
 export * from './constants';
 export { Config } from './config/env';
 
+// Configuration interface for Qontrol setup
+export interface QontrolConfig {
+  config: Config;
+  logger?: ILogger;
+}
+
 // Main Qontrol class for easy setup
 export class Qontrol {
-  constructor(config: Config) {
-    configManager.config = config;
+  constructor(options: QontrolConfig) {
+    // Support both old and new constructor signatures
+    configManager.config = options.config;
+    if (options.logger) {
+      Logger.setLogger(options.logger);
+    }
   }
 
   // Get a specific queue instance
