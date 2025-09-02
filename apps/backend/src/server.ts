@@ -1,5 +1,4 @@
 import dotenv from 'dotenv';
-dotenv.config();
 import {Qontrol} from '@qontrol/core';
 import {createQontrolRouter} from '@qontrol/express';
 import express from'express';
@@ -12,6 +11,9 @@ import { ExpressAdapter } from '@bull-board/express';
 import { createQueueDashExpressMiddleware } from "@queuedash/api";
 import {BullMonitorExpress} from '@bull-monitor/express';
 import { BullMQAdapter as BMQ } from "@bull-monitor/root/dist/bullmq-adapter";
+import { resolve } from 'node:path'
+
+dotenv.config({ path: resolve(__dirname, '../../../.env') });
 
 const app = express();
 
