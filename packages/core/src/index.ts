@@ -18,6 +18,11 @@ export class Qontrol {
   }
 
   // Get a specific queue instance
+  addQueue(queueName: string) {
+    return QueueRegistry.addQueue(queueName);
+  }
+
+  // Get a specific queue instance
   getQueue(queueName: string) {
     return QueueRegistry.getQueue(queueName);
   }

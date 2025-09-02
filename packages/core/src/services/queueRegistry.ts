@@ -5,6 +5,7 @@ import { Logger } from '../config/logger';
 
 export class QueueRegistry {
   private static queues: Map<string, Queue> = new Map();
+  private static queueList = new Set<string>();
 
   /**
    * Discover queues safely by filtering out corrupted keys
@@ -79,6 +80,8 @@ export class QueueRegistry {
         logger.warn(`Filtered out ${filteredCount} corrupted/invalid queue keys`);
       }
 
+      queueNames.forEach(name => this.queueList.add(name));
+
       return queueNames;
     } catch (error) {
       logger.error('Failed to discover queues:', error);
@@ -90,6 +93,10 @@ export class QueueRegistry {
    * Get or create a Queue instance
    */
   static getQueue(queueName: string): Queue {
+    if (!this.queueList.has(queueName)) {
+      throw new Error(`Queue "${queueName}" not found`);
+    }
+
     if (!this.queues.has(queueName)) {
       const queue = new Queue(queueName, {
         connection: RedisConnection.getInstance(),
@@ -156,6 +163,7 @@ export class QueueRegistry {
       if (!discoveredSet.has(name)) {
         await queue.close();
         this.queues.delete(name);
+        this.queueList.delete(name);
       }
     }
 
@@ -232,5 +240,28 @@ export class QueueRegistry {
       logger.error(`Failed to drain queue ${queueName}:`, error);
       throw error;
     }
+  }
+
+  static addQueue(queue: Queue): Queue;
+  static addQueue(queueName: string): Queue;
+  static addQueue(maybeQueue: string | Queue): Queue {
+    const queueName = typeof maybeQueue === 'string' ? maybeQueue : maybeQueue.name;
+    const queueInstance = typeof maybeQueue === 'string' ? null : maybeQueue;
+
+    if (!this.queueList.has(queueName)) {
+      this.queueList.add(queueName);
+    }
+
+    if (!this.queues.has(queueName)) {
+      const queue = queueInstance ?? new Queue(queueName, {
+        connection: RedisConnection.getInstance(),
+        prefix: RedisConnection.getPrefix(),
+      });
+      this.queues.set(queueName, queue);
+
+      return queue;
+    }
+
+    return this.queues.get(queueName)!;
   }
 }
