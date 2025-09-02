@@ -12,6 +12,7 @@ import { createQueueDashExpressMiddleware } from "@queuedash/api";
 import {BullMonitorExpress} from '@bull-monitor/express';
 import { BullMQAdapter as BMQ } from "@bull-monitor/root/dist/bullmq-adapter";
 import { resolve } from 'node:path'
+import { PinoLogger } from './pino.logger';
 
 dotenv.config({ path: resolve(__dirname, '../../../.env') });
 
@@ -27,6 +28,7 @@ serverAdapter.setBasePath('/admin/queues2');
 // Create Qontrol monitoring
 const qontrol = new Qontrol({
   config,
+  logger: new PinoLogger()
 });
 const router = createQontrolRouter(qontrol);
 const { DefaultQueue, DefaultQueueWorker, disconnect } = setupQueue(config);

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Qontrol, GetJobsResponse, GetJobDetailResponse, BulkActionResponse } from '@qontrol/core';
+import { Qontrol, GetJobsResponse, GetJobDetailResponse, BulkActionResponse, Logger } from '@qontrol/core';
 import { Readable, Transform } from 'node:stream';
 
 export class JobsController {
@@ -41,7 +41,7 @@ export class JobsController {
 
       // Handle stream errors before starting
       stream.on('error', (error) => {
-        console.error('Error streaming jobs:', error);
+        Logger.getInstance().error('Error streaming jobs:', error);
         if (!res.headersSent) {
           res.status(500).json({
             message: 'Failed to stream jobs',
@@ -54,7 +54,7 @@ export class JobsController {
       });
 
       toJsonTransform.on('error', (error) => {
-        console.error('Error in transform stream:', error);
+        Logger.getInstance().error('Error in transform stream:', error);
         if (!res.headersSent) {
           res.status(500).json({
             message: 'Failed to transform jobs',
@@ -71,7 +71,7 @@ export class JobsController {
         .pipe(res);
 
     } catch (error) {
-      console.error('Error setting up jobs stream:', error);
+      Logger.getInstance().error('Error setting up jobs stream:', error);
       if (!res.headersSent) {
         res.status(500).json({
           message: 'Failed to setup jobs stream',
@@ -244,7 +244,7 @@ export class JobsController {
         timestamp: new Date(),
       });
     } catch (error) {
-      console.error('Add job error:', error);
+      Logger.getInstance().error('Add job error:', error);
       res.status(500).json({
         message: 'Failed to add job',
         code: 'JOB_ADD_ERROR',

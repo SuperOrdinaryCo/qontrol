@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Qontrol } from '@qontrol/core';
+import { Qontrol, Logger } from '@qontrol/core';
 
 export class RedisController {
   constructor(private qontrol: Qontrol) {}
@@ -17,7 +17,7 @@ export class RedisController {
         timestamp: stats.timestamp,
       });
     } catch (error) {
-      console.error('Redis stats error:', error);
+      Logger.getInstance().error('Redis stats error:', error);
       res.status(500).json({
         message: 'Failed to retrieve Redis statistics',
         code: 'REDIS_STATS_ERROR',

@@ -1,6 +1,6 @@
 import express from 'express';
 import path from 'path';
-import { Qontrol } from '@qontrol/core';
+import { Qontrol, Logger } from '@qontrol/core';
 import { validateGetJobs } from './validation';
 import { HealthController } from './health.controller';
 import { RedisController } from './redis.controller';
@@ -44,9 +44,9 @@ export function createQontrolRouter(qontrol: Qontrol, options: ExpressOptions = 
       res.send(html);
     });
 
-    console.log(`✅ Serving qontrol UI from: ${uiDistPath}`);
+    Logger.getInstance().info(`✅ Serving qontrol UI from: ${uiDistPath}`);
   } catch (error: any) {
-    console.error('❌ Could not locate @qontrol/ui package:', error.message);
+    Logger.getInstance().error('❌ Could not locate @qontrol/ui package:', error.message);
 
     // Fallback: serve a simple error page
     const fallbackHtml = `
