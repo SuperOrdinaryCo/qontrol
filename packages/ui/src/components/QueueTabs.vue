@@ -1,6 +1,7 @@
 <script setup lang="ts">
-
-import {QueueInfo} from '@/types';
+import { useRouter, useRoute } from 'vue-router'
+import { watch } from 'vue';
+import { QueueInfo } from '@/types';
 
 defineProps<{
   queueInfo: QueueInfo
@@ -11,8 +12,12 @@ const selectedStateTab = defineModel({
   validator: (value: string) => ['waiting', 'active', 'completed', 'failed', 'delayed', 'paused', 'waiting-children'].includes(value)
 })
 
+const router = useRouter()
+const route = useRoute()
+
 function selectStateTab(state: string) {
   selectedStateTab.value = state
+  router.push({ query: { state } })
 }
 
 function getStateTabStyle(isSelected: boolean) {
@@ -22,6 +27,12 @@ function getStateTabStyle(isSelected: boolean) {
     return 'bg-gray-100 dark:bg-gray-200 text-gray-800 dark:text-gray-800'
   }
 }
+
+watch(() => route.query.state, () => {
+  if (route.query.state && selectedStateTab.value !== route.query.state) {
+    selectedStateTab.value = route.query.state as string
+  }
+})
 </script>
 
 <template>

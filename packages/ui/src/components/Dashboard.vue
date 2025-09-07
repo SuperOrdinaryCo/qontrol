@@ -151,7 +151,7 @@
           v-for="queue in sortedQueues"
           :key="queue.name"
           :queue="queue"
-          @click="navigateToQueue(queue.name)"
+          @click="state => navigateToQueue(queue.name, state)"
         />
       </div>
     </div>
@@ -200,8 +200,8 @@ function refreshQueues() {
   queuesStore.fetchQueues()
 }
 
-function navigateToQueue(queueName: string) {
-  router.push({ name: 'queue-detail', params: { name: queueName } })
+function navigateToQueue(queueName: string, state: string = '') {
+  router.push({ name: 'queue-detail', params: { name: queueName }, query: { state: state || 'waiting' } })
 }
 
 function clearSearch() {

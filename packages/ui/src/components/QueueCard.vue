@@ -3,7 +3,7 @@
        :class="[
          isPinned ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-800'
        ]"
-       @click="$emit('click')">
+       @click.stop="$emit('click', '')">
 
     <!-- Pin indicator -->
     <div v-if="isPinned" class="absolute top-2 left-2 w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
@@ -54,7 +54,7 @@
       <!-- Job State Counters with Colors -->
       <div class="mt-4 grid grid-cols-8 gap-1.5">
         <template v-for="[state, count] in Object.entries(queue.counts)" :key="state">
-          <div class="flex flex-col items-center px-2 py-2 rounded-lg" :class="getStateBackgroundClass(state)">
+          <div class="flex flex-col items-center px-2 py-2 rounded-lg cursor-pointer" :class="getStateBackgroundClass(state)" @click.stop="$emit('click', state)">
             <span class="text-xs font-medium text-center leading-tight" :class="getStateTextClass(state)">
               {{ state === 'waiting-children' ? 'waiting-children' : state }}
             </span>
@@ -81,7 +81,7 @@ interface Props {
 const props = defineProps<Props>()
 
 defineEmits<{
-  click: []
+  click: [string]
 }>()
 
 const queuesStore = useQueuesStore()

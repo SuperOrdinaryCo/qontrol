@@ -3,7 +3,7 @@
     <!-- Page Header -->
     <div class="flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <button @click="$router.back()" class="text-gray-400 hover:text-gray-600 dark:text-gray-100 hober:dark:text-gray-300">
+        <button @click="$router.push('/')" class="text-gray-400 hover:text-gray-600 dark:text-gray-100 hober:dark:text-gray-300">
           <ArrowLeftIcon class="w-6 h-6" />
         </button>
         <div>
@@ -103,6 +103,7 @@ const queuesStore = useQueuesStore()
 const settingsStore = useSettingsStore()
 
 const queueName = computed(() => route.params.name as string)
+const queueState = route.query.state as string || 'waiting'
 
 const {
   loading,
@@ -115,7 +116,7 @@ const {
 const { settings, autoRefreshEnabled } = storeToRefs(settingsStore)
 
 // Local filter state
-const selectedStateTab = ref<string>('waiting')
+const selectedStateTab = ref<string>(queueState)
 const searchQuery = ref('')
 const searchType = ref<'id' | 'name' | 'data'>('id')
 const sortBy = ref('createdAt')
@@ -277,8 +278,7 @@ onMounted(() => {
   // Load queue info first
   queuesStore.fetchQueues()
 
-  // Set default tab - try to restore from localStorage, otherwise default to 'waiting'
-  const savedState = localStorage.getItem(`queue-${queueName.value}-selectedState`)
+  const savedState = route.query.state as string
   if (savedState && ['waiting', 'active', 'completed', 'failed', 'delayed', 'paused', 'waiting-children'].includes(savedState)) {
     selectedStateTab.value = savedState
   } else {
