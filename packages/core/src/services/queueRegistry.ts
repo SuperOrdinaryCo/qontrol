@@ -6,6 +6,7 @@ import { Logger } from '../config/logger';
 export class QueueRegistry {
   private static queues: Map<string, Queue> = new Map();
   private static queueList = new Set<string>();
+  static canDiscoverQueues = false;
 
   /**
    * Discover queues safely by filtering out corrupted keys
@@ -155,7 +156,7 @@ export class QueueRegistry {
    * Get all queues with their information
    */
   static async getAllQueuesInfo(): Promise<QueueInfo[]> {
-    const queueNames = await this.discoverQueues();
+    const queueNames = this.canDiscoverQueues ? await this.discoverQueues() : Array.from(this.queueList);
 
     // Clear any stale queue instances that are no longer discovered
     const discoveredSet = new Set(queueNames);

@@ -3,6 +3,7 @@ import { QueueRegistry } from './services/queueRegistry';
 import { JobService } from './services/jobService';
 import { GetJobsRequest, QueueInfo } from './types/api';
 import { ILogger, Logger } from './config/logger';
+import { Queue } from 'bullmq';
 
 export * from './services/jobService';
 export * from './services/queueRegistry';
@@ -16,6 +17,7 @@ export { Config } from './config/env';
 export interface QontrolConfig {
   config: Config;
   logger?: ILogger;
+  autoDiscovery?: boolean;
 }
 
 // Main Qontrol class for easy setup
@@ -26,11 +28,14 @@ export class Qontrol {
     if (options.logger) {
       Logger.setLogger(options.logger);
     }
+    QueueRegistry.canDiscoverQueues = options.autoDiscovery ?? false;
   }
 
-  // Get a specific queue instance
-  addQueue(queueName: string) {
-    return QueueRegistry.addQueue(queueName);
+  // Add a specific queue instance
+  addQueue(queue: Queue): Queue;
+  addQueue(queueName: string): Queue;
+  addQueue(maybeQueue: string | Queue): Queue {
+    return QueueRegistry.addQueue(maybeQueue);
   }
 
   // Get a specific queue instance

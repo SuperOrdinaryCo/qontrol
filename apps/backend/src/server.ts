@@ -28,7 +28,8 @@ serverAdapter.setBasePath('/admin/queues2');
 // Create Qontrol monitoring
 const qontrol = new Qontrol({
   config,
-  logger: new PinoLogger()
+  logger: new PinoLogger(),
+  autoDiscovery: true
 });
 const router = createQontrolRouter(qontrol);
 const { DefaultQueue, DefaultQueueWorker, disconnect } = setupQueue(config);
