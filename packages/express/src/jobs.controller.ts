@@ -462,4 +462,91 @@ export class JobsController {
       });
     }
   }
+
+  /**
+   * POST /api/queues/:queue/jobs/bulk-export
+   * Bulk export jobs by streaming job details in chunks
+   */
+  async bulkExportJobs(req: Request, res: Response) {
+    try {
+      const { queue: queueName } = req.params;
+      const { jobIds } = req.body;
+
+      // Validate input
+      if (!Array.isArray(jobIds) || jobIds.length === 0) {
+        return res.status(400).json({
+          message: 'jobIds must be a non-empty array',
+          code: 'INVALID_JOB_IDS',
+        });
+      }
+
+      // Limit bulk operations to prevent overload
+      if (jobIds.length > 1000) {
+        return res.status(400).json({
+          message: 'Cannot export more than 1000 jobs at once',
+          code: 'TOO_MANY_JOBS',
+        });
+      }
+
+      // Get the async generator from Qontrol
+      const exportGenerator = this.qontrol.bulkExportJobs(queueName, jobIds);
+
+      const toJsonTransform = new Transform({
+        objectMode: true,
+        transform(chunk, encoding, callback) {
+          const json = JSON.stringify(chunk) + '\n';
+          callback(null, json);
+        },
+        flush(callback) {
+          callback();
+        }
+      });
+
+      // Set proper headers for streaming JSON
+      res.setHeader('Content-Type', 'application/x-ndjson'); // Newline-delimited JSON
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+
+      const stream = Readable.from(exportGenerator);
+
+      // Handle stream errors before starting
+      stream.on('error', (error) => {
+        Logger.getInstance().error('Error streaming bulk export:', error);
+        if (!res.headersSent) {
+          res.status(500).json({
+            message: 'Failed to stream bulk export',
+            code: 'BULK_EXPORT_STREAM_ERROR',
+          });
+        } else {
+          res.end();
+        }
+      });
+
+      toJsonTransform.on('error', (error) => {
+        Logger.getInstance().error('Error in bulk export transform stream:', error);
+        if (!res.headersSent) {
+          res.status(500).json({
+            message: 'Failed to transform bulk export',
+            code: 'BULK_EXPORT_TRANSFORM_ERROR',
+          });
+        } else {
+          res.end();
+        }
+      });
+
+      // Start streaming
+      stream
+        .pipe(toJsonTransform)
+        .pipe(res);
+
+    } catch (error) {
+      Logger.getInstance().error('Error setting up bulk export stream:', error);
+      if (!res.headersSent) {
+        res.status(500).json({
+          message: 'Failed to setup bulk export stream',
+          code: 'BULK_EXPORT_SETUP_ERROR',
+        });
+      }
+    }
+  }
 }

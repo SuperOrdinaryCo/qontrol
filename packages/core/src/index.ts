@@ -98,6 +98,11 @@ export class Qontrol {
     return JobService.bulkRetryJobs(queueName, jobIds);
   }
 
+  // Bulk export jobs
+  bulkExportJobs(queueName: string, jobIds: string[]) {
+    return JobService.bulkExportJobs(queueName, jobIds);
+  }
+
   // Queue management
   async pauseQueue(queueName: string) {
     return JobService.pauseQueue(queueName);

@@ -498,39 +498,21 @@ export const useJobsStore = defineStore('jobs', () => {
         errors: [] as Array<{ jobId: string; error: string }>,
       };
 
-      // Fetch all job details in parallel with concurrency limit
-      const concurrencyLimit = 10;
-      const chunks = [];
-      for (let i = 0; i < jobIds.length; i += concurrencyLimit) {
-        chunks.push(jobIds.slice(i, i + concurrencyLimit));
-      }
+      // Get the streaming iterator from the API client
+      const exportIterator = apiClient.bulkExportJobs(queueName, jobIds);
 
       const allJobDetails = [];
 
-      for (const chunk of chunks) {
-        const promises = chunk.map(async (jobId) => {
-          try {
-            const job = await apiClient.getJobDetail(queueName, jobId);
-            result.success++;
-            return {
-              ...job,
-              createdAt: job.createdAt,
-              processedOn: job.processedOn,
-              finishedOn: job.finishedOn,
-            };
-          } catch (error) {
-            result.failed++;
-            result.errors.push({
-              jobId,
-              error: error instanceof Error ? error.message : 'Unknown error'
-            });
-            console.error(`Failed to fetch job ${jobId} for export:`, error);
-            return null;
-          }
-        });
+      // Iterate over the stream and combine data into blob
+      for await (const chunk of exportIterator) {
+        result.success += chunk.success;
+        result.failed += chunk.failed;
+        result.errors.push(...chunk.errors);
 
-        const chunkResults = await Promise.all(promises);
-        allJobDetails.push(...chunkResults.filter(job => job !== null));
+        // Add jobs from this chunk to the collection
+        allJobDetails.push(...chunk.jobs);
+
+        console.log(`Processed chunk ${chunk.chunkIndex + 1}/${chunk.totalChunks}: ${chunk.success} success, ${chunk.failed} failed`);
       }
 
       if (allJobDetails.length === 0) {

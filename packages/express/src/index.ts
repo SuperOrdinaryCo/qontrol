@@ -88,6 +88,7 @@ export function createQontrolRouter(qontrol: Qontrol, options: ExpressOptions = 
   router.post('/api/queues/:queue/jobs/:id/promote', (req, res) => jobsController.promoteJob(req, res));
   router.post('/api/queues/:queue/jobs/bulk-remove', (req, res) => jobsController.bulkRemoveJobs(req, res));
   router.post('/api/queues/:queue/jobs/bulk-retry', (req, res) => jobsController.bulkRetryJobs(req, res));
+  router.post('/api/queues/:queue/jobs/bulk-export', (req, res) => jobsController.bulkExportJobs(req, res));
 
   return router;
 }

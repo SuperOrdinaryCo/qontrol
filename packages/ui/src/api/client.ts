@@ -131,6 +131,42 @@ export const apiClient = {
     return response.data;
   },
 
+  async *bulkExportJobs(queueName: string, jobIds: string[]): AsyncGenerator<{ jobs: any[]; chunkIndex: number; totalChunks: number; success: number; failed: number; errors: Array<{ jobId: string; error: string }> }> {
+    const response = await api.post(`/queues/${queueName}/jobs/bulk-export`,
+      { jobIds },
+      {
+        responseType: 'stream',
+        adapter: 'fetch',
+      }
+    );
+
+    const stream = response.data; // The response data will be a ReadableStream
+    const reader = stream.pipeThrough(new TextDecoderStream()).getReader();
+
+    let buffer = [];
+
+    while (true) {
+      const {
+        value,
+        done
+      } = await reader.read();
+      if (done) break;
+      buffer.push(value);
+
+      try {
+        const piece = buffer.join('');
+        const [line, ...rest] = piece.split('\n')
+        const parsedLine = JSON.parse(line.trim());
+
+        buffer = rest;
+
+        yield parsedLine;
+      } catch (e) {
+        // Incomplete JSON, wait for more data
+      }
+    }
+  },
+
   async pauseQueue(queueName: string): Promise<void> {
     await api.post(`/queues/${queueName}/pause`);
   },

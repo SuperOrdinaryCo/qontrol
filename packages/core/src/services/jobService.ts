@@ -763,4 +763,58 @@ export class JobService {
       return this.matchesRegexSearch((job as any).data, regex!)
     })
   }
+
+  /**
+   * Bulk export jobs by streaming job details in chunks
+   */
+  static async *bulkExportJobs(queueName: string, jobIds: string[]) {
+    const logger = Logger.getInstance();
+    const chunkSize = 50;
+
+    try {
+      const queue = QueueRegistry.getQueue(queueName);
+
+      // Split job IDs into chunks of 50
+      for (let i = 0; i < jobIds.length; i += chunkSize) {
+        const chunk = jobIds.slice(i, i + chunkSize);
+        const jobDetails = [];
+        const errors = [];
+
+        // Fetch job details for this chunk
+        for (const jobId of chunk) {
+          try {
+            const job = await queue.getJob(jobId);
+            if (job) {
+              const jobDetail = await this.jobToDetail(job);
+              jobDetails.push(jobDetail);
+            } else {
+              errors.push({
+                jobId,
+                error: 'Job not found'
+              });
+            }
+          } catch (error) {
+            errors.push({
+              jobId,
+              error: error instanceof Error ? error.message : 'Unknown error'
+            });
+            logger.error(`Failed to fetch job ${jobId} for export:`, error);
+          }
+        }
+
+        // Yield the chunk of job details
+        yield {
+          jobs: jobDetails,
+          chunkIndex: Math.floor(i / chunkSize),
+          totalChunks: Math.ceil(jobIds.length / chunkSize),
+          success: jobDetails.length,
+          failed: errors.length,
+          errors
+        };
+      }
+    } catch (error) {
+      logger.error(`Failed to bulk export jobs for queue ${queueName}:`, error);
+      throw error;
+    }
+  }
 }
