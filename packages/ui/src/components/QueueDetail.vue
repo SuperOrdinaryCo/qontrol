@@ -61,7 +61,7 @@
     <JobsTable :queue-name="queueName" />
 
     <!-- Pagination -->
-    <PaginationBlock v-if="pagination.totalPages > 1 && !filters.all" @to-page="fetchJobs(false)" />
+    <PaginationBlock v-if="pagination.totalPages > 1" @to-page="paginate" />
 
     <!-- Custom Confirmation Dialog -->
     <ConfirmDialog />
@@ -137,7 +137,9 @@ function selectStateTab(state: string) {
     search: searchQuery.value || undefined,
     sortBy: sortBy.value as any,
     sortOrder: sortOrder.value as any,
+    searchType: searchType.value || undefined,
     page: 1,
+    all: ['data', 'name'].includes(searchType.value),
   })
 
   // Don't preserve selection when changing tabs (original behavior)
@@ -259,6 +261,15 @@ function setupAutoRefresh() {
         })
       }
     }, settings.value.autoRefreshInterval * 1000)
+  }
+}
+
+function paginate(page: number) {
+  if (filters.value.all) {
+    jobsStore.updateJobsPage(page);
+  }
+  else {
+    fetchJobs(false)
   }
 }
 

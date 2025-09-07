@@ -12,7 +12,7 @@ export const useJobsStore = defineStore('jobs', () => {
   const error = ref<string | null>(null);
   const currentQueue = ref<string>('');
   const showJobDetailDrawer = ref(false);
-  
+
   // Job duplication state
   const duplicateJobData = ref<JobDetail | null>(null);
   const showAddJobDrawer = ref(false);
@@ -25,15 +25,14 @@ export const useJobsStore = defineStore('jobs', () => {
     totalPages: 0,
   });
 
+  const paginatedJobs = ref<JobSummary[]>([]);
+
   const filters = reactive<GetJobsRequest>({
     page: 1,
     pageSize: 500,
     sortBy: 'createdAt',
     sortOrder: 'desc',
     states: undefined,
-    timeRange: undefined,
-    minDuration: undefined,
-    minAttempts: undefined,
     search: '',
     searchType: '',
     all: false,
@@ -48,12 +47,12 @@ export const useJobsStore = defineStore('jobs', () => {
   // Getters
   const hasSelection = computed(() => selection.selectedIds.size > 0);
   
-  const selectedJobs = computed(() => 
-    jobs.value.filter(job => selection.selectedIds.has(job.id))
+  const selectedJobs = computed(() =>
+      paginatedJobs.value.filter(job => selection.selectedIds.has(job.id))
   );
 
   const jobsByState = computed(() => {
-    return jobs.value.reduce((acc, job) => {
+    return paginatedJobs.value.reduce((acc, job) => {
       acc[job.state] = (acc[job.state] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
@@ -92,10 +91,22 @@ export const useJobsStore = defineStore('jobs', () => {
 
       let index = 0;
 
-      for await (const chunk of jobsIterator) {
-        _pagination = paginationFactory(chunk.total);
+      let totalJobs = 0;
+      let totalJobsOverall = 0;
+      let hadJobs = false;
 
-        const jobsChunk = chunk.jobs.map(job => ({
+      while (true) {
+        const { done, value } = await jobsIterator.next();
+        if (done) {
+          jobs.value = hadJobs ? jobs.value : [];
+          break;
+        }
+
+        hadJobs = true;
+        totalJobs += value.jobs.length;
+        totalJobsOverall = value.total;
+
+        const jobsChunk = value.jobs.map(job => ({
           ...job,
           createdAt: new Date(job.createdAt),
           processedOn: job.processedOn ? new Date(job.processedOn) : undefined,
@@ -111,6 +122,14 @@ export const useJobsStore = defineStore('jobs', () => {
 
         index++
       }
+
+      if (jobs.value.length > pagination.pageSize) {
+        paginatedJobs.value = jobs.value.slice((pagination.page - 1) * pagination.pageSize, pagination.page * pagination.pageSize);
+      } else {
+        paginatedJobs.value = jobs.value;
+      }
+
+      _pagination = paginationFactory(filters.all ? totalJobs : totalJobsOverall);
 
       // Update pagination
       Object.assign(pagination, _pagination);
@@ -140,6 +159,11 @@ export const useJobsStore = defineStore('jobs', () => {
       // Always clear loading state
       loading.value = false;
     }
+  }
+
+  function updateJobsPage(page: number ) {
+    pagination.page = page;
+    paginatedJobs.value = jobs.value.slice((pagination.page - 1) * pagination.pageSize, pagination.page * pagination.pageSize);
   }
 
   async function fetchJobDetail(queueName: string, jobId: string) {
@@ -600,14 +624,14 @@ export const useJobsStore = defineStore('jobs', () => {
     }
     
     // Update select all state
-    selection.isAllSelected = selection.selectedIds.size === jobs.value.length;
+    selection.isAllSelected = selection.selectedIds.size === paginatedJobs.value.length;
   }
 
   function toggleSelectAll() {
     if (selection.isAllSelected) {
       clearSelection();
     } else {
-      jobs.value.forEach(job => selection.selectedIds.add(job.id));
+      paginatedJobs.value.forEach(job => selection.selectedIds.add(job.id));
       selection.isAllSelected = true;
     }
   }
@@ -619,6 +643,7 @@ export const useJobsStore = defineStore('jobs', () => {
 
   function reset() {
     jobs.value = [];
+    paginatedJobs.value = [];
     jobDetail.value = null;
     loading.value = false;
     loadingDetail.value = false;
@@ -654,6 +679,7 @@ export const useJobsStore = defineStore('jobs', () => {
   return {
     // State
     jobs,
+    paginatedJobs,
     jobDetail,
     loading,
     loadingDetail,
@@ -693,5 +719,6 @@ export const useJobsStore = defineStore('jobs', () => {
     toggleSelectAll,
     clearSelection,
     reset,
+    updateJobsPage,
   };
 });

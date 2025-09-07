@@ -20,6 +20,7 @@ const queueName = computed(() => props.queueName)
 
 const {
   jobs,
+  paginatedJobs,
   loading,
   pagination,
   selection,
@@ -55,7 +56,7 @@ let tooltipTimeout: ReturnType<typeof setTimeout> | null = null
 const hasFailedJobsSelected = computed(() => {
   if (!hasSelection.value) return false
 
-  const selectedJobs = jobs.value.filter(job => selection.value.selectedIds.has(job.id))
+  const selectedJobs = paginatedJobs.value.filter(job => selection.value.selectedIds.has(job.id))
   return selectedJobs.some(job => job.state === 'failed')
 })
 
@@ -142,7 +143,7 @@ function handleRangeSelection(currentIndex: number) {
   const endIndex = Math.max(lastSelectedIndex.value, currentIndex)
 
   // Get all job IDs in the range
-  const jobsInRange = jobs.value.slice(startIndex, endIndex + 1)
+  const jobsInRange = paginatedJobs.value.slice(startIndex, endIndex + 1)
 
   // Check if all jobs in range are already selected
   const allInRangeSelected = jobsInRange.every(job => selection.value.selectedIds.has(job.id))
@@ -281,7 +282,7 @@ function handleBulkRemove() {
 
 function handleBulkRetry() {
   // Collect all selected job IDs that are failed
-  const selectedJobs = jobs.value.filter(job => selection.value.selectedIds.has(job.id))
+  const selectedJobs = paginatedJobs.value.filter(job => selection.value.selectedIds.has(job.id))
   const failedJobIds = selectedJobs.filter(job => job.state === 'failed').map(job => job.id)
 
   if (failedJobIds.length === 0) return
@@ -437,7 +438,7 @@ onUnmounted(() => {
         </div>
 
         <span class="text-sm text-gray-500">
-          Showing {{ jobs.length }} of {{ pagination.total }} total jobs
+          Showing {{ paginatedJobs.length }} of {{ pagination.total }} total jobs
         </span>
       </div>
     </div>
@@ -448,7 +449,7 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <div v-else-if="jobs.length === 0" class="p-6 text-center text-gray-500 dark:text-gray-100">
+    <div v-else-if="paginatedJobs.length === 0" class="p-6 text-center text-gray-500 dark:text-gray-100">
       No jobs found
     </div>
 
@@ -478,7 +479,7 @@ onUnmounted(() => {
       <!-- Table Body -->
       <div class="divide-y divide-gray-200 dark:divide-gray-600">
         <div
-            v-for="(job, index) in jobs"
+            v-for="(job, index) in paginatedJobs"
             :key="job.id"
             class="px-6 py-4 hover:bg-gray-50 hover:dark:bg-gray-700 cursor-pointer relative"
             @click="handleJobClick(job.id, index, $event)"
