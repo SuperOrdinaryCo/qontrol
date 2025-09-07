@@ -79,7 +79,7 @@ export const useJobsStore = defineStore('jobs', () => {
         delete mergedFilters.search;
       }
 
-      const chunks = apiClient.getJobs(queueName, mergedFilters);
+      const jobsIterator = apiClient.getJobs(queueName, mergedFilters);
 
       const paginationFactory = (total: number) => ({
         page: mergedFilters.page || 1,
@@ -90,9 +90,9 @@ export const useJobsStore = defineStore('jobs', () => {
 
       let _pagination = {};
 
-      const _jobs = [];
+      let index = 0;
 
-      for await (const chunk of chunks) {
+      for await (const chunk of jobsIterator) {
         _pagination = paginationFactory(chunk.total);
 
         const jobsChunk = chunk.jobs.map(job => ({
@@ -102,14 +102,19 @@ export const useJobsStore = defineStore('jobs', () => {
           finishedOn: job.finishedOn ? new Date(job.finishedOn) : undefined,
         }))
 
-        _jobs.push(...jobsChunk)
-      }
+        if (index === 0) {
+          jobs.value = jobsChunk;
+        }
+        else {
+          jobs.value.push(...jobsChunk);
+        }
 
-      jobs.value = _jobs;
+        index++
+      }
 
       // Update pagination
       Object.assign(pagination, _pagination);
-      
+
       // Update filters with response filters
       Object.assign(filters, mergedFilters);
 

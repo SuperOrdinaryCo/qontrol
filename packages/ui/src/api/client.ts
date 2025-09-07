@@ -66,7 +66,7 @@ export const apiClient = {
     const stream = response.data; // The response data will be a ReadableStream
     const reader = stream.pipeThrough(new TextDecoderStream()).getReader();
 
-    let buffer = '';
+    let buffer = [];
 
     while (true) {
       const {
@@ -74,18 +74,18 @@ export const apiClient = {
         done
       } = await reader.read();
       if (done) break;
-      buffer += value;
-    }
-
-    for (const line of buffer.split('\n')) {
-      const _line = line.trim();
-
-      if (!_line) continue;
+      buffer.push(value);
 
       try {
-        yield JSON.parse(_line);
+        const piece = buffer.join('');
+        const [line, ...rest] = piece.split('\n')
+        const parsedLine = JSON.parse(line.trim());
+
+        buffer = rest;
+
+        yield parsedLine;
       } catch (e) {
-        console.error(e);
+        // Incomplete JSON, wait for more data
       }
     }
   },
