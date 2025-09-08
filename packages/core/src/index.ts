@@ -35,7 +35,7 @@ export class Qontrol {
   addQueue(queue: Queue): Queue;
   addQueue(queueName: string): Queue;
   addQueue(maybeQueue: string | Queue): Queue {
-    return QueueRegistry.addQueue(maybeQueue);
+    return QueueRegistry.addQueue(maybeQueue as any);
   }
 
   // Get a specific queue instance
