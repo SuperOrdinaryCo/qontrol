@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { apiClient } from '@/api/client';
-import type { QueueInfo, LoadingState, JobState } from '@/types';
+import type { QueueInfo, LoadingState } from '@/types';
 
 export const useQueuesStore = defineStore('queues', () => {
   // State
@@ -184,7 +184,7 @@ export const useQueuesStore = defineStore('queues', () => {
     savePinnedQueues(pinnedQueues.value);
   }
 
-  function updateJobCount(queueName: string, state: keyof JobState, delta: number) {
+  function updateJobCount(queueName: string, state: keyof QueueInfo['counts'], delta: number) {
     const queue = queues.value.find(q => q.name === queueName);
     if (queue && queue.counts[state] !== undefined) {
       queue.counts[state] = Math.max(0, queue.counts[state] + delta);

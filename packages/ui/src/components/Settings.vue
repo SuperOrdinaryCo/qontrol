@@ -199,7 +199,7 @@ import { formatTimestamp } from '@/utils/date'
 import type { AppSettings } from '@/types'
 
 // Version information
-const version = __APP_VERSION__ || 'unknown'
+const version = import.meta.env.VITE_APP_VERSION || 'unknown'
 
 const settingsStore = useSettingsStore()
 const { settings, autoRefreshEnabled, isDarkMode } = storeToRefs(settingsStore)

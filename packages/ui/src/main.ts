@@ -6,6 +6,14 @@ import './assets/main.css'
 
 import {routes} from '@/routes.ts';
 import {getBaseUrl} from '@/utils/base-url.ts';
+import { startMockWorker } from './mocks/browser'
+
+// Initialize MSW for mocking API calls
+async function enableMocking() {
+  if (import.meta.env.VITE_ENABLE_MOCKS) {
+    await startMockWorker()
+  }
+}
 
 // Create router with relative base path handling
 const router = createRouter({
@@ -19,4 +27,7 @@ const pinia = createPinia()
 app.use(pinia)
 app.use(router)
 
-app.mount('#app')
+// Start the app with mocking enabled
+enableMocking().then(() => {
+  app.mount('#app')
+})

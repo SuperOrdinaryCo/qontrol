@@ -19,7 +19,6 @@ const settingsStore = useSettingsStore()
 const queueName = computed(() => props.queueName)
 
 const {
-  jobs,
   paginatedJobs,
   loading,
   pagination,

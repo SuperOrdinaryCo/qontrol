@@ -53,7 +53,7 @@ const colorClasses = computed(() => {
     danger: 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400',
   }
 
-  return colors[props.color as keyof typeof colors] || colors.blue
+  return colors[props.color as keyof typeof colors] || colors.primary
 })
 
 const formattedValue = computed(() => {

@@ -14,21 +14,12 @@ export interface QueueInfo {
   isPaused: boolean;
 }
 
-export interface JobState {
-  waiting: number;
-  active: number;
-  completed: number;
-  failed: number;
-  delayed: number;
-  paused: number;
-  prioritized: number;
-  'waiting-children': number;
-}
+export type JobState = 'waiting' | 'active' | 'completed' | 'failed' | 'delayed' | 'paused' | 'waiting-children' | 'prioritized';
 
 export interface JobSummary {
   id: string;
   name: string;
-  state: keyof JobState;
+  state: JobState;
   createdAt: Date;
   processedOn?: Date;
   finishedOn?: Date;
@@ -70,7 +61,7 @@ export interface GetJobsRequest {
   pageSize?: number;
   sortBy?: 'createdAt' | 'processedOn' | 'finishedOn' | 'duration' | 'state' | 'name';
   sortOrder?: 'asc' | 'desc';
-  states?: Array<keyof JobState>;
+  states?: Array<JobState>;
   all?: boolean;
   timeRange?: {
     field: 'createdAt' | 'processedOn' | 'finishedOn';

@@ -248,7 +248,7 @@ export const useJobsStore = defineStore('jobs', () => {
       const { useQueuesStore } = await import('@/stores/queues');
       const queuesStore = useQueuesStore();
       queuesStore.updateJobCount(queueName, jobToRemove.state, -1);
-      
+
       console.log(`Successfully removed job ${jobId} from queue ${queueName}`);
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to remove job';
