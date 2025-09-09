@@ -15,7 +15,7 @@ async function setupMSW() {
 
 // Start the worker in development mode or when explicitly enabled
 export async function startMockWorker() {
-  if (import.meta.env.DEV || import.meta.env.VITE_ENABLE_MOCKS === 'true') {
+  if (import.meta.env.VITE_ENABLE_MOCKS) {
     try {
       const worker = await setupMSW()
       if (!worker) return
