@@ -1,0 +1,58 @@
+# Changelog
+
+## [1.1.0](https://github.com/SuperOrdinaryCo/qontrol/compare/ui-v1.0.0...ui-v1.1.0) (2025-09-09)
+
+
+### Features
+
+* add bulk retry ([697cea1](https://github.com/SuperOrdinaryCo/qontrol/commit/697cea1a0249a7984fce87a7935fd896fb85a310))
+* add confirm on job retry ([2eb2904](https://github.com/SuperOrdinaryCo/qontrol/commit/2eb290446730d35961ec15495b2b35ca81b2ce35))
+* add custom job using the UI ([d76c2a8](https://github.com/SuperOrdinaryCo/qontrol/commit/d76c2a827b0896d2511e665871c06ea4af20369a))
+* add job bulk export feature ([8a4bc0b](https://github.com/SuperOrdinaryCo/qontrol/commit/8a4bc0b0026d0bdd3d8f3c845e6038588b18edb3))
+* add job data preview on 3sec hover on row ([2ddd567](https://github.com/SuperOrdinaryCo/qontrol/commit/2ddd567846ce01ec68894fdc594ca36073d99b9a))
+* add job duplication feature ([2a3e564](https://github.com/SuperOrdinaryCo/qontrol/commit/2a3e56420b6e70b0b5bc3fece933e63f2383aba4))
+* add job export feature ([acd9c80](https://github.com/SuperOrdinaryCo/qontrol/commit/acd9c80d1cbcd946a37145474e871f8768a4cba3))
+* add job logs ([5d5d801](https://github.com/SuperOrdinaryCo/qontrol/commit/5d5d801ba738955d069b9b47829c565e94949be3))
+* add prioritized state ([6f4ae9b](https://github.com/SuperOrdinaryCo/qontrol/commit/6f4ae9b7649caf7b1a712c1b86e3e9dce6d5f542))
+* add queue state clean action ([2b1876b](https://github.com/SuperOrdinaryCo/qontrol/commit/2b1876b272fb74b38912c4729fe8e217dd67a506))
+* add setting for job data preview delay ([b26f705](https://github.com/SuperOrdinaryCo/qontrol/commit/b26f705f42a86e112075c0482af8acaf17c99306))
+* add sticky headers ([ebeedf2](https://github.com/SuperOrdinaryCo/qontrol/commit/ebeedf2b6ca4ac520ee20791d12d5a57b05d4b72))
+* add sticky pagination ([023a734](https://github.com/SuperOrdinaryCo/qontrol/commit/023a73481c807b2fca98658b514131b1cd0c640c))
+* dark mode. theme swither ([da0ca07](https://github.com/SuperOrdinaryCo/qontrol/commit/da0ca07a239a8f53d72be967206cf9f1c36e9ea8))
+* mock api. prepare for gh pages ([3a37409](https://github.com/SuperOrdinaryCo/qontrol/commit/3a374091eecc948d8663ab4815c11ca2a117c168))
+* packages more or less stable ([4dce7e0](https://github.com/SuperOrdinaryCo/qontrol/commit/4dce7e0f197cba5eeb2b10e45012a4d982f6e789))
+* paginate jobs on the client when jobs are more then on per page ([d518285](https://github.com/SuperOrdinaryCo/qontrol/commit/d5182853952fa31bdaf8a4b1854f0cb49163cfd8))
+* pause / resume queue ([6a9b296](https://github.com/SuperOrdinaryCo/qontrol/commit/6a9b2967c33fdd5557009c49e9bf5a7c080cb83b))
+* pin queues ([dc410b9](https://github.com/SuperOrdinaryCo/qontrol/commit/dc410b972d6cbd7d42dd2a72f7b33e8471bc8d2f))
+* queue removing ([0fda368](https://github.com/SuperOrdinaryCo/qontrol/commit/0fda3686e27aa256a513e398074febab5225335f))
+* search by job data ([573702f](https://github.com/SuperOrdinaryCo/qontrol/commit/573702fdd245a227b8c7ebd1524683e9d4b43beb))
+* select multiple job by holding shift and click on checkbox ([58cb052](https://github.com/SuperOrdinaryCo/qontrol/commit/58cb052f82a9a3ded7b1b2b9170441925ea4621a))
+* sort queues on dashboard by state or alpha ([f634596](https://github.com/SuperOrdinaryCo/qontrol/commit/f6345960299ecfa0cf13ff213def98eb827f4e29))
+* split queue detail into components ([e6be0f6](https://github.com/SuperOrdinaryCo/qontrol/commit/e6be0f69b5c2272423febb8f14dd11b6bf092cf8))
+* use route query to hold the queue state. watch it ([97f0398](https://github.com/SuperOrdinaryCo/qontrol/commit/97f03980f0b561813777cddedc24d80d987442cb))
+* views redis info on UI ([20155d1](https://github.com/SuperOrdinaryCo/qontrol/commit/20155d1420184a0a3ded2175c7ee182dbb35f876))
+
+
+### Bug Fixes
+
+* always load fresh job detail ([aa8a494](https://github.com/SuperOrdinaryCo/qontrol/commit/aa8a494a4286e208d5eb93e0365ccadface1c738))
+* autorefresh pagination ([4d3f104](https://github.com/SuperOrdinaryCo/qontrol/commit/4d3f10440800d10c62730e9eee8222f82b8dc7a7))
+* bullmq allow to clean more states ([6abaedb](https://github.com/SuperOrdinaryCo/qontrol/commit/6abaedb54165b643bc27d4b6d592b82de32bf0b2))
+* client routes. clean up ([c887f94](https://github.com/SuperOrdinaryCo/qontrol/commit/c887f946e1f6fa3e207ec4402ea6c40062c9b0ef))
+* colors ([2187bea](https://github.com/SuperOrdinaryCo/qontrol/commit/2187bea0d483a1a1a745ad558afd397c19bac522))
+* export multiple jobs using streams ([2a4cdc1](https://github.com/SuperOrdinaryCo/qontrol/commit/2a4cdc1212021d1d4af30d61b45bffd469c257ab))
+* filters should look same ([f1af5dd](https://github.com/SuperOrdinaryCo/qontrol/commit/f1af5dd9892625f80895ff14c7b20a72cf18289f))
+* fix attempts. audit deps ([dca95c2](https://github.com/SuperOrdinaryCo/qontrol/commit/dca95c2d8c0eaa0a56463613922b98fd9650862b))
+* job promotion and discard ([a31660b](https://github.com/SuperOrdinaryCo/qontrol/commit/a31660b3eaff870a517845d493fd252e3d5cf881))
+* job state and show time to handle for delayed jobs ([73b0f16](https://github.com/SuperOrdinaryCo/qontrol/commit/73b0f164d0449fa15707ee4c66268b82c91386fb))
+* move click outside to jobs table ([a4d7138](https://github.com/SuperOrdinaryCo/qontrol/commit/a4d7138e63f7ff973078c550315e2385e117dc97))
+* pagination. streams wip ([19cc9d4](https://github.com/SuperOrdinaryCo/qontrol/commit/19cc9d4334804ebc21282d170b5b0e14da7e676f))
+* refresh counts of the queue using auto refresh ([85c39f1](https://github.com/SuperOrdinaryCo/qontrol/commit/85c39f10ed41e4aea28c9be901adf16ecce74e4c))
+* render fast portion of jobs ([bbcb82d](https://github.com/SuperOrdinaryCo/qontrol/commit/bbcb82dc617afd7fa348021294b7cb0d899c2025))
+* rollback after ai dropped features ([d21f625](https://github.com/SuperOrdinaryCo/qontrol/commit/d21f62540b1ad4cfe3715dd025015b5f9340d2d8))
+* routing ([f544283](https://github.com/SuperOrdinaryCo/qontrol/commit/f544283678370d287d8d914ad4639a05e457b685))
+* split stacktrace on attempts ([54d26ba](https://github.com/SuperOrdinaryCo/qontrol/commit/54d26ba5043f3310255ef093b0f399fc7d33a6c3))
+* states overflow and data/opts areas in dark mode ([07650e9](https://github.com/SuperOrdinaryCo/qontrol/commit/07650e94179c3651d90db66e04b47a7eb3a51446))
+* update discard feature ([9d75308](https://github.com/SuperOrdinaryCo/qontrol/commit/9d75308f36d799c9c4cfb89f23b751f16dd7d70a))
+* view package version on UI ([1d44a66](https://github.com/SuperOrdinaryCo/qontrol/commit/1d44a6610a4ebb9ee6d9ee44c9940f1ccefe73e4))
+* z-index. show tooltip on hover over state column ([3e55f6d](https://github.com/SuperOrdinaryCo/qontrol/commit/3e55f6dbd419a79c9cf30d8aa8dfc5b734967aff))
