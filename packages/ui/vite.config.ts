@@ -7,6 +7,7 @@ import { mockExclusionPlugin } from './src/plugins/mockExclusion'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, resolve(__dirname, '../..'), '')
   const enableMocks = env.VITE_ENABLE_MOCKS === 'true'
+  const base = process.env.NODE_ENV === 'production' ? '/qontrol/' : '/';
 
   let proxy = {}
 
@@ -32,6 +33,7 @@ export default defineConfig(({ mode }) => {
     define: {
       'import.meta.env.VITE_APP_VERSION': JSON.stringify(version),
       'import.meta.env.VITE_ENABLE_MOCKS': enableMocks,
+      'import.meta.env.VITE_BASE_URL': base,
     },
     server: {
       port: 5173,

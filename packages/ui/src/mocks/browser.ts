@@ -20,10 +20,15 @@ export async function startMockWorker() {
       const worker = await setupMSW()
       if (!worker) return
 
+      const baseUrl = import.meta.env.VITE_BASE_URL || '/'
+      const serviceWorkerUrl = `${baseUrl}mockServiceWorker.js`.replace('//', '/')
+
+      console.log(serviceWorkerUrl)
+
       await worker.start({
         onUnhandledRequest: 'bypass',
         serviceWorker: {
-          url: '/mockServiceWorker.js'
+          url: serviceWorkerUrl
         }
       })
       console.log('🔧 MSW: Mock Service Worker started')
