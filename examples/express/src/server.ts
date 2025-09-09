@@ -16,6 +16,7 @@ const config = configFactory();
 // Create Qontrol monitoring
 const qontrol = new Qontrol({
   config,
+  autoDiscovery: true,
 });
 const router = createQontrolRouter(qontrol);
 

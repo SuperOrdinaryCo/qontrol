@@ -42,12 +42,15 @@ const { createQontrolRouter } = require('@qontrol/express');
 const app = express();
 
 const qontrol = new Qontrol({
-    redis: {
-        host: 'localhost',
-        port: 6379,
-        // All ioredis options supported
+    config: {
+        redis: {
+            host: 'localhost',
+            port: 6379,
+            // All ioredis options supported
+        },
+        queuePrefix: 'bull' // Optional: BullMQ queue prefix
     },
-    queuePrefix: 'bull' // Optional: BullMQ queue prefix
+    autoDiscovery: true // Optional: Automatically discover BullMQ queues. False by default. Use qontrol.addQueue() to manually add queues.
 });
 
 // Create the dashboard router
@@ -76,9 +79,11 @@ npm install @qontrol/core bullmq
 const { Qontrol } = require('@qontrol/core');
 
 const qontrol = new Qontrol({
-  redis: {
-    host: 'localhost',
-    port: 6379,
+  config: {
+      redis: {
+          host: 'localhost',
+          port: 6379,
+      }
   }
 });
 
@@ -103,7 +108,9 @@ const app = express();
 
 // Create core monitoring instance
 const qontrol = new Qontrol({
-  redis: { host: 'localhost', port: 6379 }
+  config: {
+      redis: { host: 'localhost', port: 6379 }
+  }
 });
 
 // Create Express router with custom options
