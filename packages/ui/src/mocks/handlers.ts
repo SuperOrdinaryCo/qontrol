@@ -17,6 +17,9 @@ import type {
 let queuesState = [...mockQueues]
 const jobsCache = new Map<string, any[]>()
 
+const baseUrl = import.meta.env.VITE_BASE_URL || ''
+const basePath = `${baseUrl}/api`.replace('//', '/')
+
 // Helper to get jobs for a queue
 function getJobsForQueue(queueName: string, count: number = 50) {
   if (!jobsCache.has(queueName)) {
@@ -27,7 +30,7 @@ function getJobsForQueue(queueName: string, count: number = 50) {
 
 export const handlers = [
   // Health check endpoint
-  http.get('/api/health', () => {
+  http.get(`${basePath}/health`, () => {
     const response: HealthCheckResponse = {
       status: 'healthy',
       redis: {
@@ -41,7 +44,7 @@ export const handlers = [
   }),
 
   // Alternative health check endpoint (common in Kubernetes environments)
-  http.get('/api/healthz', () => {
+  http.get(`${basePath}/healthz`, () => {
     const response: HealthCheckResponse = {
       status: 'healthy',
       redis: {
@@ -55,7 +58,7 @@ export const handlers = [
   }),
 
   // Get all queues
-  http.get('/api/queues', () => {
+  http.get(`${basePath}/queues`, () => {
     const response: GetQueuesResponse = {
       queues: queuesState,
       timestamp: new Date(),
@@ -64,7 +67,7 @@ export const handlers = [
   }),
 
   // Get specific queue
-  http.get('/api/queues/:queue', ({ params }) => {
+  http.get(`${basePath}/queues/:queue`, ({ params }) => {
     const queueName = params.queue as string
     const queue = queuesState.find(q => q.name === queueName)
 
@@ -82,7 +85,7 @@ export const handlers = [
   }),
 
   // Pause queue
-  http.post('/api/queues/:queue/pause', ({ params }) => {
+  http.post(`${basePath}/queues/:queue/pause`, ({ params }) => {
     const queueName = params.queue as string
     const queueIndex = queuesState.findIndex(q => q.name === queueName)
 
@@ -103,7 +106,7 @@ export const handlers = [
   }),
 
   // Resume queue
-  http.post('/api/queues/:queue/resume', ({ params }) => {
+  http.post(`${basePath}/queues/:queue/resume`, ({ params }) => {
     const queueName = params.queue as string
     const queueIndex = queuesState.findIndex(q => q.name === queueName)
 
@@ -124,7 +127,7 @@ export const handlers = [
   }),
 
   // Clean queue
-  http.post('/api/queues/:queue/clean', async ({ params, request }) => {
+  http.post(`${basePath}/queues/:queue/clean`, async ({ params, request }) => {
     const queueName = params.queue as string
     const body = await request.json() as {
       limit?: number;
@@ -167,7 +170,7 @@ export const handlers = [
   }),
 
   // Remove/obliterate queue
-  http.delete('/api/queues/:queue', ({ params }) => {
+  http.delete(`${basePath}/queues/:queue`, ({ params }) => {
     const queueName = params.queue as string
     const queueIndex = queuesState.findIndex(q => q.name === queueName)
 
@@ -189,7 +192,7 @@ export const handlers = [
   }),
 
   // Get jobs for a queue
-  http.get('/api/queues/:queue/jobs', ({ params, request }) => {
+  http.get(`${basePath}/queues/:queue/jobs`, ({ params, request }) => {
     const queueName = params.queue as string
     const url = new URL(request.url)
 
@@ -263,7 +266,7 @@ export const handlers = [
   }),
 
   // Get job by ID
-  http.get('/api/queues/:queue/job-by-id/:id', ({ params }) => {
+  http.get(`${basePath}/queues/:queue/job-by-id/:id`, ({ params }) => {
     const queueName = params.queue as string
     const jobId = params.id as string
 
@@ -293,7 +296,7 @@ export const handlers = [
   }),
 
   // Get job detail
-  http.get('/api/queues/:queue/jobs/:id', ({ params }) => {
+  http.get(`${basePath}/queues/:queue/jobs/:id`, ({ params }) => {
     const queueName = params.queue as string
     const jobId = params.id as string
 
@@ -318,7 +321,7 @@ export const handlers = [
   }),
 
   // Redis stats
-  http.get('/api/redis/stats', () => {
+  http.get(`${basePath}/redis/stats`, () => {
     return HttpResponse.json({
       info: mockRedisStats.info,
       timestamp: new Date(),
@@ -326,7 +329,7 @@ export const handlers = [
   }),
 
   // Bulk actions (if needed)
-  http.post('/api/queues/:queue/jobs/bulk/:action', async ({ params, request }) => {
+  http.post(`${basePath}/queues/:queue/jobs/bulk/:action`, async ({ params, request }) => {
     const queueName = params.queue as string
     const action = params.action as string
     const body = await request.json() as { jobIds: string[] }
