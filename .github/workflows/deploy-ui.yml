@@ -36,7 +36,7 @@ jobs:
       - name: Build UI with mocks for GitHub Pages
         run: |
           cd packages/ui
-          npm run build:gh-pages
+          VITE_ENABLE_MOCKS=true npm run build
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
