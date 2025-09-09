@@ -10,9 +10,14 @@ export function mockExclusionPlugin(): Plugin {
     resolveId(id, importer) {
       const enableMocks = process.env.VITE_ENABLE_MOCKS === 'true'
 
+      if (id.includes('/mocks/') || id.includes('msw')) {
+        console.log(`🔍 Resolving mock-related module: ${id}, enableMocks: ${enableMocks}`)
+      }
+
       if (!enableMocks) {
         // Block resolution of mock-related modules
         if (id.includes('/mocks/') || id.includes('msw')) {
+          console.log(`🚫 Blocking mock module: ${id}`)
           return { id: 'virtual:empty', external: false }
         }
       }
