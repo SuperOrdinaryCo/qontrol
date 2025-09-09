@@ -3,6 +3,7 @@ import { rmSync, existsSync } from 'fs'
 import { resolve } from 'path'
 
 export function mockExclusionPlugin(): Plugin {
+  console.log('🔍 Initializing mock exclusion plugin', 'VITE_ENABLE_MOCKS:', process.env.VITE_ENABLE_MOCKS || 'false')
   return {
     name: 'mock-exclusion',
     apply: 'build',

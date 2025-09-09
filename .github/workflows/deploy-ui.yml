@@ -34,9 +34,9 @@ jobs:
         run: npm ci
 
       - name: Build UI with mocks for GitHub Pages
-        run: |
-          cd packages/ui
-          VITE_ENABLE_MOCKS=true npm run build
+        run: cd packages/ui && npm run build
+        env:
+          VITE_ENABLE_MOCKS: 'true'
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
