@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/SuperOrdinaryCo/qontrol/compare/qontrol-v1.1.0...qontrol-v1.1.1) (2026-03-25)
+
+
+### Bug Fixes
+
+* simplify states filters ([086ae03](https://github.com/SuperOrdinaryCo/qontrol/commit/086ae0388c6a8a56433cac49fc3b8e7edb11e85a))
+
 ## [1.1.0](https://github.com/SuperOrdinaryCo/qontrol/compare/qontrol-v1.0.0...qontrol-v1.1.0) (2025-09-09)
 
 

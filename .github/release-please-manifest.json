@@ -1,7 +1,7 @@
 {
-  ".": "1.1.0",
-  "packages/core": "1.1.0",
-  "packages/express": "1.1.0",
-  "packages/ui": "1.1.0"
+  ".": "1.1.1",
+  "packages/core": "1.1.1",
+  "packages/express": "1.1.1",
+  "packages/ui": "1.1.1"
 }
 
