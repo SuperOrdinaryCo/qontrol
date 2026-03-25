@@ -18,9 +18,8 @@ export class JobService {
       const getStart = (_page: number) => (_page - 1) * pageSize;
       const getEnd = (_page: number) => getStart(_page) + pageSize - 1;
 
-      // Get jobs by states if specified, otherwise default to waiting state only
-      const states = params.states || ['waiting'];
-      const state = states[0];
+      // Get jobs by state if specified, otherwise default to waiting state only
+      const state = params.state || 'waiting';
 
       const totalJobs = await queue.getJobCounts(state);
 
@@ -589,7 +588,7 @@ export class JobService {
         return 'paused'
       }
 
-      // Map BullMQ states to our JobState interface
+      // Map BullMQ state to our JobState interface
       switch (state) {
         case 'completed':
           return 'completed';

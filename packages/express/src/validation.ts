@@ -7,7 +7,7 @@ const getJobsSchema = Joi.object({
   page: Joi.number().integer().min(1).default(1),
   pageSize: Joi.number().integer().min(1).max(1000).default(500),
   sortOrder: Joi.string().valid('asc', 'desc').default('desc'),
-  states: Joi.array().items(Joi.string().valid(...JOB_STATES)),
+  state: Joi.string().valid(...JOB_STATES),
   all: Joi.boolean().default(false),
   search: Joi.string().max(500).empty(),
   searchType: Joi.string().valid('name', 'data', 'id').optional(),
@@ -29,17 +29,16 @@ export const validateGetJobs = (req: Request, res: Response, next: NextFunction)
   }
 
   // Transform flat query params to nested structure
-  const params: GetJobsRequest = {
+  req.validatedQuery = {
     page: value.page,
     pageSize: value.pageSize,
     sortOrder: value.sortOrder,
-    states: value.states,
+    state: value.state,
     all: value.all,
     search: value.search,
     searchType: value.searchType,
-  };
+  } as GetJobsRequest;
 
-  req.validatedQuery = params;
   next();
 };
 

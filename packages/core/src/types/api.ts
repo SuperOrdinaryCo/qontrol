@@ -68,7 +68,7 @@ export interface GetJobsRequest {
   page?: number;
   pageSize?: number;
   sortOrder?: 'asc' | 'desc';
-  states?: Array<JobState>;
+  state?: JobState;
   all?: boolean;
   search?: string;
   searchType?: string;

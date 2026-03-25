@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRouter, useRoute } from 'vue-router'
 import { watch } from 'vue';
-import { QueueInfo } from '@/types';
+import { JobState, QueueInfo } from '@/types';
 
 defineProps<{
   queueInfo: QueueInfo
@@ -9,7 +9,7 @@ defineProps<{
 
 const selectedStateTab = defineModel({
   default: 'waiting',
-  validator: (value: string) => ['waiting', 'active', 'completed', 'failed', 'delayed', 'paused', 'waiting-children'].includes(value)
+  validator: (value: JobState) => ['waiting', 'active', 'completed', 'failed', 'delayed', 'paused', 'waiting-children'].includes(value)
 })
 
 const router = useRouter()

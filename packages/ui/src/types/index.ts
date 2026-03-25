@@ -61,7 +61,7 @@ export interface GetJobsRequest {
   pageSize?: number;
   sortBy?: 'createdAt' | 'processedOn' | 'finishedOn' | 'duration' | 'state' | 'name';
   sortOrder?: 'asc' | 'desc';
-  states?: Array<JobState>;
+  state?: JobState;
   all?: boolean;
   timeRange?: {
     field: 'createdAt' | 'processedOn' | 'finishedOn';

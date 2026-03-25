@@ -199,8 +199,7 @@ export const handlers = [
     const page = parseInt(url.searchParams.get('page') || '1')
     const pageSize = parseInt(url.searchParams.get('pageSize') || '20')
     const sortOrder = url.searchParams.get('sortOrder') as 'asc' | 'desc' || 'desc'
-    const statesParam = url.searchParams.get('states[]')
-    const states = statesParam ? statesParam.split(',') as JobState[] : undefined
+    const state = url.searchParams.get('state') as JobState
     const search = url.searchParams.get('search') || undefined
     const all = url.searchParams.get('all') === 'true'
 
@@ -215,8 +214,8 @@ export const handlers = [
     let jobs = getJobsForQueue(queueName, 100)
 
     // Apply filters
-    if (states && states.length > 0) {
-      jobs = jobs.filter(job => states.includes(job.state))
+    if (state) {
+      jobs = jobs.filter(job => state === job.state)
     }
 
     if (search) {
@@ -255,7 +254,7 @@ export const handlers = [
         page: all ? undefined : page,
         pageSize: all ? undefined : pageSize,
         sortOrder,
-        states,
+        state,
         search,
         all,
       },

@@ -96,6 +96,7 @@ import SortOrder from '@/components/SortOrder.vue';
 import SearchInput from '@/components/SearchInput.vue';
 import AddJobDrawer from '@/components/AddJobDrawer.vue';
 import RemoveAction from '@/components/queue-actions/RemoveAction.vue';
+import {JobState} from '@/types';
 
 const route = useRoute()
 const jobsStore = useJobsStore()
@@ -103,7 +104,7 @@ const queuesStore = useQueuesStore()
 const settingsStore = useSettingsStore()
 
 const queueName = computed(() => route.params.name as string)
-const queueState = route.query.state as string || 'waiting'
+const queueState = route.query.state as JobState || 'waiting'
 
 const {
   loading,
@@ -116,7 +117,7 @@ const {
 const { settings, autoRefreshEnabled } = storeToRefs(settingsStore)
 
 // Local filter state
-const selectedStateTab = ref<string>(queueState)
+const selectedStateTab = ref<JobState>(queueState)
 const searchQuery = ref('')
 const searchType = ref<'id' | 'name' | 'data'>('id')
 const sortBy = ref('createdAt')
@@ -129,12 +130,12 @@ const queueInfo = computed(() =>
   queuesStore.getQueueByName(queueName.value)
 )
 
-function selectStateTab(state: string) {
+function selectStateTab(state: JobState) {
   selectedStateTab.value = state
 
   // Update filters based on selected tab (always filter by specific state)
   jobsStore.updateFilters({
-    states: [state] as any,
+    state: state,
     search: searchQuery.value || undefined,
     sortBy: sortBy.value as any,
     sortOrder: sortOrder.value as any,
@@ -160,7 +161,7 @@ function applyFilters() {
   }
   // Apply current tab state along with other filters
   jobsStore.updateFilters({
-    states: [selectedStateTab.value] as any,
+    state: selectedStateTab.value,
     search: searchQuery.value || undefined,
     searchType: searchType.value || undefined,
     all: ['data', 'name'].includes(searchType.value),
@@ -243,7 +244,7 @@ function setupAutoRefresh() {
         } else {
           // Update filters with current search state before auto-refresh
           jobsStore.updateFilters({
-            states: [selectedStateTab.value] as any,
+            state: selectedStateTab.value,
             search: searchQuery.value || undefined,
             searchType: searchType.value || undefined,
             sortBy: sortBy.value as any,
@@ -278,16 +279,17 @@ onMounted(() => {
   // Load queue info first
   queuesStore.fetchQueues()
 
-  const savedState = route.query.state as string
+  const savedState = route.query.state as JobState
   if (savedState && ['waiting', 'active', 'completed', 'failed', 'delayed', 'paused', 'waiting-children'].includes(savedState)) {
     selectedStateTab.value = savedState
   } else {
+    console.warn('Invalid or missing state in URL query, defaulting to "waiting"');
     selectedStateTab.value = 'waiting'
   }
 
   // Update filters with the selected state before fetching jobs
   jobsStore.updateFilters({
-    states: [selectedStateTab.value] as any,
+    state: selectedStateTab.value,
     search: searchQuery.value || undefined,
     searchType: searchType.value || undefined,
     all: ['data', 'name'].includes(searchType.value),
